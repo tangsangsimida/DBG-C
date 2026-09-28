@@ -1654,3 +1654,5 @@ CMSIS-DAP SWD engine checks passed: 168 assertions, 9 cases
   Class:                             ELF32
   Machine:                           RISC-V
   Entry point address:               0x0
+
+Disposition update (2026-09-29): The release result recorded in the earlier software-gate rerun predates acceptance of the two-gate release criteria. It is superseded for current release status by docs/00-project/DBG-C-OPEN-001.zh-CN.md O19 V0.31 and the bilingual DBG-C-FW-001 V0.30 records. Current status: reproducible build, ELF/link review, and static review release limited-purpose verification-board design only; PoC-1 CH585M runtime verification remains Not run; product-hardware freeze is not released. The 100 ticks/s source setting versus 1000 ticks/s requirement-text conflict remains open and must be resolved before freezing the board-test tick-frequency threshold. This update does not change or extend the recorded build evidence.

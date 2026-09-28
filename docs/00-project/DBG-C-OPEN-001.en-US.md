@@ -1,6 +1,6 @@
 # DBG-C Open Questions and Verification List
 
-**Document ID:** DBG-C-OPEN-001　**Version:** V0.30　**Status:** Open items
+**Document ID:** DBG-C-OPEN-001　**Version:** V0.31　**Status:** Open items
 
 | ID | Question | Evidence/decision required | Affected documents | Status |
 |---|---|---|---|---|
@@ -66,7 +66,7 @@ Before limited-purpose **verification-hardware design**, all of these reviewable
 4. Separate statically decidable items from chip-runtime items. Hardware exception semantics, measured frequency, interrupt delivery, tick, scheduling, and sleep/wakeup that cannot be proven from source/ELF remain board-test items and must not be marked Pass.
 5. Verification-board design inputs must provide programming/recovery, reset, system-clock, SysTick, and interrupt-activity observation/measurement paths, with debug and measurement access points. Confirm exact pins and circuitry from authoritative project sources.
 
-**Current verdict: the verification-board design gate has passed; product-hardware freeze has not passed.** The two reproducible builds, ELF/link resource checks, and source static review are complete, so a minimal board for verification may be designed. It must provide programming/recovery access and measurement access for reset, system clock, SysTick, and interrupt activity. Design details must be grounded in official chip material and the test plan. This is not a release to freeze the product schematic or PCB.
+**Current verdict: the verification-board design gate has passed; PoC-1 CH585M runtime verification has not passed and remains Not run; product-hardware freeze has not passed.** The two reproducible builds, ELF/link resource checks, and source static review are complete, so a minimal board for verification may be designed. It must provide programming/recovery access and measurement access for reset, system clock, SysTick, and interrupt activity. Design details must be grounded in official chip material and the test plan. This is not a release to freeze the product schematic or PCB. A host cross-build proves that the target ELF can be built and statically checked; it does not prove CH585M interrupt delivery, SysTick delivery, thread switching, or scheduling. The current tick configuration conflict does not block verification-board design, but it must be resolved before freezing the board-test tick-frequency threshold.
 
 Before product-hardware freeze, CH585M board records must show ThreadX startup, thread run/switch/sleep/wakeup, measured SysTick frequency and tick delivery, interrupt entry/exit and context/stack integrity, reset/sleep-wakeup, and sustained operation meeting duration, repetition, load, and pass thresholds frozen in advance. Keep untested items Not run; O18 cannot close before board testing. The current 100 ticks/s source setting conflicts with existing 1000 ticks/s requirement text; resolve that decision before freezing the board-test frequency acceptance threshold.
 

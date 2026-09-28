@@ -8,11 +8,11 @@ This document set is a V0.x engineering baseline draft, not a frozen interface o
 | SYS-001 | [System Architecture](../02-system/DBG-C-SYS-001.en-US.md) | V0.2, for review |
 | IF-001 | [DBG-C Interface Specification](../03-interfaces/DBG-C-IF-001.en-US.md) | V0.1 concept draft; pins not frozen |
 | MCU-001 | [MCU Selection and Resource Assessment](../04-hardware/DBG-C-MCU-001.en-US.md) | V0.6; verification-board design gate passed, tick target pending decision, board verification not run |
-| FW-001 | [Firmware Architecture and PoC-1 Record](../05-firmware/DBG-C-FW-001.en-US.md) | V0.29; CMSIS-DAP request-boundary dependencies clarified; 57 SWD GPIO and 33 Reset GPIO modeled-register checks; board runtime and product-hardware freeze not released |
+| FW-001 | [Firmware Architecture and PoC-1 Record](../05-firmware/DBG-C-FW-001.en-US.md) | V0.30; verification-board design released; PoC-1 runtime not run; product-hardware freeze not released; O21 remains open |
 | RF-001 | [Private 2.4G Protocol Specification](../06-protocols/DBG-C-RF-001.en-US.md) | V0.1 framework; not ready for implementation |
 | TEST-001 | [Verification Specification](../07-verification/DBG-C-TEST-001.en-US.md) | V0.27; vendor-command, string-callback, and ExecuteCommands bounds clarified; ThreadX board cases not run |
 | RISK-001 | [Risk Register](../08-risk/DBG-C-RISK-001.en-US.md) | V0.5; ThreadX port awaits board verification, tick target pending decision |
-| OPEN-001 | [Open Questions and Verification List](DBG-C-OPEN-001.en-US.md) | V0.30; O11 tracks GPIO electrical modes and reset-pulse decisions; O21 tracks CMSIS-DAP buffer, callback, and request bounds; USB/link integration and ThreadX board verification remain open |
+| OPEN-001 | [Open Questions and Verification List](DBG-C-OPEN-001.en-US.md) | V0.31; verification-board design released; PoC-1 runtime not run; product-hardware freeze not released; O11/O21 remain open |
 
 Future phase documents DBG-C-HW-001, USB-001, and BLE-001 have not yet been created.
 
