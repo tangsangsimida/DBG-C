@@ -62,17 +62,17 @@ static void test_wraparound(void)
 {
     dbgc_byte_fifo_t fifo;
     uint8_t guarded_storage[5] = {0xA5U, 0U, 0U, 0U, 0x5AU};
-    const uint8_t first[] = {1U, 2U, 3U};
-    const uint8_t second[] = {4U, 5U};
+    const uint8_t first[] = {1U, 2U};
+    const uint8_t second[] = {3U, 4U};
     uint8_t output[4] = {0U};
 
     CHECK(dbgc_byte_fifo_initialize(&fifo, &guarded_storage[1], 3U) == 0);
     CHECK(dbgc_byte_fifo_write(&fifo, first, sizeof(first)) == sizeof(first));
-    CHECK(dbgc_byte_fifo_read(&fifo, output, 2U) == 2U);
-    CHECK(output[0] == 1U && output[1] == 2U);
+    CHECK(dbgc_byte_fifo_read(&fifo, output, 1U) == 1U);
+    CHECK(output[0] == 1U);
     CHECK(dbgc_byte_fifo_write(&fifo, second, sizeof(second)) == sizeof(second));
     CHECK(dbgc_byte_fifo_read(&fifo, output, sizeof(output)) == 3U);
-    CHECK(output[0] == 3U && output[1] == 4U && output[2] == 5U);
+    CHECK(output[0] == 2U && output[1] == 3U && output[2] == 4U);
     CHECK(dbgc_byte_fifo_count(&fifo) == 0U);
     CHECK(guarded_storage[0] == 0xA5U && guarded_storage[4] == 0x5AU);
 }
