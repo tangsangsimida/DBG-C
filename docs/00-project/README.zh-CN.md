@@ -8,11 +8,11 @@
 | SYS-001 | [系统架构设计](../02-system/DBG-C-SYS-001.zh-CN.md) | V0.2，待评审 |
 | IF-001 | [DBG-C Interface Specification](../03-interfaces/DBG-C-IF-001.zh-CN.md) | V0.1 概念草案，Pin 未冻结 |
 | MCU-001 | [MCU 选型与资源评估](../04-hardware/DBG-C-MCU-001.zh-CN.md) | V0.6；验证板设计门通过，tick 目标待决策，实板验证未执行 |
-| FW-001 | [固件架构与 PoC-1 记录](../05-firmware/DBG-C-FW-001.zh-CN.md) | V0.21；FIFO、8 项 CMSIS-DAP 命令核心及 7 项 CMSIS-DAP 到 SWD 引擎集成线模型主机检查通过；产品 HAL 适配未完成；ThreadX 实板运行未验证 |
+| FW-001 | [固件架构与 PoC-1 记录](../05-firmware/DBG-C-FW-001.zh-CN.md) | V0.22；FIFO、8 项 CMSIS-DAP 命令核心及 8 项 CMSIS-DAP 到 SWD 引擎集成线模型主机检查通过；产品 HAL 适配未完成；ThreadX 实板运行未验证 |
 | RF-001 | [Private 2.4G Protocol Specification](../06-protocols/DBG-C-RF-001.zh-CN.md) | V0.1 协议框架，不可据此编码 |
-| TEST-001 | [Verification Specification](../07-verification/DBG-C-TEST-001.zh-CN.md) | V0.19；FIFO、8 项 CMSIS-DAP 命令核心及 7 项 CMSIS-DAP 到 SWD 引擎集成线模型主机检查通过，ThreadX 板测未执行；验证板设计门通过 |
+| TEST-001 | [Verification Specification](../07-verification/DBG-C-TEST-001.zh-CN.md) | V0.20；FIFO、8 项 CMSIS-DAP 命令核心及 8 项 CMSIS-DAP 到 SWD 引擎集成线模型主机检查通过，ThreadX 板测未执行；验证板设计门通过 |
 | RISK-001 | [Risk Register](../08-risk/DBG-C-RISK-001.zh-CN.md) | V0.5 风险清单；ThreadX 移植待实板验证，tick 目标待决策 |
-| OPEN-001 | [未决问题与验证清单](DBG-C-OPEN-001.zh-CN.md) | V0.23；CMSIS-DAP 产品 HAL/链接仍待验证；验证板设计门通过，ThreadX 实板验证未执行，tick 目标待决策，产品硬件冻结未放行 |
+| OPEN-001 | [未决问题与验证清单](DBG-C-OPEN-001.zh-CN.md) | V0.24；CMSIS-DAP 产品 HAL/链接仍待验证；验证板设计门通过，ThreadX 实板验证未执行，tick 目标待决策，产品硬件冻结未放行 |
 
 后续阶段文档 DBG-C-HW-001、USB-001、BLE-001 尚未建立。
 
