@@ -1,6 +1,6 @@
 # DBG-C Open Questions and Verification List
 
-**Document ID:** DBG-C-OPEN-001　**Version:** V0.3　**Status:** Open items
+**Document ID:** DBG-C-OPEN-001　**Version:** V0.4　**Status:** Open items
 
 | ID | Question | Evidence/decision required | Affected documents | Status |
 |---|---|---|---|---|
@@ -21,13 +21,14 @@
 | O15 | Which datasheet revision/errata/reference manual apply to the current silicon? | WCH release page and chip revision check | MCU, HW, FW | To obtain |
 | O16 | What BLE wireless-download protocol, image format, target scope, and resume rules apply? | Define DBG-C Tool ↔ Probe protocol and select an acceptance target board | PRD, BLE, TEST | Decision needed |
 | O17 | Can USBFS and USBHS operate concurrently? What implementation constraint would require V1 to switch from its USBFS allocation to USBHS? | SDK examples, official resource limits, comparative measurements | MCU, USB, SYS | To verify |
-| O18 | Can the upstream Eclipse ThreadX RISC-V32/GNU port be correctly adapted to CH585M QingKe V3C? | Implement and verify HPE, PFIC/VTF, startup, exception frames, SysTick, and ThreadX preemption; run PoC-1 on CH585M | MCU, FW, TEST | To verify; host ELF build passes |
+| O18 | Can Eclipse ThreadX RISC-V32/GNU context routines and the local CH585M low-level adapter run correctly on QingKe V3C? | Verify HPE, PFIC/VTF, startup, exception frames, SysTick, sleep/wakeup, scheduling, and sustained runtime on CH585M | MCU, FW, TEST | To verify; experimental ISR/timebase implemented, host ELF build passes |
 
 ## O18 Evidence Update
 
 - ThreadX is pinned to `v6.5.1.202602a_rel`, commit `b91b03b9e75fa523b17127f9e0eca09dca916459`; MounRiver Linux x64 Toolchain V2.4.0 GCC 12.2.0 is installed in the current user account.
-- The PoC-1 ELF cross-build passed on the host, but SysTick is not configured; the WCH startup default SysTick handler is a halt loop, and HPE/exception-frame/context-switch adaptation is unverified.
-- No CH585M board was identified as connected, so O18 remains open.
+- PoC-1 now contains experimental clock initialization, a low-level unused-memory boundary, VTF SysTick registration, and a ThreadX tick ISR. The threads read `tx_time_get()` and sleep for one tick. Host cross-build passed; output is ELF32 RISC-V, text 8876, data 8, bss 5564 bytes.
+- The tick uses the upstream ThreadX header default of 100 ticks/s. HPE/VTF behavior, exception frames, actual SysTick frequency, tick delivery, sleep/wakeup, scheduling, and endurance remain unverified on hardware; O18 remains open.
+- `docs/05-firmware/DBG-C-FW-001.en-US.md` records EVT provenance, archive hashes, and host setup. The WCH EVT `.cproject` establishes a GCC12 configuration but not the GCC patch version; the installed toolchain was measured as GCC 12.2.0.
 
 ## Confirmed Evidence Boundary
 
