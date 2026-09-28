@@ -1,6 +1,6 @@
 # DBG-C Verification Specification
 
-**文档编号：** DBG-C-TEST-001　**版本：** V0.22　**状态：** 测试计划草案；FIFO、CMSIS-DAP 命令层、SWD 引擎主机模型及 CMSIS 编译器映射目标编译检查已执行，ThreadX 实板测试尚未执行
+**文档编号：** DBG-C-TEST-001　**版本：** V0.23　**状态：** 测试计划草案；FIFO、CMSIS-DAP 命令层、SWD 引擎主机模型及 CMSIS 编译器映射目标编译检查已执行；上游命令请求边界尚无验证，ThreadX 实板测试未执行
 
 ## 1. 通过规则
 
@@ -95,3 +95,12 @@ Discovery、设备信息、Pair/Unpair、配置、状态、OTA、中断恢复、
 这些是编译/目标对象静态检查，不运行对象、不链接到 PoC，也不证明产品 DAP 配置、GPIO、PB5/PB6 电气与 SWD 时序、USB、ThreadX 或 CH585M 实板行为。为编译 CMSIS-DAP，构建脚本只在构建目录的 `DAP.h` 副本中选择上游 C 循环延时分支；该 C 循环的 SWD 时序尚未在实板校准。
 
 复现命令（仓库根目录执行）：`DBGC_BUILD_DIR=build/cmsis-compiler-adapter-final software/poc1-ch585-threadx/build.sh`。
+
+### 10.2 CMSIS-DAP 请求长度安全检查
+
+| 检查项 | 所需覆盖 | 状态 |
+|---|---|---|
+| DAP-GUARD-01 | 固定上游所有启用命令的最小/最大输入长度、变长字段截断、计数乘法溢出及 packet 上限 | 未执行；边界适配器未实现，DAP_PACKET_SIZE/USB 收包约定未冻结 |
+| DAP-GUARD-02 | 读型 `DAP_Transfer`、`DAP_TransferBlock`、`DAP_SWD_Sequence` 及 `DAP_ExecuteCommands` 的最坏响应长度与输出缓冲边界 | 未执行；产品响应容量及字符串信息回调上限未定义 |
+
+固定 CMSIS-DAP 上游命令处理 API 不接收请求长度或响应容量；已有 8 项命令主机检查使用完整请求数组，不代表截断/恶意包安全验证。完成边界适配器后，须运行这些用例并记录确切配置和容量。见 OPEN-001 O21。

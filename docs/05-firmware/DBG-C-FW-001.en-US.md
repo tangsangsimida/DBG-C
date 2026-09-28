@@ -1,6 +1,6 @@
 # DBG-C Firmware Architecture and PoC-1 Record
 
-**Document ID:** DBG-C-FW-001　**Version:** V0.24　**Status:** Experimental draft; generic FIFO, CMSIS-DAP command-core, and upstream SWD-engine host checks pass; CMSIS compiler-macro mapping passes target-object compile checks; product HAL adaptation incomplete; verification-board design gate passed; board runtime and product-hardware freeze not passed
+**Document ID:** DBG-C-FW-001　**Version:** V0.25　**Status:** Experimental draft; generic FIFO, CMSIS-DAP command-core, and upstream SWD-engine host checks pass; CMSIS compiler-macro mapping passes target-object compile checks; product HAL adaptation incomplete; CMSIS-DAP request-length boundary remains to be designed; verification-board design gate passed; board runtime and product-hardware freeze not passed
 
 ## 1. Scope and status
 
@@ -187,3 +187,9 @@ The WCH EVT GPIO header `EVT/EXAM/SRC/StdPeriphDriver/inc/CH58x_gpio.h` (SHA-256
 The official Arm CMSIS-DAP repository is pinned as a Git submodule at commit `12636590eec66fae2d1bba4518749426ad5a4595`. `Firmware/Include/DAP.h` in that commit declares `DAP_ProcessCommand()` and `DAP_ExecuteCommand()` and firmware version 2.1.2. This source implements CMSIS-DAP firmware; it is not the complete DAPLink firmware system. `Firmware/Config/DAP_config.h` is an example-project template: its CPU clock, JTAG capability, DAP packet size, and packet-buffer count defaults must not be used as DBG-C settings.
 
 The submodule's `DAP.h` includes `cmsis_compiler.h`; that file is absent from both the CMSIS-DAP submodule and the supplied CH585EVT ZIP. Its `PIN_DELAY_SLOW()` uses Arm `subs %0,%0,#1` inline assembly outside the `__CC_ARM` branch, which WCH RISC-V GCC cannot assemble. Do not define `__CC_ARM`; the test script changes only the branch guard in a build-directory header copy to select the upstream C loop. A local `platform/ch585/cmsis_compiler.h` maps CMSIS inline, NOP, and weak-symbol macros using the WCH core header plus GCC/RISC-V compiler primitives. WCH GCC compiles this header check and test-configured `DAP.c`/`SW_DP.c` into RISC-V objects. DAP configuration still uses no-op test pins, and the objects are not linked into PoC firmware. This verifies compiler primitives only; it is not a completed product GPIO/clock HAL or CMSIS-DAP port, and proves no PB5/PB6 waveform, electrical timing, target ACK, or CH585M runtime behavior.
+
+#### Request-length boundary
+
+The pinned upstream `DAP.h` declares `DAP_ExecuteCommand()` and `DAP_ProcessCommand()` with request and response pointers only. In `DAP.c`, `DAP_Transfer`, `DAP_TransferBlock`, `DAP_SWD_Sequence`, and `DAP_ExecuteCommands` advance pointers or loop according to command fields; these interfaces do not carry available input length or response-buffer capacity. Existing command host checks use complete, manually constructed request arrays and do not cover truncation or insufficient output capacity.
+
+The repository has no USB receive path and has not frozen the actual receive-length contract, product `DAP_PACKET_SIZE`, maximum product string-info callback output, or response-buffer configuration. Therefore, do not call the upstream pointer-only API under an unknown buffer contract. A bounds adapter must sit between USB and DAP and cover variable fields, truncation, integer ranges, and maximum response budgets for every enabled command in the pinned source, including `DAP_ExecuteCommands`; then malformed/truncated-packet host tests must validate it. Tracked as OPEN-001 O21.

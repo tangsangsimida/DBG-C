@@ -1,6 +1,6 @@
 # DBG-C Firmware Architecture 与 PoC-1 记录
 
-**文档编号：** DBG-C-FW-001　**版本：** V0.24　**状态：** 实验草案；通用 FIFO、CMSIS-DAP 命令层和上游 SWD 引擎主机检查已通过；CMSIS 编译器宏映射通过目标对象编译检查；产品 HAL 适配未完成；验证板设计门已通过；实板运行及产品硬件冻结未通过
+**文档编号：** DBG-C-FW-001　**版本：** V0.25　**状态：** 实验草案；通用 FIFO、CMSIS-DAP 命令层和上游 SWD 引擎主机检查已通过；CMSIS 编译器宏映射通过目标对象编译检查；产品 HAL 适配未完成；CMSIS-DAP 请求长度安全边界待设计；验证板设计门已通过；实板运行及产品硬件冻结未通过
 
 ## 1. 范围与状态
 
@@ -185,3 +185,9 @@ WCH EVT 官方归档 GPIO 文件：`EVT/EXAM/SRC/StdPeriphDriver/inc/CH58x_gpio.
 Arm 官方 CMSIS-DAP 仓库已作为 Git 子模块固定到提交 `12636590eec66fae2d1bba4518749426ad5a4595`。该提交 `Firmware/Include/DAP.h` 声明 `DAP_ProcessCommand()` 与 `DAP_ExecuteCommand()`，并通过 `DAP_FW_VER` 声明固件版本 2.1.2。此源码是 CMSIS-DAP 固件实现，不是 DAPLink 完整固件体系。上游 `Firmware/Config/DAP_config.h` 是面向示例工程的模板：其中 CPU 时钟、JTAG 能力、DAP 包尺寸及缓冲包数的默认值不得直接用于 DBG-C。
 
 当前子模块的 `DAP.h` 包含 `cmsis_compiler.h`；该文件既不在 CMSIS-DAP 子模块，也未出现在仓库提供的 CH585EVT ZIP 条目中。该头文件的 `PIN_DELAY_SLOW()` 在非 `__CC_ARM` 分支使用 Arm `subs %0,%0,#1` 内联汇编，WCH RISC-V GCC 不能直接汇编该指令。不得伪定义 `__CC_ARM`；测试脚本只在构建目录的头文件副本中选择上游 C 循环分支。本地 `platform/ch585/cmsis_compiler.h` 基于 WCH Core 头及 GCC/RISC-V 编译器基元提供 CMSIS inline、NOP 和 weak-symbol 宏映射；构建脚本用 WCH GCC 编译该映射检查，并在测试配置下将 `DAP.c`、`SW_DP.c` 编译为 ELF32 RISC-V 对象。测试仍使用 no-op pin 宏，且这些对象未链接 PoC。此结果只验证编译器基元，不是完整 CMSIS-DAP 产品移植，不证明 GPIO、时序、目标 ACK 或 CH585M 实板运行。
+
+#### 请求长度边界
+
+固定上游 `DAP.h` 中 `DAP_ExecuteCommand()` 与 `DAP_ProcessCommand()` 只接收请求和响应指针；`DAP.c` 内 `DAP_Transfer`、`DAP_TransferBlock`、`DAP_SWD_Sequence` 和 `DAP_ExecuteCommands` 根据命令字段推进请求指针/循环次数，接口没有携带输入可用长度或响应缓冲容量。现有命令层主机测试提供完整、手工构造的请求数组，未覆盖截断输入或输出容量不足。
+
+当前未实现 USB 收包路径，也未冻结 USB 实际接收长度约定、产品 `DAP_PACKET_SIZE`、字符串信息回调的最大输出或响应缓冲配置。故不在未知缓冲契约上调用无长度上游 API。边界适配器须在 USB 与 DAP 之间建立，并覆盖固定提交中所有启用命令及 `DAP_ExecuteCommands` 的变长字段、截断、整数范围和最大响应预算；完成后再以畸形/截断包主机测试验证。该问题跟踪在 OPEN-001 O21。

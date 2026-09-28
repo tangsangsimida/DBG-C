@@ -1,6 +1,6 @@
 # DBG-C Open Questions and Verification List
 
-**Document ID:** DBG-C-OPEN-001　**Version:** V0.26　**Status:** Open items
+**Document ID:** DBG-C-OPEN-001　**Version:** V0.27　**Status:** Open items
 
 | ID | Question | Evidence/decision required | Affected documents | Status |
 |---|---|---|---|---|
@@ -24,6 +24,7 @@
 | O18 | Can Eclipse ThreadX RISC-V32/GNU context routines and the local CH585M low-level adapter run correctly on QingKe V3C? | Verify HPE, PFIC/VTF, startup, exception frames, SysTick, sleep/wakeup, scheduling, and sustained runtime on CH585M | MCU, FW, TEST | Board verification pending; software gate releases verification-board design, but no board is currently available and chip runtime has not been tested |
 | O19 | What is the PoC-1 software-verification gate before hardware design? | Apply the O19 criteria: two reproducible builds, ELF/link resource checks, and static review of startup/ThreadX context/interrupt paths; release verification-board design only, with product freeze gated by board tests | MCU, FW, SYS, TEST | Software gate passed for verification-hardware design only; tick-target conflict remains open; board runtime and product-hardware freeze have not passed |
 | O20 | Can the Arm CMSIS-DAP firmware core compile with the CH585M WCH RISC-V GCC, and what compiler/ISA adaptation is evidence-based? | Review compiler headers, inline assembly, and port dependencies in the pinned upstream commit; verify target compilation and host command-layer behavior without Arm ISA assembly | FW, MCU, TEST | Local CMSIS compiler-macro adaptation and compile checks pass; eight command-core host checks and nine SWD line-model cases pass; WCH GCC compiles test-configured `DAP.c` and `SW_DP.c` into ELF32 RISC-V objects. Product HAL, timing calibration, USB integration, and firmware linking are incomplete, so O20 remains open |
+| O21 | How are actual input length and response capacity validated before calling the upstream CMSIS-DAP command processor? | Fix the USB receive-length/buffer contract, DAP_PACKET_SIZE, and product DAP configuration; then add bounded parsing/response budgeting for all enabled commands and DAP_ExecuteCommands, with truncated, overflow, and response-capacity host cases | USB, FW, TEST | To define; upstream `DAP_ExecuteCommand()`/`DAP_ProcessCommand()` have no length parameters, and some commands walk variable-length data based on request fields. No USB receive implementation or frozen DAP_PACKET_SIZE exists; no bounds adapter is implemented. Existing host command checks are not malformed/truncated-packet security tests |
 
 ## O18 Evidence Update
 

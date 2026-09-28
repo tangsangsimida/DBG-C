@@ -1,6 +1,6 @@
 # DBG-C Verification Specification
 
-**Document ID:** DBG-C-TEST-001　**Version:** V0.22　**Status:** Test-plan draft; FIFO, CMSIS-DAP command-core, upstream SWD-engine host-model, and CMSIS compiler-mapping target-object checks executed; ThreadX board tests have not run
+**Document ID:** DBG-C-TEST-001　**Version:** V0.23　**Status:** Test-plan draft; FIFO, CMSIS-DAP command-core, upstream SWD-engine host-model, and CMSIS compiler-mapping target-object checks executed; upstream command-request bounds have not been verified; ThreadX board tests have not run
 
 ## 1. Pass Criteria
 
@@ -95,3 +95,12 @@ The repository contains the CH585M datasheet, CH585EVT archive, and ThreadX PoC-
 These are compile and target-object checks. They do not run the objects or link them into PoC, and do not prove product DAP configuration, GPIO, PB5/PB6 electrical behavior or SWD timing, USB, ThreadX, or CH585M board behavior. To compile CMSIS-DAP, the build script selects the upstream C-loop delay branch in a build-directory copy of `DAP.h`; the SWD timing of that C loop has not been calibrated on hardware.
 
 Reproduction command from the repository root: `DBGC_BUILD_DIR=build/cmsis-compiler-adapter-final software/poc1-ch585-threadx/build.sh`.
+
+### 10.2 CMSIS-DAP Request-Length Safety Checks
+
+| Check | Required coverage | Status |
+|---|---|---|
+| DAP-GUARD-01 | Minimum/maximum input lengths for all enabled commands in the pinned source, variable-field truncation, count-multiplication overflow, and packet-capacity bounds | Not run; bounds adapter is not implemented, and DAP_PACKET_SIZE/USB receive contract are not frozen |
+| DAP-GUARD-02 | Worst-case response length and output-buffer bounds for read `DAP_Transfer`, `DAP_TransferBlock`, `DAP_SWD_Sequence`, and `DAP_ExecuteCommands` | Not run; product response capacity and maximum string-info callback output are undefined |
+
+The pinned CMSIS-DAP command API does not receive request length or response capacity. The existing eight command host checks use complete request arrays and are not malformed/truncated-packet safety tests. After a bounds adapter is implemented, execute these cases and record the exact configuration and capacities. See OPEN-001 O21.
