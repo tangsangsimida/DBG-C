@@ -1,6 +1,6 @@
 # DBG-C Verification Specification
 
-**Document ID:** DBG-C-TEST-001　**Version:** V0.6　**Status:** Test-plan draft; FIFO host behavior tests and ThreadX board tests have not run
+**Document ID:** DBG-C-TEST-001　**Version:** V0.7　**Status:** Test-plan draft; FIFO host behavior tests passed, ThreadX board tests have not run
 
 ## 1. Pass Criteria
 
@@ -36,15 +36,15 @@ Test `software/common/byte_fifo/` against the public header contract. These case
 
 | Case | Check | Pass condition | Status |
 |---|---|---|---|
-| FIFO-01 Initialization boundaries | Null FIFO, null storage, zero capacity, capacity 1, and a non-power-of-two capacity | Invalid inputs return nonzero and leave the object unusable; valid capacities initialize successfully | Not run |
-| FIFO-02 Writes and full capacity | Write to empty, exact fill, write beyond capacity, and write while full | Return the accepted byte count; partial write is allowed when space is limited; unread bytes are never overwritten | Not run |
-| FIFO-03 Reads and empty capacity | Read from empty, partial read, and read to empty | Return the number actually read and preserve FIFO byte order; empty reads do not change state | Not run |
-| FIFO-04 Wraparound | Use a non-power-of-two capacity and split reads/writes so both indices pass the end | Order and count remain correct across wraparound with no out-of-bounds access | Not run |
-| FIFO-05 Invalid data pointers | Nonzero length with a null read/write data pointer | Return 0 and leave FIFO state unchanged | Not run |
-| FIFO-06 Clear and queries | Clear empty/nonempty FIFO; query capacity, used count, and free space; zero-length read/write | Queries match state; clear discards contents but preserves capacity; zero-length operations do not change state | Not run |
+| FIFO-01 Initialization boundaries | Null FIFO, null storage, zero capacity, capacity 1, and a non-power-of-two capacity | Invalid inputs return nonzero and leave the object unusable; valid capacities initialize successfully | Pass |
+| FIFO-02 Writes and full capacity | Write to empty, exact fill, write beyond capacity, and write while full | Return the accepted byte count; partial write is allowed when space is limited; unread bytes are never overwritten | Pass |
+| FIFO-03 Reads and empty capacity | Read from empty, partial read, and read to empty | Return the number actually read and preserve FIFO byte order; empty reads do not change state | Pass |
+| FIFO-04 Wraparound | Use a non-power-of-two capacity and operations that wrap both read and write indices | FIFO order/count remain correct and the guard bytes around the backing storage remain intact | Pass |
+| FIFO-05 Invalid data pointers | Nonzero length with a null read/write data pointer | Return 0 and leave FIFO state unchanged | Pass |
+| FIFO-06 Clear and queries | Clear empty/nonempty FIFO; query capacity, used count, and free space; zero-length read/write | Queries match state; clear discards contents but preserves capacity; zero-length operations do not change state | Pass |
 
-This FIFO has no concurrency-safety guarantee, so no multi-thread/ISR concurrency pass case is defined. The repository has no existing host test runner. This turn followed the requirement to run only existing relevant build commands, so these cases were not executed; run them later in an established host-verification flow and record the command and results.
+This FIFO has no concurrency-safety guarantee, so no multi-thread/ISR concurrency pass case is defined. The six host case groups are integrated into the existing `software/poc1-ch585-threadx/build.sh`; the run reported `PASS: 57 byte FIFO checks`, with command and toolchain evidence in `software/poc1-ch585-threadx/build-evidence.log`. This proves only pure C FIFO data behavior on the current host, not ThreadX concurrency, ISR safety, CH585M SRAM behavior, or board behavior.
 
 ## 9. Current Execution Status
 
-The repository contains the CH585M datasheet, CH585EVT archive, and ThreadX PoC-1. A host cross-build log for the PoC is recorded in FW-001; the user confirms no hardware is currently available, so no CH585M programming/debug or runtime evidence exists. DBG-C product firmware, cable samples, and captures are also unavailable. All product-verification cases in this document are **Not run**; the PoC host build does not count as board or product-function testing. Build, ELF/link checks, and source static review are complete; the verification-board design gate has passed for limited-purpose verification hardware. Board runtime remains Not run, and product-hardware freeze is not released. ThreadX startup, interrupt, tick, thread switch/sleep/wakeup, clock measurement, reset recovery, and sustained-runtime cases remain Not run. Define duration, repetitions, load, and thresholds in the specific test plan before execution. See OPEN-001 O18/O19 for software and board release gates. This document defines coverage and is not a board verification report.
+The repository contains the CH585M datasheet, CH585EVT archive, and ThreadX PoC-1. A host cross-build log for the PoC is recorded in FW-001; the user confirms no hardware is currently available, so no CH585M programming/debug or runtime evidence exists. DBG-C product firmware, cable samples, and captures are also unavailable. All product-level verification cases remain **Not run**. The six FIFO host case groups passed, but do not count as board or product-function tests; neither does the PoC cross-build count as board runtime evidence. Build, ELF/link checks, and source static review are complete; the verification-board design gate has passed for limited-purpose verification hardware. Board runtime remains Not run, and product-hardware freeze is not released. ThreadX startup, interrupt, tick, thread switch/sleep/wakeup, clock measurement, reset recovery, and sustained-runtime cases remain Not run. Define duration, repetitions, load, and thresholds in the specific test plan before execution. See OPEN-001 O18/O19 for software and board release gates. This document defines coverage and is not a board verification report.

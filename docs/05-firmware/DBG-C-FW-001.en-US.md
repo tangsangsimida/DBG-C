@@ -1,6 +1,6 @@
 # DBG-C Firmware Architecture and PoC-1 Record
 
-**Document ID:** DBG-C-FW-001　**Version:** V0.6　**Status:** Experimental draft; generic FIFO module added to the build; verification-board design gate passed; tick-target decision open; board runtime and product-hardware freeze not passed
+**Document ID:** DBG-C-FW-001　**Version:** V0.7　**Status:** Experimental draft; generic FIFO added to the build with 57 host assertions passing; verification-board design gate passed; tick-target decision open; board runtime and product-hardware freeze not passed
 
 ## 1. Scope and status
 
@@ -35,7 +35,7 @@ The PoC keeps ThreadX upstream RISC-V32/GNU thread context save/restore, system-
 
 ### 3.1 Required tools
 
-Git, CMake 3.20 or newer, GNU Make, and the MounRiver Linux x64 RISC-V Embedded GCC 12 toolchain are required. The recorded build host has Git 2.43.0, CMake 3.28.3, GNU Make 4.3, GCC 12.2.0, and GNU assembler/linker 2.38. Ninja is optional.
+Git, CMake 3.20 or newer, GNU Make, the MounRiver Linux x64 RISC-V Embedded GCC 12 toolchain, and a native C99 compiler are required. Host tests use `cc` by default; set `CC` to select another compiler executable. The recorded build host has Git 2.43.0, CMake 3.28.3, GNU Make 4.3, GCC 12.2.0, GNU assembler/linker 2.38, and Ubuntu cc 13.3.0. Ninja is optional.
 
 ### 3.2 Install the MounRiver toolchain
 
@@ -142,7 +142,7 @@ Resource evidence is in [MCU-001 Section 5](../04-hardware/DBG-C-MCU-001.en-US.m
 
 | Module | Software location/resource evidence | Current implementation boundary | Status/verification |
 |---|---|---|---|
-| Generic byte FIFO | `software/common/byte_fifo/`; corresponds to USB CDC, UART, and RF buffering in MCU-001 | Caller-owned fixed storage; arbitrary nonzero capacity; partial reads/writes; no overwrite of unread data; clear and capacity queries; no dynamic allocation, chip registers, interrupts, or ThreadX API; not concurrency-safe, callers must serialize access | Added to the existing CMake build and cross-compiled for CH585; not connected to USB/UART/RF; no standalone host behavior test or board test; not a frozen product ABI |
+| Generic byte FIFO | `software/common/byte_fifo/`; corresponds to USB CDC, UART, and RF buffering in MCU-001 | Caller-owned fixed storage; arbitrary nonzero capacity; partial reads/writes; no overwrite of unread data; clear and capacity queries; no dynamic allocation, chip registers, interrupts, or ThreadX API; not concurrency-safe, callers must serialize access | Added to the existing CMake build and cross-compiled for CH585; 57 assertions pass in the host verification run integrated into the existing build script; not connected to USB/UART/RF and not board-tested; not a frozen product ABI |
 | CMSIS-DAP / DAP command core | MCU-001 USBFS allocation; PRD CMSIS-DAP v2 target | No CMSIS-DAP source or selected version in the repository; USB/DAP interfaces and VID/PID are not frozen | Not implemented; first pin upstream source/version and complete USB-001 and O02/O08 |
 | USBFS Device + CDC transport | MCU-001 USBFS, PB10/PB11; WCH EVT contains USB examples | Endpoints, descriptors, WCH USB Device API, WinUSB, and organization VID are unresolved | Not implemented; gather evidence for O02/O08 and define USB-001 first |
 | UART0 driver/bridge | MCU-001 UART0, PB4/PB7 | WCH UART API/multiplex initialization, baud/flow control, and ISR-to-ThreadX synchronization rules require confirmation | Not implemented; review CH585 UART EVT example and settle CDC/UART behavior (O09) |
@@ -151,4 +151,4 @@ Resource evidence is in [MCU-001 Section 5](../04-hardware/DBG-C-MCU-001.en-US.m
 | Private 2.4 GHz transport | Integrated Radio and DBG-C RF Protocol target | PHY/API, frame format, sequence, retries, recovery, and latency target remain undefined | Not implemented; complete RF-001 and O01/O03/O12 first |
 | CH585M ThreadX port | Current `software/poc1-ch585-threadx/platform/ch585/` | Reset, SysTick, PFIC/VTF/HPE, and context switching depend on chip hardware semantics | Experimental PoC only; startup, interrupts, tick, context switch, scheduling, sleep/wakeup have not been verified on a CH585M board; O18 remains open |
 
-The byte FIFO only establishes a hardware-independent storage boundary. USB/UART/RF callers must not depend on its internal indices. Do not present it as an ISR-safe queue or product data protocol until synchronization and transport APIs are confirmed. The repository has no general host unit-test framework; this turn ran only the existing `software/poc1-ch585-threadx/build.sh`, which proves cross-compilation, not FIFO host runtime behavior.
+The byte FIFO only establishes a hardware-independent storage boundary. USB/UART/RF callers must not depend on its internal indices. Do not present it as an ISR-safe queue or product data protocol until synchronization and transport APIs are confirmed. Host cases in `software/common/byte_fifo/tests/test_dbgc_byte_fifo.c` are built and run by the existing `software/poc1-ch585-threadx/build.sh` using the native C99 compiler; 57 assertions pass. This does not verify concurrency, ISR use, CH585M SRAM, or board behavior.
