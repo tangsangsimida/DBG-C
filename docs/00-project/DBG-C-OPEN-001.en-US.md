@@ -1,6 +1,6 @@
 # DBG-C Open Questions and Verification List
 
-**Document ID:** DBG-C-OPEN-001　**Version:** V0.4　**Status:** Open items
+**Document ID:** DBG-C-OPEN-001　**Version:** V0.5　**Status:** Open items
 
 | ID | Question | Evidence/decision required | Affected documents | Status |
 |---|---|---|---|---|
@@ -32,7 +32,7 @@
 
 ## Confirmed Evidence Boundary
 
-- The repository currently contains only `docs/09-references/CH585-CH584_Datasheet_V1.6.pdf`; no SDK, reference manual, source, schematic, test record, or packet capture was found.
-- The MCU assessment is therefore a datasheet extract, not evidence of SDK APIs, concurrency, or board validation.
+- The repository contains `docs/09-references/CH585-CH584_Datasheet_V1.6.pdf`, the `docs/09-references/CH585EVT/CH585EVT.ZIP` archive, and the limited EVT startup/linker/header copies used by PoC-1. No separate CH585 reference manual, DBG-C schematic, board-test record, or packet capture is present.
+- The EVT index is dated 2026.08 and its FreeRTOS example uses FreeRTOS-Kernel V11.3.0; the material does not declare a standalone WCH SDK semantic version. Extracted APIs/registers support the ThreadX PoC only and do not prove RF/BLE/USB resource coexistence or board behavior.
 - DBG-C Interface pins, RF frame fields, USB descriptors, and role-switch rules are not frozen.
 - The product direction includes BLE dongle-free target download and USBFS as the V1 USB allocation. BLE download lacks an application protocol/target scope; USBFS endpoint and SDK Device compatibility still require verification.

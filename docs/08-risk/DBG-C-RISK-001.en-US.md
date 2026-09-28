@@ -1,6 +1,6 @@
 # DBG-C Risk Register
 
-**Document ID:** DBG-C-RISK-001　**Version:** V0.1　**Status:** Initial risk list
+**Document ID:** DBG-C-RISK-001　**Version:** V0.2　**Status:** Initial risk list
 
 Ratings use qualitative High/Medium/Low and await an agreed project scoring method.
 
@@ -22,3 +22,4 @@ Ratings use qualitative High/Medium/Low and await an agreed project scoring meth
 | R14 | RF antenna/matching/layout deviates from reference design | Link performance failure | High | Obtain official RF/layout guidance and review | Matching, sensitivity, radiated tests | Open |
 | R15 | Insufficient ESD/EMC/power integrity | Reset, damage, or regulatory failure | High | Protection and layout review during design | ESD/EMC/power-transient tests | Open |
 | R16 | SWD timing/target voltage tolerance is unverified | Instability or damage on some targets | High | Define target compatibility and SWD frequency range | Oscilloscope measurements and multi-target regression | Open |
+| R17 | Upstream RISC-V32 ThreadX assumptions conflict with QingKe V3C hardware stack push, WCH VTF/HPE, or exception return | Startup failure, stack corruption, tick/scheduling faults, or runtime reset | High | Keep CH585M adaptation separate from upstream context routines; do not treat a host build as board evidence | On-board startup, SysTick, sleep/wakeup, context restore, and endurance; record silicon/board revision and logs | PoC host ELF build passes; board verification not run |

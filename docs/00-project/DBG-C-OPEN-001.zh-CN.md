@@ -1,6 +1,6 @@
 # DBG-C 未决问题与验证清单
 
-**文档编号：** DBG-C-OPEN-001　**版本：** V0.4　**状态：** 开放项
+**文档编号：** DBG-C-OPEN-001　**版本：** V0.5　**状态：** 开放项
 
 | ID | 问题 | 需要的证据/决策 | 影响文档 | 状态 |
 |---|---|---|---|---|
@@ -32,7 +32,7 @@
 
 ## 当前确认边界
 
-- 仓库当前仅发现 `docs/09-references/CH585-CH584_Datasheet_V1.6.pdf`；未发现 SDK、参考手册、源代码、原理图、测试记录或抓包。
-- 因此芯片评估是数据手册层面的摘录，不代表 SDK API、并发可行性或板级验证。
+- 仓库包含 `docs/09-references/CH585-CH584_Datasheet_V1.6.pdf`、`docs/09-references/CH585EVT/CH585EVT.ZIP` 归档及 PoC-1 使用的少量 EVT 启动、链接和头文件副本；没有独立 CH585 参考手册、DBG-C 原理图、板级测试记录或抓包。
+- EVT 索引日期为 2026.08，FreeRTOS 示例使用 FreeRTOS-Kernel V11.3.0；资料没有声明独立 WCH SDK 语义版本。已摘录 API/寄存器仅用于 ThreadX PoC，不代表 RF/BLE/USB 资源并发可行或已通过板级验证。
 - DBG-C Interface 的 Pin 映射、RF 帧字段、USB 描述符、角色切换规则均未冻结。
 - 用户补充明确了 BLE 无 Dongle 目标下载和 USBFS 优先的产品方向；前者仍缺应用协议与目标范围，后者已经确定为 V1 USB 分配；端点和 SDK Device 栈兼容性仍需验证。

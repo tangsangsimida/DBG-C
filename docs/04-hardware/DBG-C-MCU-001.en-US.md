@@ -1,10 +1,12 @@
 # DBG-C MCU Selection and Resource Assessment
 
-**Document ID:** DBG-C-MCU-001　**Version:** V0.2　**Status:** CH585M V1 schematic resource allocation draft; SDK and electrical review pending
+**Document ID:** DBG-C-MCU-001　**Version:** V0.3　**Status:** CH585M V1 schematic resource allocation draft; ThreadX host build verified, board/electrical review pending
 
 ## 1. Evidence Source
 
 `docs/09-references/CH585-CH584_Datasheet_V1.6.pdf` is the project-designated CH585M IC manual. Its internal title is *CH585/CH584 Datasheet*, V1.6, 160 pages. Use it as the primary project source for chip parameters, pin multiplexing, and documented peripheral capabilities. SDK APIs, concrete project configuration, RF concurrency performance, and board behavior still require SDK review/measurement. Do not infer CH585M behavior from CH584 or other CH series.
+
+The repository also keeps the official EVT archive at `docs/09-references/CH585EVT/CH585EVT.ZIP` and copies only the startup, linker, and WCH headers used by the ThreadX PoC into `software/poc1-ch585-threadx/platform/ch585/`. The archive index `EVT/CH585_List_EN.txt` is dated 2026.08; the material does not declare a separate WCH SDK semantic version. EVT provenance/hashes, the pinned ThreadX version, and MounRiver toolchain version are recorded in DBG-C-FW-001. The PoC host cross-build does not prove board runtime or product-level peripheral concurrency.
 
 ## 2. Resource Table
 
@@ -150,26 +152,26 @@ Peripheral counts support moving this design into a **schematic draft**: USBFS, 
 
 ## 6. Additional Resource Requirements for ThreadX
 
-The project has selected ThreadX for V1 firmware. Eclipse ThreadX upstream has published a RISC-V32 port; this does not prove that CH585M QingKe RISC-V3C works directly with that port or the WCH startup/interrupt framework. Confirm the ThreadX version, compiler, and CH585M integration by building with the actual SDK and testing on the board.
+The project has selected ThreadX for V1 firmware. PoC-1 pins Eclipse ThreadX `v6.5.1.202602a_rel` (commit `b91b03b9e75fa523b17127f9e0eca09dca916459`), uses its `ports/risc-v32/gnu` context routines, and adds experimental CH585M low-level, SysTick, WCH startup, and clock adaptation. A host cross-build passed with MounRiver Linux x64 Toolchain V2.4.0 GCC 12.2.0; the WCH EVT `.cproject` selects a GCC12 configuration but does not record its patch version. A successful build does not establish compatibility of QingKe RISC-V3C hardware stack push, VTF/HPE, exception return, or scheduling; board validation has not run.
 
 | Resource | ThreadX requirement | DBG-C allocation | Evidence boundary |
 |---|---|---|---|
-| Kernel tick | Periodic time base and interrupt | Designate the built-in 32-bit SysTick as the ThreadX kernel tick source; do not consume TMR0 through TMR3 | The CH585M manual confirms the SysTick counter and interrupt. ThreadX port integration, clock source, reload value, and priority must be verified in the WCH SDK project. If the port cannot use SysTick, review a resource change before using a general-purpose timer |
-| Context switch | CPU context save/restore and scheduler entry | Integrate with WCH startup/interrupt framework; define thread/ISR boundaries for CMSIS-DAP, SWD, RF, and USB | Compatibility between upstream RISC-V32 port and QingKe interrupt/exception framework is unverified |
+| Kernel tick | Periodic time base and interrupt | Designate the built-in 32-bit SysTick as the ThreadX kernel tick source; do not consume TMR0 through TMR3 | The PoC configures the EVT-defined SysTick API/IRQ at ThreadX upstream default 100 ticks/s; host build passes, but actual frequency, VTF/HPE, tick delivery, and wakeup are untested on board |
+| Context switch | CPU context save/restore and scheduler entry | Experimental integration with WCH startup/interrupt framework; product thread/ISR boundaries remain to be defined | Uses upstream RISC-V32 context routines plus a local tick ISR; hardware exception frame, VTF/HPE, and restore path still require CH585M board verification |
 | Interrupts | Peripheral ISR to ThreadX scheduling interface | Define ThreadX API boundaries for USB, Radio/BLE, and Timer ISRs in firmware architecture | Interrupt nesting, priorities, and SDK ISR constraints require SDK review |
 | SRAM | ThreadX objects, system stack, thread stacks, application buffers | Budget USB DAP/CDC, RF reassembly, BLE stack, and SWD workspace together in the 128 KB SRAM linker layout | Allocate byte counts after measuring selected ThreadX/SDK, thread count, stack watermarks, and linker map; do not invent values |
 | CPU | Scheduling, interrupt, and protocol processing | Verify worst-case response under concurrent USB/RF load | Datasheet maximum of 78 MHz alone does not prove performance targets |
-| Compiler/Port | ThreadX port compatible with CH585M toolchain, ABI, and startup | Integrate after locking ThreadX and WCH toolchain versions | Version, compiler, and porting patches are not selected |
+| Compiler/Port | ThreadX port compatible with CH585M toolchain, ABI, and startup | ThreadX `v6.5.1.202602a_rel`, commit `b91b03b9e75fa523b17127f9e0eca09dca916459`; MounRiver GCC 12.2.0; WCH EVT GCC12 configuration | Host cross-build passes; EVT compiler patch version is not specified, board port compatibility is unverified |
 
 ThreadX adds no external connector signal and does not change the assigned USBFS, UART0, SWD GPIO, Target Reset GPIO, and integrated Radio. Preserve Probe programming/recovery access. The current resource baseline designates SysTick for the ThreadX kernel tick and reserves TMR0 through TMR3; if port integration fails, document and review a resource change.
 
 ### ThreadX Upstream Dependency Source
 
-V1 firmware will reference the official Eclipse ThreadX GitHub project through a **Git Submodule**: [eclipse-threadx/threadx](https://github.com/eclipse-threadx/threadx). The DBG-C superproject must record the submodule URL and exact commit; its directory path will be recorded when the firmware repository layout is frozen. The upstream README describes `master` as the development branch containing the newest code and explicitly says it does not represent the latest GA release. The integration baseline must therefore select and verify a formal release, then record its tag and corresponding commit; recording only `master` is insufficient. The exact version is unresolved; see O18 in OPEN-001.
+V1 firmware references the official Eclipse ThreadX GitHub project through a **Git Submodule**: [eclipse-threadx/threadx](https://github.com/eclipse-threadx/threadx). The current PoC submodule is at `software/third_party/threadx/`, pinned to tag `v6.5.1.202602a_rel` and commit `b91b03b9e75fa523b17127f9e0eca09dca916459`; that checkout includes `LICENSE.txt` under MIT. This pin is used for host cross-build and does not establish CH585M board compatibility.
 
-The upstream repository lists the `risc-v32` architecture and provides a [GNU RISC-V32 port directory](https://github.com/eclipse-threadx/threadx/tree/master/ports/risc-v32/gnu), but this does not establish direct compatibility with CH585M QingKe RISC-V3C, the WCH toolchain, or its interrupt framework. DBG-C will use this repository as the source for the ThreadX kernel and port. Whether to adopt that port directly, the required modifications, and the CH585M integration method must be recorded after an actual build and on-board verification. DBG-C firmware checkouts must initialize and recursively update submodules so the working tree checks out the ThreadX commit recorded by the superproject.
+This upstream version contains `ports/risc-v32/gnu`; the PoC uses its generic context save/restore, thread-stack build, system-return, and interrupt-control routines. Local code provides CH585M low-level initialization and the SysTick entry. The WCH FreeRTOS sample is used only as a QingKe V3C startup/interrupt reference; its FreeRTOS task-switching code was not moved into ThreadX. HPE/PFIC/VTF, exception-frame, and scheduling behavior remain for board verification. Initialize submodules recursively when cloning DBG-C firmware so the checkout uses the exact ThreadX commit recorded by the superproject.
 
-The upstream root [LICENSE.txt](https://github.com/eclipse-threadx/threadx/blob/master/LICENSE.txt) identifies the MIT License, which requires preserving the copyright and permission notices in copies or substantial portions of the software. Before source or binary distribution, inspect the license file and source headers in the exact version used, and retain the required notices in the DBG-C third-party component inventory and release materials. This record is not legal advice. Upstream materials checked 2026-09-28.
+The pinned upstream version's root `LICENSE.txt` identifies the MIT License. Retain the required notices in the DBG-C third-party component inventory and release materials. This record is not legal advice. Upstream materials checked 2026-09-28.
 
 ## 7. Required Materials
 

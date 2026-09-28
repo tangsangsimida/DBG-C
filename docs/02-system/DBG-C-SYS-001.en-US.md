@@ -1,6 +1,6 @@
 # DBG-C System Architecture
 
-**Document ID:** DBG-C-SYS-001　**Version:** V0.1　**Status:** For review
+**Document ID:** DBG-C-SYS-001　**Version:** V0.2　**Status:** For review
 
 ## 1. System Boundary
 
@@ -50,7 +50,7 @@ CH585M Probe controller, USB Device connection, 2.4 GHz antenna/RF, power and cl
 
 ## 6. Resource-Conflict Topics
 
-USB FS/HS choice, RF/BLE coexistence, DMA, endpoint buffers, clocks, RAM, timers, and debug/programming port resources require official SDK/reference-manual review and prototype measurements. The repository currently has only a datasheet, so simultaneous-operation constraints are not established.
+USB FS/HS choice, RF/BLE coexistence, DMA, endpoint buffers, clocks, RAM, timers, and debug/programming port resources require official SDK, reference-manual, and prototype review. The repository contains the CH585EVT archive and only the EVT startup/linker/header copies used by PoC-1; the archive index is dated 2026.08 but does not give a separate WCH SDK semantic version. The FreeRTOS example is not a concurrent-resource specification and does not establish DBG-C product coexistence. A separate reference manual and prototype measurements are still missing.
 
 ## 7. Related Specifications
 

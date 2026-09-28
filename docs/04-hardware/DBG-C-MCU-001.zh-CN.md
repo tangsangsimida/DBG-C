@@ -1,10 +1,12 @@
 # DBG-C MCU 选型与资源评估
 
-**文档编号：** DBG-C-MCU-001　**版本：** V0.2　**状态：** CH585M V1 原理图资源分配草案；待 SDK 与电气设计核验
+**文档编号：** DBG-C-MCU-001　**版本：** V0.3　**状态：** CH585M V1 原理图资源分配草案；ThreadX 主机构建已验证，板级/电气核验待完成
 
 ## 1. 证据来源
 
 `docs/09-references/CH585-CH584_Datasheet_V1.6.pdf` 是项目指定的 CH585M IC 手册；PDF 内文标题为《CH585/CH584 数据手册》V1.6，共 160 页。本文件作为当前芯片参数、引脚功能复用与寄存器能力判断的首要项目依据。SDK API、具体工程配置、射频并发性能及板级行为仍须用 SDK/实测核验。不得把 CH584/其他 CH 系列资料外推到 CH585M。
+
+仓库还保留了 `docs/09-references/CH585EVT/CH585EVT.ZIP` 官方 EVT 压缩包，并仅将 ThreadX PoC 实际使用的启动、链接文件及 WCH 头文件副本放入 `software/poc1-ch585-threadx/platform/ch585/`。归档索引 `EVT/CH585_List_EN.txt` 标注日期 2026.08；资料未声明独立 WCH SDK 语义版本。PoC 的 EVT 来源、散列、ThreadX 固定版本和 MounRiver 工具链版本见 DBG-C-FW-001。PoC 主机交叉构建不证明板上运行或产品级外设并发。
 
 ## 2. 资源表
 
@@ -150,26 +152,26 @@ SPI、I2C、ADC、NFC、TouchKey、LCD/LED Matrix、USBHS、SWO/JTAG、Target Po
 
 ## 6. ThreadX 对资源分配的增量要求
 
-项目已确定 V1 固件运行 ThreadX。Eclipse ThreadX 上游发布了 RISC-V32 端口；这不证明 CH585M 青稞 RISC-V3C 与 WCH 启动/中断框架可直接使用该端口。ThreadX 版本、编译器及 CH585M 移植状态须通过真实 SDK 工程编译和板上测试确认。
+项目已确定 V1 固件运行 ThreadX。PoC-1 固定 Eclipse ThreadX `v6.5.1.202602a_rel`（commit `b91b03b9e75fa523b17127f9e0eca09dca916459`），使用其 `ports/risc-v32/gnu` 上下文例程，并加入实验性 CH585M low-level、SysTick 和 WCH 启动/时钟适配。MounRiver Linux x64 Toolchain V2.4.0 的 GCC 12.2.0 主机交叉构建通过；WCH EVT `.cproject` 选择 GCC12 配置但未记载补丁版本。编译通过不证明 QingKe RISC-V3C 的硬件压栈、VTF/HPE、异常返回或调度兼容；板上验证未执行。
 
 | 资源 | ThreadX 需求 | DBG-C 分配 | 当前证据边界 |
 |---|---|---|---|
-| Kernel tick | 周期性时基和中断 | 指定芯片内置 32 位 SysTick 作为 ThreadX kernel tick 来源；不占用 TMR0 至 TMR3 | CH585M 手册确认 SysTick 计数器及其中断存在。ThreadX 端口接入、时钟源选择、重装值及优先级须在 WCH SDK 工程中验证；若端口不能接入 SysTick，需先提交资源变更再改用通用定时器 |
-| Context switch | CPU 上下文保存/恢复、调度入口 | 接入 WCH 启动与中断框架；定义 CMSIS-DAP、SWD、RF、USB 的线程/ISR 边界 | 上游 RISC-V32 端口与青稞中断/异常框架的兼容性待验证 |
+| Kernel tick | 周期性时基和中断 | 指定芯片内置 32 位 SysTick 作为 ThreadX kernel tick 来源；不占用 TMR0 至 TMR3 | PoC 已使用 EVT 定义的 SysTick API/IRQ 并按 ThreadX 上游默认 100 tick/s 配置；构建通过，实际频率、VTF/HPE、tick 投递和唤醒未板测 |
+| Context switch | CPU 上下文保存/恢复、调度入口 | 实验性接入 WCH 启动与中断框架；产品线程/ISR 边界仍待定义 | 使用上游 RISC-V32 上下文例程并添加本地 tick ISR；硬件异常栈帧、VTF/HPE 和恢复路径仍待 CH585M 实板验证 |
 | Interrupt | 外设 ISR 到 ThreadX 调度接口 | 在固件架构中分别定义 USB、Radio/BLE、Timer ISR 的 ThreadX API 使用边界 | 中断嵌套、优先级和 SDK ISR 约束需读取 SDK |
 | SRAM | ThreadX 内核对象、系统栈、线程栈及应用缓冲 | 在 128 KB SRAM 链接布局中统一预算 USB DAP/CDC、RF 重组、BLE 栈、SWD 工作区 | 各项字节数由选定 ThreadX/SDK、线程数、栈水位和链接映射测量后分配；不填猜测值 |
 | CPU | 调度、中断和协议处理时间 | 以 USB/RF 并发负载验证最坏响应时间 | 手册最高 78 MHz 不能单独证明符合性能目标 |
-| Compiler/Port | 与 CH585M 工具链、ABI、启动代码兼容的 ThreadX 端口 | 锁定 ThreadX 和 WCH 工具链版本后集成 | 版本、编译器及移植补丁未确定 |
+| Compiler/Port | 与 CH585M 工具链、ABI、启动代码兼容的 ThreadX 端口 | ThreadX `v6.5.1.202602a_rel`，commit `b91b03b9e75fa523b17127f9e0eca09dca916459`；MounRiver GCC 12.2.0；WCH EVT GCC12 配置 | 主机交叉构建通过；EVT 工具链补丁版本未标注，板级端口兼容性未验证 |
 
 ThreadX 不增加外部连接器信号，不改变已分配的 USBFS、UART0、SWD GPIO、Target Reset GPIO 和集成 Radio。硬件侧须保留 Probe 编程/恢复路径。当前资源基线将 SysTick 指定为 ThreadX kernel tick 来源，TMR0 至 TMR3 保留；端口接入验证失败时，须记录并评审资源变更。
 
 ### ThreadX 上游依赖来源
 
-V1 固件将通过 **Git Submodule** 引用 Eclipse ThreadX 官方 GitHub 项目：[eclipse-threadx/threadx](https://github.com/eclipse-threadx/threadx)。主仓库应记录子模块 URL 和精确 commit；子模块目录路径在固件仓库布局冻结时登记。项目 README 将 `master` 描述为包含最新代码的开发分支，并明确说明它不等同于最新 GA 发布版；因此集成基线须选定并验证后记录正式发布标签及对应 commit，不能仅记录 `master`。具体版本尚未确定，见 OPEN-001 的 O18。
+V1 固件通过 **Git Submodule** 引用 Eclipse ThreadX 官方 GitHub 项目：[eclipse-threadx/threadx](https://github.com/eclipse-threadx/threadx)。当前 PoC 的子模块路径为 `software/third_party/threadx/`，固定标签 `v6.5.1.202602a_rel` 和 commit `b91b03b9e75fa523b17127f9e0eca09dca916459`；该检出包含 MIT `LICENSE.txt`。该固定版本目前用于主机交叉构建，不能据此宣称 CH585M 板级兼容。
 
-上游仓库列出 `risc-v32` 架构，并提供 [GNU RISC-V32 端口目录](https://github.com/eclipse-threadx/threadx/tree/master/ports/risc-v32/gnu)，但这不证明该端口可直接用于 CH585M 的青稞 RISC-V3C、WCH 工具链或中断框架。DBG-C 将以该仓库为 ThreadX 内核及端口来源；是否直接采用该端口、修改范围和 CH585M 移植方式须在实际构建与板上验证后记录。克隆 DBG-C 固件仓库时须初始化并递归更新子模块，确保工作区检出主仓库记录的 ThreadX commit。
+ThreadX 上游该版本包含 `ports/risc-v32/gnu`，PoC 使用通用上下文保存/恢复、线程栈构建、系统返回和中断控制例程；CH585M 的 low-level 初始化与 SysTick 入口由本地代码提供。WCH FreeRTOS 样例仅作 QingKe V3C 启动/中断参考，未将 FreeRTOS 任务切换代码移入 ThreadX。此适配的 HPE/PFIC/VTF、异常帧和调度行为仍须板上验证。克隆 DBG-C 固件仓库时须递归初始化子模块，以检出主仓库记录的精确 ThreadX commit。
 
-上游仓库根目录 [LICENSE.txt](https://github.com/eclipse-threadx/threadx/blob/master/LICENSE.txt) 标示 MIT License，其中要求在软件副本或实质部分中保留版权声明和许可声明。纳入源码或二进制发布前，应按实际采用版本检查其许可证文件及源码头部声明，并在 DBG-C 第三方组件清单与发布材料中保留所需声明。该记录不是法律意见。以上上游资料查阅日期：2026-09-28。
+上游所固定版本的根目录 `LICENSE.txt` 标示 MIT License。纳入源码或二进制发布前，应在 DBG-C 第三方组件清单与发布材料中保留所需声明。该记录不是法律意见。以上上游资料查阅日期：2026-09-28。
 
 ## 7. 必须补齐的资料
 

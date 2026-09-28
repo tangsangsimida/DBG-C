@@ -96,7 +96,7 @@ software/poc1-ch585-threadx/build.sh
 | `platform/ch585/wch/core_riscv.h` | `EVT/EXAM/SRC/RVMSIS/core_riscv.h` | `fd0099eb7fce96c1ae1c0c5c58fd5da0d8f6b6b167e2c3fb335d5910b0a5503e` |
 | `platform/ch585/highcode_init.c` clock sequence | `EVT/EXAM/SRC/StdPeriphDriver/CH58x_sys.c` | `954a8b489c8b333d482ed65e0665a1260c5f7976398ef4878f4f928251f62772` |
 
-工程背景证据：`EVT/CH585_List_EN.txt` SHA-256 `112318f05aa8764f591dcea84333fba3a0e978e234c9c2d4f9086dc915c27fc9`；FreeRTOS `readme.txt` SHA-256 `ae231c158445d7d68ef7b0e534100c24afcccac903bf2475f5647c9903d1d353`；`.project` SHA-256 `e98d5f026b4f06d2cb6a46933c5aa85425ccdeb5a4941fbb8a40a7a0b94c8b41`；`.cproject` SHA-256 `158d9e4ff583f3bff39be61a5b19270f976ecc1d10dd5ce17170281c0d1bab81`。FreeRTOS 样例中的 `FreeRTOSConfig.h` tick 为 500 Hz；本 PoC 不复用该值。ThreadX 使用其上游头文件定义的默认 100 tick/s。
+版本与工程格式证据：`EVT/CH585_List_EN.txt`（SHA-256 `112318f05aa8764f591dcea84333fba3a0e978e234c9c2d4f9086dc915c27fc9`）标注日期 `2026.08`；该索引和下述 FreeRTOS 工程元数据没有声明独立的 WCH SDK 语义版本，因此不得把日期称为 SDK 版本。示例 `EVT/EXAM/FreeRTOS/readme.txt`（SHA-256 `ae231c158445d7d68ef7b0e534100c24afcccac903bf2475f5647c9903d1d353`）声明它移植 FreeRTOS-Kernel V11.3.0 到 CH585/CH584 QingKe V3C，并说明硬件压栈、中断栈与 SysTick 快速中断入口的约束；这只是移植参考，不证明 ThreadX 兼容。`EVT/EXAM/FreeRTOS/.project`（SHA-256 `e98d5f026b4f06d2cb6a46933c5aa85425ccdeb5a4941fbb8a40a7a0b94c8b41`）是 Eclipse CDT 工程描述，项目名为 `FreeRTOS`；`.cproject`（SHA-256 `158d9e4ff583f3bff39be61a5b19270f976ecc1d10dd5ce17170281c0d1bab81`）是 CDT managed-build 配置，选择 GCC12 RISC-V 编译器选项，RV32I 加 M/C，ilp32，配置前缀 `riscv-none-embed-`，但未标明 GCC 补丁版本。FreeRTOS 样例 `EVT/EXAM/FreeRTOS/FreeRTOS/FreeRTOSConfig.h` 的 tick 为 500 Hz；本 PoC 不复用该值。ThreadX 使用上游头文件定义的默认 100 tick/s。
 
 ## 5. 链接、时钟和中断边界
 
