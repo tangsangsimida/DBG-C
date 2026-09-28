@@ -46,6 +46,14 @@ esac
         -o "${build_dir}/host-tests/test_dbgc_byte_fifo"
     "${build_dir}/host-tests/test_dbgc_byte_fifo"
     "${host_cc}" -std=c99 -Wall -Wextra -Werror -pedantic \
+        -I"${repo_dir}/software/common/byte_fifo/include" \
+        -I"${repo_dir}/software/common/byte_stream_bridge/include" \
+        "${repo_dir}/software/common/byte_fifo/src/dbgc_byte_fifo.c" \
+        "${repo_dir}/software/common/byte_stream_bridge/src/dbgc_byte_stream_bridge.c" \
+        "${repo_dir}/software/common/byte_stream_bridge/tests/test_dbgc_byte_stream_bridge.c" \
+        -o "${build_dir}/host-tests/test_dbgc_byte_stream_bridge"
+    "${build_dir}/host-tests/test_dbgc_byte_stream_bridge"
+    "${host_cc}" -std=c99 -Wall -Wextra -Werror -pedantic \
         -DDBGC_CH585_UART0_HOST_TEST \
         -I"${repo_dir}/software/common/ch585_uart0_host_test" \
         -I"${project_dir}/platform/ch585" \

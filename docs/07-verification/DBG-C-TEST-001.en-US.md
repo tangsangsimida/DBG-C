@@ -1,6 +1,6 @@
 # DBG-C Verification Specification
 
-**Document ID:** DBG-C-TEST-001　**Version:** V0.33　**Status:** Test-plan draft; FIFO, CMSIS-DAP command-core, upstream SWD-engine host model, bounded dispatch, bounds preflight, CMSIS compiler mapping, and CH585 SWD GPIO, Target Reset GPIO, and UART0 host register-model/target-object checks executed; product UART/command bounds and ThreadX board tests have not run
+**Document ID:** DBG-C-TEST-001　**Version:** V0.34　**Status:** Test-plan draft; FIFO, byte-stream bridge, CMSIS-DAP command-core, upstream SWD-engine host model, bounded dispatch, bounds preflight, CMSIS compiler mapping, and CH585 SWD GPIO, Target Reset GPIO, and UART0 host register-model/target-object checks executed; product UART/command bounds and ThreadX board tests have not run
 
 ## 1. Pass Criteria
 
@@ -46,6 +46,18 @@ Test `software/common/byte_fifo/` against the public header contract. These case
 
 This FIFO has no concurrency-safety guarantee, so no multi-thread/ISR concurrency pass case is defined. The seven host case groups are integrated into the existing `software/poc1-ch585-threadx/build.sh`; the run reported `PASS: 3683 byte FIFO checks`, with command and toolchain evidence in `software/poc1-ch585-threadx/build-evidence.log`. This proves only pure C FIFO data behavior on the current host, not ThreadX concurrency, ISR safety, CH585M SRAM behavior, or board behavior.
 
+## 8.1 Scheduler-Free Byte-Stream Bridge Host Checks
+
+The test target is `software/common/byte_stream_bridge/`. It reuses the generic byte FIFO and represents source and sink endpoints through explicit one-byte callbacks. Each service call is bounded by a maximum forwarded-byte count. The tests use no USB stack, UART registers, interrupts, or ThreadX.
+
+| Case | Check | Pass condition | Status |
+|---|---|---|---|
+| BYTE-BRIDGE-HOST-01 | Check source-to-sink order, service budget, pending-byte retention and FIFO buffering under sink backpressure, source/sink errors, zero budget, and invalid initialization arguments | 15 callback-model checks pass; bytes not accepted by the sink remain in the channel or FIFO | Pass (host callback model only) |
+
+The channel is a caller-polled primitive for one serialized execution context. It provides no concurrency protection and is not connected to a product CDC/UART path. The target static library compiles in the existing PoC build, but the PoC application does not call the channel. Host checks do not establish USB CDC or UART behavior, product throughput under sustained backpressure, or ThreadX/ISR integration.
+
+Reproduction command from the repository root: `DBGC_BUILD_DIR=build/byte-stream-bridge software/poc1-ch585-threadx/build.sh`.
+
 ## 9. CMSIS-DAP Command-Core Host Checks
 
 The test target is `Firmware/Source/DAP.c` from the pinned upstream commit, called through `DAP_ExecuteCommand()`. The configuration under `software/common/cmsis_dap_host_test/` is test-only and is not the DBG-C product configuration; SWD command processing is enabled and JTAG is disabled. SWD pin operations are no-ops, and `SWD_Transfer()` is mocked. The build copies `DAP.h` into `software/poc1-ch585-threadx/build/host-tests/` and changes only its delay-branch selection condition. It does not define `__CC_ARM` or modify the third-party submodule.
@@ -83,7 +95,7 @@ WCH RISC-V GCC also compiles upstream `SW_DP.c` with the test configuration to a
 
 ## 10. Current Execution Status
 
-The repository contains the CH585M datasheet, CH585EVT archive, and ThreadX PoC-1. A host cross-build log for the PoC is recorded in FW-001; the user confirms no hardware is currently available, so no CH585M programming/debug or runtime evidence exists. DBG-C product firmware, cable samples, and captures are also unavailable. All product-level verification cases remain **Not run**. The seven FIFO host case groups, eight CMSIS-DAP command-core host checks, five bounded-dispatch host cases, nine CMSIS-DAP command-to-SWD-engine integration line-model checks, two CMSIS compiler-mapping target-object checks, 57 SWD GPIO BSP modeled-register host checks, 33 Target Reset GPIO BSP modeled-register host checks, 85 UART0 BSP modeled-register host checks, and three BSP target-object compile checks passed, but none count as board or product-function tests; neither does the PoC cross-build count as board runtime evidence. Build, ELF/link checks, and source static review are complete; the verification-board design gate has passed for limited-purpose verification hardware. This gate requires reproducible clean builds, ELF/link/resource checks, and static review of startup, context, and interrupt paths; it only permits a verification board and does not release product schematic or PCB freeze. Board runtime remains Not run, and product-hardware freeze is not released. ThreadX startup, interrupt entry/exit, SysTick frequency and tick delivery, thread switch/sleep/wakeup, stack integrity, reset recovery, and sustained-runtime cases remain Not run. Define duration, repetitions, load, and pass thresholds in the specific test plan before execution. See OPEN-001 O18/O19 for the release gates. This document defines coverage and is not a board verification report.
+The repository contains the CH585M datasheet, CH585EVT archive, and ThreadX PoC-1. A host cross-build log for the PoC is recorded in FW-001; the user confirms no hardware is currently available, so no CH585M programming/debug or runtime evidence exists. DBG-C product firmware, cable samples, and captures are also unavailable. All product-level verification cases remain **Not run**. The seven FIFO host case groups, eight CMSIS-DAP command-core host checks, five bounded-dispatch host cases, nine CMSIS-DAP command-to-SWD-engine integration line-model checks, two CMSIS compiler-mapping target-object checks, 57 SWD GPIO BSP modeled-register host checks, 33 Target Reset GPIO BSP modeled-register host checks, 85 UART0 BSP modeled-register checks and 15 byte-stream-bridge host checks, and three BSP target-object compile checks passed, but none count as board or product-function tests; neither does the PoC cross-build count as board runtime evidence. Build, ELF/link checks, and source static review are complete; the verification-board design gate has passed for limited-purpose verification hardware. This gate requires reproducible clean builds, ELF/link/resource checks, and static review of startup, context, and interrupt paths; it only permits a verification board and does not release product schematic or PCB freeze. Board runtime remains Not run, and product-hardware freeze is not released. ThreadX startup, interrupt entry/exit, SysTick frequency and tick delivery, thread switch/sleep/wakeup, stack integrity, reset recovery, and sustained-runtime cases remain Not run. Define duration, repetitions, load, and pass thresholds in the specific test plan before execution. See OPEN-001 O18/O19 for the release gates. This document defines coverage and is not a board verification report.
 
 ### 10.1 CMSIS and CH585 GPIO Host/Target Checks
 
