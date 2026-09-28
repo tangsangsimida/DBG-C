@@ -1,6 +1,6 @@
 # DBG-C Firmware Architecture 与 PoC-1 记录
 
-**文档编号：** DBG-C-FW-001　**版本：** V0.38　**状态：** 实验草案；通用 FIFO、无调度字节流桥接、CMSIS-DAP 命令层、上游 SWD 引擎、请求/响应边界预检及有界 dispatch 主机检查已通过；CMSIS 编译器宏映射、SWD GPIO、Target Reset GPIO、UART0、UART0 桥接适配器与边界预检器/字节流桥接目标编译通过；PB5/PB6、PA4、UART0 与字节流桥接主机检查分别为 57 项、33 项、89 项和 15 项；产品 DAP/USB 接入、GPIO/UART 电气行为及时序未验证；产品命令配置与边界契约仍待定义；验证板设计门已通过；PoC-1 实板运行验证未执行；产品硬件冻结未放行
+**文档编号：** DBG-C-FW-001　**版本：** V0.39　**状态：** 实验草案；通用 FIFO、单向/双向无调度字节流桥接、CMSIS-DAP 命令层、上游 SWD 引擎、请求/响应边界预检及有界 dispatch 主机检查已通过；CMSIS 编译器宏映射、SWD GPIO、Target Reset GPIO、UART0、UART0 桥接适配器与边界预检器/单向与双向字节流桥接目标编译通过；PB5/PB6、PA4、UART0、单向/双向字节流桥接主机检查分别为 57 项、33 项、89 项、15 项和 15 项；产品 DAP/USB 接入、GPIO/UART 电气行为及时序未验证；产品命令配置与边界契约仍待定义；验证板设计门已通过；PoC-1 实板运行验证未执行；产品硬件冻结未放行
 
 ## 1. 范围与状态
 
@@ -146,6 +146,7 @@ WCH 示例的 `highcode_init()` 初始化 HSI PLL 到 62.4 MHz，并配置相关
 |---|---|---|---|
 | 通用字节 FIFO | `software/common/byte_fifo/`；对应 MCU-001 规划的 USB CDC、UART 与 RF 收发缓冲 | 调用方提供固定存储；支持任意非零容量、部分读写、不覆盖未读数据、清空与容量查询；无动态分配、无芯片寄存器/中断/ThreadX API；不保证并发安全，调用方必须串行化访问 | 已加入现有 CMake 构建并通过 CH585 交叉编译；既有构建脚本中的主机验证运行通过 3683 项断言；当前未接入 USB/UART/RF，未做实板测试；不是冻结的产品 ABI |
 | 无调度字节流桥接通道 | `software/common/byte_stream_bridge`；PRD-001 CDC UART 双向数据要求、MCU-001 UART0 PB4/PB7 与 USB CDC、通用 FIFO 及轮询 UART0 原语 | 单执行上下文轮询；端点使用显式单字节非阻塞回调；固定 FIFO 加每次服务限额；FIFO 满时停止读源，写端背压或错误时保留待发字节；不含 ThreadX、ISR、USB 栈 API、产品波特率/流控或并发保证 | 15 项回调主机检查通过；静态库在 PoC 构建中编译，但应用未调用，尚未形成 USB CDC/UART 产品桥接；实板 UART/USB、电气、并发和产品流控未验证 |
+| 双向无调度字节流桥接服务 | `software/common/byte_duplex_bridge/`；复用两路通用字节流桥接通道，适用于 MCU-001 的 UART0 PB4/PB7 与待实现的 USB CDC 端点之间的数据双向传输 | 调用方分别提供两路 FIFO、读写回调和每次服务预算；按固定先后顺序服务两个方向；单方向回压不阻止另一方向服务；不分配内存、不选定 USB/UART API、不含 ThreadX/ISR/并发保证，也不定义缓冲容量或调度频率 | 15 项回调模型主机检查通过；PoC CMake 构建编译静态库，但 PoC 应用未调用；尚未接入 USB CDC/UART 产品路径，不证明端点公平性、吞吐、电气或实板行为 |
 | CMSIS-DAP / DAP command core | MCU-001 USBFS 分配；PRD 的 CMSIS-DAP v2 目标；Arm 官方源码固定于 `software/third_party/cmsis-dap/` 提交 `12636590eec66fae2d1bba4518749426ad5a4595` | `DAP.h` 声明 `DAP_ProcessCommand()`/`DAP_ExecuteCommand()`，固件版本宏为 2.1.2；上游依赖缺失的 `cmsis_compiler.h`，非 ArmCC 分支使用 Arm `subs` 内联汇编，不能直接用于 WCH RISC-V GCC | 8 项主机用例覆盖 Info/错误响应、TransferConfigure 重试配置、DP 读写、WAIT 重试、DAP_Transfer AP posted-read 与 `DP_RDBUFF` 响应顺序，以及 AP DAP_TransferBlock 读；WCH RISC-V GCC 将启用 SWD 命令分支的 `DAP.c` 编译为 ELF32 RISC-V 对象。测试 pin 宏为空操作、SWD 事务为模拟桩、JTAG 关闭；对象未链接到 PoC。这不是产品 HAL/配置，不验证 GPIO、电气时序、USB、线程或实板 |
 | CMSIS-DAP 请求/响应边界预检与 dispatch | `software/common/cmsis_dap_bounds/`；命令 ID 和 transfer 标志取自固定 CMSIS-DAP `DAP.h` | API 接收实际请求长度、响应容量及显式 profile；dispatch 在调用上游 `DAP_ExecuteCommand()` 前执行预检，成功后核对上游报告的消费/响应长度；vendor、SWO、CMSIS-DAP UART 命令，以及未提供 Info payload 上限的 profile 失败关闭。profile 必须与最终 DAP 编译配置一致；调用方仍须核实回调实际写入不超过其声明上限，调用后的长度核对不能阻止违规回调越界写入 | 102 项边界主机检查及 5 个有界 dispatch 主机用例通过；WCH RISC-V GCC 生成 ELF32 RISC-V 对象。dispatch 尚未接入产品 USB 收包路径；产品 profile、Info 回调上限、USB 实际收包长度和产品缓冲容量未定义，因此不构成产品请求边界安全证明 |
 | CMSIS-DAP SWD I/O engine | 固定上游 `Firmware/Source/SW_DP.c`；MCU-001 分配 PB5=SWDIO、PB6=SWCLK | 上游位级算法经 `DAP_config.h` 的 pin 宏调用 IO；本项目 host-test 用回调式线模型，未连接 WCH GPIO API；fast 延时为空操作 | 九项主机用例共 168 项断言，覆盖 SWD 读/写数据与奇偶校验、WAIT/FAULT ACK、10 位输入/输出序列及 DAP_SWD_Sequence 命令解析、DAP_Connect 后的 DP IDCODE 读取，以及 AP DAP_Transfer / DAP_TransferBlock posted-read 经 DP_RDBUFF 返回数据的端到端响应；WCH RISC-V GCC 将上游 `SW_DP.c` 编译成 ELF32 RISC-V 对象。对象未与产品 HAL 链接，也未在 Target 或 CH585M 板上运行；不证明 PB5/PB6 波形、频率、电平或时序 |
@@ -159,7 +160,7 @@ WCH 示例的 `highcode_init()` 初始化 HSI PLL 到 62.4 MHz，并配置相关
 | 私有 2.4G transport | 集成 Radio，DBG-C RF Protocol 目标 | PHY/API、包格式、序列、重试、恢复和时延目标未确定 | 暂不实现；需先完成 RF-001、O01/O03/O12 |
 | CH585M ThreadX port | 当前 `software/poc1-ch585-threadx/platform/ch585/` | reset、SysTick、PFIC/VTF/HPE 与上下文切换依赖芯片硬件语义 | 仅实验 PoC；启动、中断、tick、上下文切换、调度、睡眠/唤醒均未做 CH585M 实板验证，保持 O18 开放 |
 
-字节 FIFO 只建立与硬件无关的存储边界。USB、UART、RF 调用方不得直接依赖其内部索引；在同步/并发模型和传输 API 确认前，不把该模块包装成 ISR-safe queue 或产品数据协议。FIFO 主机用例由 `software/common/byte_fifo/tests/test_dbgc_byte_fifo.c` 提供，并由既有 `software/poc1-ch585-threadx/build.sh` 使用本机 C99 编译器构建和运行；当前 3683 项断言通过。该结果不验证并发、ISR、CH585M SRAM 或板级行为。
+字节 FIFO 只建立与硬件无关的存储边界。USB、UART、RF 调用方不得直接依赖其内部索引；在同步/并发模型和传输 API 确认前，不把该模块包装成 ISR-safe queue 或产品数据协议。FIFO 主机用例由 `software/common/byte_fifo/tests/test_dbgc_byte_fifo.c` 提供，并由既有 `software/poc1-ch585-threadx/build.sh` 使用本机 C99 编译器构建和运行；当前 3683 项断言通过；单向桥接 15 项和双向桥接 12 项检查通过。该结果不验证并发、ISR、CH585M SRAM 或板级行为。
 
 CMSIS-DAP 测试位于 `software/common/cmsis_dap_host_test/`，由既有 `software/poc1-ch585-threadx/build.sh` 编译固定上游源码副本并运行。准备脚本核对 CMSIS-DAP 提交及原始源码未修改，只在构建目录副本中把 `DAP.h` 的 `__CC_ARM` 延时分支切换到专用测试宏；未定义 `__CC_ARM`，未改动第三方子模块。命令核心的 8 项检查使用空操作引脚及 `SWD_Transfer()` 模拟桩。另将原始上游 `SW_DP.c` 与同一 `DAP.c` 编译到独立测试程序，pin 宏通过回调连接到纯主机位流模型；九项测试检查读成功/奇偶校验错误、写数据及奇偶校验、WAIT/FAULT ACK、10 位 SWD 输入/输出序列及 DAP_SWD_Sequence 命令解析、DAP_Connect 到 DP IDCODE、AP DAP_Transfer 与两项 AP DAP_TransferBlock 端到端响应、方向切换和模型周期数。模型 fast 延时为空操作，周期数不是实测时钟。WCH RISC-V GCC 分别将测试配置下的 `DAP.c` 和 `SW_DP.c` 编译为 ELF32 RISC-V 对象，均未链接 PoC。以上均不验证产品 GPIO HAL、PB5/PB6 电气及时序、USBFS、ThreadX 或 CH585M 板级行为。
 
