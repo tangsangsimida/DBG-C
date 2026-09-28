@@ -22,7 +22,6 @@
 | O16 | What BLE wireless-download protocol, image format, target scope, and resume rules apply? | Define DBG-C Tool ↔ Probe protocol and select an acceptance target board | PRD, BLE, TEST | Decision needed |
 | O17 | Can USBFS and USBHS operate concurrently? What implementation constraint would require V1 to switch from its USBFS allocation to USBHS? | SDK examples, official resource limits, comparative measurements | MCU, USB, SYS | To verify |
 | O18 | Which Eclipse ThreadX version/compiler port will be used on CH585M, and how will it integrate with QingKe RISC-V3C startup, interrupts, and context switching? | Lock ThreadX/WCH SDK/toolchain versions; verify tick, interrupts, preemption, and thread stacks on board | MCU, FW, TEST | To verify |
-| O20 | The CH585M overview states 40 GPIOs, while the CH585M package pin table lists a different GPIO count. What are the usable GPIO and interrupt-capable GPIO counts? | Obtain WCH clarification and the complete package pin/interrupt-wake definitions; check package documentation, silicon revision, and SDK definitions | MCU, HW, FW | To obtain |
 
 ## Confirmed Evidence Boundary
 

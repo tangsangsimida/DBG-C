@@ -18,7 +18,7 @@
 | UART | Four instances; 8-level FIFO; datasheet states up to 9 Mbps | Pins, clock accuracy, and target levels TBD |
 | SPI | Two instances, Master/Slave, DMA | No evidence yet whether RF needs an external transceiver; internal RF path TBD from SDK |
 | ADC | 12-bit; 14 external + 3 internal channels (overview) | Not mandatory in V1; package/mux channel check required |
-| GPIO | The overview states 40 GPIOs, two with 5 V input tolerance and 32 with interrupt/wake capability | The CH585M package pin table lists a different number of GPIOs; counting the GPIO pads listed for this package gives 25. WCH clarification is required before the total is frozen. 5VT does not imply 5 V output |
+| GPIO | The overview states 40 GPIOs, two with 5 V input tolerance and 32 with interrupt/wake capability | Table 1-1 CH585M column lists PA0–PA15 and PB0–PB23, 40 GPIO identifiers with package pad numbers, matching the overview count. This does not mean all 40 are freely allocatable or interrupt/wake capable. 5VT does not imply 5 V output |
 | BLE/RF | BLE 5.4; integrated 2.4 GHz RF; 1/2 Mbps; mentions 2.4G mode up to 8 kHz report rate | Meaning of 2.4G mode, private PHY/API, RF DMA capability/API, BLE coexistence, and performance require SDK/reference-manual confirmation. Local datasheet extract does not confirm RF DMA |
 | Timers/PWM | Four 26-bit timers; four capture channels; PWM resources in datasheet | Applicability to SWD timing requires SDK and waveform validation |
 | UID/security | AES-128 and unique chip ID | UID API, length, immutability, and key-storage boundaries TBD from SDK/security review |
@@ -36,6 +36,8 @@ Package pin numbers below are read from the **CH585M column** of datasheet Table
 | 1 | VDCID | Connect per datasheet power circuit | Capacitor and DC-DC connection per datasheet |
 | 2 | VSW | Connect per datasheet power circuit | DC-DC inductor/bypass per datasheet |
 | 3 | VDD33 / VIO33 | Supply and I/O supply net | Verify decoupling and USB supply relationship against reference design |
+| 4 | PA7 | Unallocated reserve | Do not enable TXD2, PWM5, LED6, or ADC A11 |
+| 5 | PA8 | Unallocated reserve | Do not enable RXD1, LED7, or ADC A12 |
 | 6 | PA9 | Optional pairing/function button GPIO reserve | Button population requires PRD confirmation; do not enable TMR0, TXD1, or ADC A13 mux |
 | 7 | PB9 | Unallocated reserve | GPIO/NFCI; NFC disabled in V1 |
 | 8 | PB8 | Unallocated reserve | GPIO/NFCM; NFC disabled in V1 |
@@ -51,8 +53,16 @@ Package pin numbers below are read from the **CH585M column** of datasheet Table
 | 18 | PB6 | Target SWCLK | GPIO-driven; do not enable RTS/PWM8 mux |
 | 19 | PB5 | Target SWDIO | Bidirectional GPIO; do not enable UART0 DTR mux |
 | 20 | PB4 / RXD0 | Probe UART RX, connected from Target TX | UART0 RXD0 |
-| 25 | PB23 | Unallocated reserve | Do not enable TMR0 remap, TXD2, or PWM11 |
-| 26 | PB22 / RST | Probe active-low chip reset input | Reserve per datasheet; do not connect as Target_nRESET output |
+| 21 | PB3 | Unallocated reserve | Do not enable DCD or PWM9_ |
+| 22 | PB2 | Unallocated reserve | Do not enable PWM8_ |
+| 23 | PB1 | Unallocated reserve | Do not enable DSR or PWM7_ |
+| 24 | PB0 | Unallocated reserve | Do not enable CTS or PWM6 |
+| 25 | PB23 / RST | Probe active-low chip reset input | Alternate functions also include TMR0_, TXD2_, and PWM11; reserve per datasheet and do not connect as Target_nRESET output |
+| 26 | PB22 | Unallocated reserve | Do not enable TMR3 or RXD2_; this is not the chip RST pin |
+| 27 | PB21 | Unallocated reserve | Do not enable SCL_ or TXD3_ |
+| 28 | PB20 | Unallocated reserve | Do not enable SDA_ or RXD3_ |
+| 29 | PB19 | Unallocated reserve | General GPIO; unallocated in V1 |
+| 30 | PB18 | Unallocated reserve | General GPIO; unallocated in V1 |
 | 31 | X32MO | One side of 32 MHz crystal network | HSE crystal pin per datasheet; crystal parameters/load per WCH reference design |
 | 32 | X32MI | Other side of 32 MHz crystal network | HSE crystal pin per datasheet; crystal parameters/load per WCH reference design |
 | 33 | VINTA | Decoupling capacitor per datasheet | Value and routing per datasheet/reference design |
@@ -60,6 +70,11 @@ Package pin numbers below are read from the **CH585M column** of datasheet Table
 | 35 | VDCIA | Decoupling capacitor per datasheet | VDCIA/VDCID connection per datasheet |
 | 36 | PA4 | Target_nRESET control output | GPIO; do not enable UART3 RXD3, LEDC, or ADC A0 mux; output stage/default state pending electrical design |
 | 37 | PA5 | Optional status LED GPIO reserve | LED population requires PRD/hardware review; do not enable UART3 TXD3, LED4, or ADC A1 mux |
+| 38 | PA6 | Unallocated reserve | Do not enable RXD2, PWM4_, LED5, or ADC A10 |
+| 39 | PA0 | Unallocated reserve | Do not enable SCK1, LED0, or ADC A9 |
+| 40 | PA1 | Unallocated reserve | Do not enable MOSI1, LED1, or ADC A8 |
+| 41 | PA2 | Unallocated reserve | Do not enable TMR3_, MISO1, RI, LED2, or ADC A7 |
+| 42 | PA3 | Unallocated reserve | Do not enable LED3 or ADC A6 |
 | 43 | PA15 | Unallocated reserve | Do not enable SPI0 MISO or UART0 RXD0 remap |
 | 44 | PA14 | Unallocated reserve | Do not enable SPI0 MOSI or UART0 TXD0 remap |
 | 45 | PA13 | Unallocated reserve | Do not enable SPI0 SCK or PWM5 |
@@ -67,7 +82,7 @@ Package pin numbers below are read from the **CH585M column** of datasheet Table
 | 47 | PA11 / X32KO | Reserve for 32 kHz clock review; no external signal | Low-frequency oscillator output; WCH BLE/low-power SDK configuration must confirm whether a 32 kHz crystal is needed |
 | 48 | PA10 / X32KI | Reserve for 32 kHz clock review; no external signal | Low-frequency oscillator input; WCH BLE/low-power SDK configuration must confirm whether a 32 kHz crystal is needed |
 
-Note: pad numbers come from the CH585M column of datasheet Table 1-1 (printed pages 5–8). Only pins relevant to DBG-C allocation and explicitly numbered in that column are listed. Do not infer electrical use for unlisted QFN48 pads. The overview GPIO count conflicts with the count in the CH585M pin table; tracked as open question O20.
+Note: pad numbers come from the CH585M column of datasheet Table 1-1 (printed pages 5–8). The table lists all 40 PA/PB GPIO identifiers with package pad numbers, as well as DBG-C-related power, clock, and RF pins. Verify interrupt/wake capability per pin against applicable chip data and the SDK.
 
 ## 4. Resource Allocation Status
 
@@ -83,7 +98,7 @@ Note: pad numbers come from the CH585M column of datasheet Table 1-1 (printed pa
 | LSE clock | Optional 32 kHz crystal | Reserve PA10 QFN48-48 and PA11 QFN48-47 | Need for external crystal TBD from WCH BLE/low-power SDK configuration |
 | RF | BLE/private 2.4 GHz | ANT QFN48-34 to RF network/antenna | Datasheet recommends direct antenna connection; verify the final network against the WCH CH585M RF reference design, not yet obtained |
 | DBG-C Interface | Basic/Full signals | MCU-side SWD/UART/Reset nets assigned; Type-C contact map not frozen | IF-001 must freeze connector mapping and electrical parameters |
-| Probe Debug/Reset | Production/recovery | PB15 QFN48-11=TCK; PB14 QFN48-12=TIO; PB22 QFN48-26=chip RST | Preserve Probe programming/reset function |
+| Probe Debug/Reset | Production/recovery | PB15 QFN48-11=TCK; PB14 QFN48-12=TIO; PB23 QFN48-25=chip RST | Preserve Probe programming/reset function |
 
 ## 5. V1 Peripheral Requirements and Schematic Pre-allocation
 
@@ -94,7 +109,7 @@ This is a **V1 schematic-input baseline**. It is not proof of MCU performance an
 | PC USB Device | USBFS controller/PHY + USB DMA | PB10 QFN48-16=UD−, PB11 QFN48-15=UD+; upstream USB-C | Use USBFS in V1 for CMSIS-DAP v2 Bulk + CDC. Verify descriptors and SDK Device stack; leave USBHS disabled |
 | Target UART/CDC | UART0 + USB CDC virtual COM port | PB4 QFN48-20=Probe RX/Target TX, PB7 QFN48-17=Probe TX/Target RX; connector pins wait for IF-001 freeze | UART0 MODEM signals unused. CDC enumerates over USBFS and bridges to UART0 |
 | Target SWD | Two GPIOs controlled by shared SWD Engine | PB5 QFN48-19=SWDIO, PB6 QFN48-18=SWCLK; connector pins wait for IF-001 freeze | GPIO-driven SWD; no SPI allocation. Verify timing and achievable SWD frequency with firmware waveform measurement |
-| Target Reset | One GPIO control output | PA4 QFN48-36=Target_nRESET; connector pin waits for IF-001 freeze | Keep separate from CH585M PB22/RST; output stage/default state/target voltage pending electrical design |
+| Target Reset | One GPIO control output | PA4 QFN48-36=Target_nRESET; connector pin waits for IF-001 freeze | Keep separate from CH585M PB23/RST at QFN48 pad 25; output stage/default state/target voltage pending electrical design |
 | BLE + private 2.4 GHz | Integrated Radio/Baseband and ANT | ANT QFN48-34 to RF network/antenna | Datasheet recommends direct antenna connection; verify the final network against the WCH CH585M RF reference design, not yet obtained. Coexistence requires SDK confirmation; no external RF SPI assigned |
 | Status/pairing interaction | GPIO reserves | PA5 QFN48-37=LED reserve; PA9 QFN48-6=optional button reserve | PRD/hardware review decides population; LED polarity/current limit and button pulls/debounce/wake policy TBD |
 | HSE clock | External 32 MHz crystal network | X32MO QFN48-31; X32MI QFN48-32 | Datasheet marks external 32 MHz HSE crystal; verify component parameters against WCH reference design |
@@ -111,7 +126,7 @@ This is a **V1 schematic-input baseline**. It is not proof of MCU performance an
 2. MCU-side assignments: PB5 QFN48-19=SWDIO, PB6 QFN48-18=SWCLK, and PA4 QFN48-36=Target_nRESET. Reserve PA5 QFN48-37 for LED and PA9 QFN48-6 for an optional button. DBG-C Interface Type-C contact mapping remains unfrozen.
 3. CH585M QFN48 pads 11/12 are PB15/TCK and PB14/TIO. Preserve them for Probe emulation debug; do not allocate them to Target SWD.
 4. PB12 QFN48-14/PB13 QFN48-13 are USBHS U2D−/U2D+; V1 leaves USBHS unused. Do not confuse them with USBFS PB10/PB11.
-5. The CH585M's own active-low reset input is PB22/RST at QFN48 pad 26. It is not the Target_nRESET output; keep the nets separate.
+5. The CH585M's own active-low reset input is the RST alternate function on PB23, QFN48 pad 25. PB22 QFN48 pad 26 lists TMR3/RXD2_ mux functions. Keep both separate from Target_nRESET on PA4.
 6. PB5/PB6 also have UART0 DTR/RTS and PWM8 alternate functions, unused in V1. PA4/PA5/PA9 UART/LED/ADC alternate functions are also unused by this allocation.
 7. The selected pins are not marked 5VT in the datasheet. Do not directly connect target signals until DBG-C Interface voltage and protection design is complete.
 

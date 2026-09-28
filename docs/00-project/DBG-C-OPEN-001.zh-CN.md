@@ -22,7 +22,6 @@
 | O16 | BLE 无线下载的应用协议、镜像格式、Target 范围和断点续传规则？ | 定义 DBG-C Tool ↔ Probe 协议并选定 Target 验收板 | PRD, BLE, TEST | 待决策 |
 | O17 | USBFS/USBHS 是否可同时运行？V1 已分配 USBFS，什么实现限制会要求改用 USBHS？ | SDK 实例、官方资源限制与对照实测 | MCU, USB, SYS | 待验证 |
 | O18 | CH585M 使用哪个 Eclipse ThreadX 版本和编译器端口？上游 RISC-V32 端口如何接入青稞 RISC-V3C 启动、中断与上下文切换？ | 锁定 ThreadX/WCH SDK/工具链版本；板上验证时基、中断、抢占和线程栈 | MCU, FW, TEST | 待验证 |
-| O20 | CH585M 手册概述的 40 个 GPIO 与 CH585M 封装引脚表列出的 GPIO 数量不一致，实际可用 GPIO/中断 GPIO 数量是多少？ | WCH 澄清适用封装的完整 Pin 表与中断/唤醒能力；核对封装资料、芯片修订和 SDK 定义 | MCU, HW, FW | 待获取 |
 
 ## 当前确认边界
 
