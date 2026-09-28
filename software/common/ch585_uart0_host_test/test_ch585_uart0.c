@@ -84,6 +84,7 @@ int main(void)
     size_t parity_index;
     uint8_t byte = 0U;
     uint8_t line_control = 0U;
+    uint16_t divisor = 0U;
 
     reset_regs();
     for (word_index = 0U;
@@ -126,6 +127,29 @@ int main(void)
               DBGC_CH585_UART0_STOP_BITS_1,
               DBGC_CH585_UART0_PARITY_NONE, 0) == -1,
           "null LCR output pointer rejected");
+
+    check((dbgc_ch585_uart0_calculate_divisor(62400000U, 115200U,
+                                               &divisor) == 0) &&
+              (divisor == 68U),
+          "WCH UART0 divisor formula rounds 62.4 MHz and 115200 baud");
+    check((dbgc_ch585_uart0_calculate_divisor(32000000U, 9600U,
+                                               &divisor) == 0) &&
+              (divisor == 417U),
+          "WCH UART0 divisor formula rounds 32 MHz and 9600 baud");
+    check((dbgc_ch585_uart0_calculate_divisor(32000000U, 4000000U,
+                                               &divisor) == 0) &&
+              (divisor == 1U),
+          "minimum nonzero UART0 divisor accepted");
+    check(dbgc_ch585_uart0_calculate_divisor(0U, 115200U, &divisor) == -1,
+          "zero UART0 clock rejected");
+    check(dbgc_ch585_uart0_calculate_divisor(62400000U, 0U, &divisor) == -1,
+          "zero UART0 baud rejected");
+    check(dbgc_ch585_uart0_calculate_divisor(62400000U, 115200U, 0) == -1,
+          "null UART0 divisor output rejected");
+    check(dbgc_ch585_uart0_calculate_divisor(1U, UINT32_MAX, &divisor) == -1,
+          "zero UART0 divisor rejected");
+    check(dbgc_ch585_uart0_calculate_divisor(UINT32_MAX, 1U, &divisor) == -1,
+          "UART0 divisor wider than data register rejected");
 
     check(dbgc_ch585_uart0_init(62400000U, 115200U, 3U,
               DBGC_CH585_UART0_FIFO_TRIGGER_1_BYTE) == 0,

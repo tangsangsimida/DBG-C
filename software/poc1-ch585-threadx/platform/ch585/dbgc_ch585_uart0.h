@@ -43,6 +43,14 @@ int dbgc_ch585_uart0_build_lcr(dbgc_ch585_uart0_word_length_t word_length,
                                dbgc_ch585_uart0_parity_t parity,
                                uint8_t *line_control);
 
+/* Calculate the UART0 divisor using the WCH EVT UART0_BaudRateCfg formula.
+ * Returns zero on success, or -1 for zero inputs, an invalid divisor, or a
+ * null output pointer. Does not access CH585 registers.
+ */
+int dbgc_ch585_uart0_calculate_divisor(uint32_t sys_clock_hz,
+                                       uint32_t baudrate,
+                                       uint16_t *divisor);
+
 /* Initialize UART0 on the MCU-001 PB4/PB7 allocation.
  * line_control is the caller-selected documented UART0 LCR value, with bit 7
  * clear. sys_clock_hz, baudrate, framing, and FIFO trigger are explicit inputs;

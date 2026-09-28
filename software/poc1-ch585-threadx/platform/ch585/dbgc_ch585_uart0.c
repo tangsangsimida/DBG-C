@@ -59,16 +59,39 @@ int dbgc_ch585_uart0_build_lcr(dbgc_ch585_uart0_word_length_t word_length,
     return 0;
 }
 
+int dbgc_ch585_uart0_calculate_divisor(uint32_t sys_clock_hz,
+                                       uint32_t baudrate,
+                                       uint16_t *divisor)
+{
+    uint64_t scaled_divisor;
+    uint64_t denominator;
+    uint64_t result;
+
+    if ((sys_clock_hz == 0U) || (baudrate == 0U) || (divisor == 0)) {
+        return -1;
+    }
+
+    denominator = (uint64_t)baudrate;
+    scaled_divisor = (10U * (uint64_t)sys_clock_hz) / 8U;
+    scaled_divisor /= denominator;
+    result = (scaled_divisor + 5U) / 10U;
+    if ((result == 0U) || (result > UINT16_MAX)) {
+        return -1;
+    }
+
+    *divisor = (uint16_t)result;
+    return 0;
+}
+
 int dbgc_ch585_uart0_init(uint32_t sys_clock_hz, uint32_t baudrate,
                           uint8_t line_control,
                           dbgc_ch585_uart0_fifo_trigger_t fifo_trigger)
 {
-    uint64_t scaled_divisor;
-    uint64_t divisor;
-    uint64_t denominator;
+    uint16_t divisor;
 
-    if ((sys_clock_hz == 0U) || (baudrate == 0U) ||
-        ((line_control & (uint8_t)~DBGC_CH585_UART0_LCR_DEFINED_MASK) != 0U)) {
+    if (((line_control & (uint8_t)~DBGC_CH585_UART0_LCR_DEFINED_MASK) != 0U) ||
+        (dbgc_ch585_uart0_calculate_divisor(sys_clock_hz, baudrate,
+                                            &divisor) != 0)) {
         return -1;
     }
     switch (fifo_trigger) {
@@ -81,13 +104,6 @@ int dbgc_ch585_uart0_init(uint32_t sys_clock_hz, uint32_t baudrate,
         return -1;
     }
 
-    denominator = (uint64_t)8U * (uint64_t)baudrate;
-    scaled_divisor = (10U * (uint64_t)sys_clock_hz) / denominator;
-    divisor = (scaled_divisor + 5U) / 10U;
-    if ((divisor == 0U) || (divisor > UINT16_MAX)) {
-        return -1;
-    }
-
     /* EVT ADC DebugInit configures PB4/PB7 this way for UART0. */
     R32_PB_SET = DBGC_CH585_PB7_MASK;
     R32_PB_PD_DRV &= ~(DBGC_CH585_PB4_MASK | DBGC_CH585_PB7_MASK);
@@ -96,7 +112,7 @@ int dbgc_ch585_uart0_init(uint32_t sys_clock_hz, uint32_t baudrate,
     R32_PB_DIR |= DBGC_CH585_PB7_MASK;
     R16_PIN_ALTERNATE &= (uint16_t)~RB_PIN_UART0;
 
-    R16_UART0_DL = (uint16_t)divisor;
+    R16_UART0_DL = divisor;
     R8_UART0_FCR = (uint8_t)fifo_trigger | RB_FCR_TX_FIFO_CLR |
                    RB_FCR_RX_FIFO_CLR | RB_FCR_FIFO_EN;
     R8_UART0_LCR = line_control;
