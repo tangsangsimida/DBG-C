@@ -234,6 +234,43 @@ static void test_transfer_configure_retry_count(void)
     CHECK(mock_swd_calls == 2U);
 }
 
+static void test_swd_transfer_block_posted_ap_reads(void)
+{
+    static const uint8_t request[] = {
+        ID_DAP_TransferBlock, 0U, 2U, 0U,
+        DAP_TRANSFER_APnDP | DAP_TRANSFER_RnW
+    };
+    uint8_t response[16] = {0};
+    uint32_t result;
+
+    connect_swd();
+    mock_swd_calls = 0U;
+    mock_wait_responses = 0U;
+    mock_read_sequence[0] = 0x01234567u;
+    mock_read_sequence[1] = 0x89abcdefu;
+    mock_read_sequence_length = 2U;
+    mock_read_sequence_index = 0U;
+    mock_final_response = DAP_TRANSFER_OK;
+    result = DAP_ExecuteCommand(request, response);
+
+    CHECK((result & 0xffffU) == 12U);
+    CHECK(response[0] == ID_DAP_TransferBlock);
+    CHECK(response[1] == 2U);
+    CHECK(response[2] == 0U);
+    CHECK(response[3] == DAP_TRANSFER_OK);
+    CHECK(response[4] == 0x67u);
+    CHECK(response[5] == 0x45u);
+    CHECK(response[6] == 0x23u);
+    CHECK(response[7] == 0x01u);
+    CHECK(response[8] == 0xefu);
+    CHECK(response[9] == 0xcdu);
+    CHECK(response[10] == 0xabu);
+    CHECK(response[11] == 0x89u);
+    CHECK(mock_swd_calls == 3U);
+    CHECK(mock_read_sequence_index == 2U);
+    CHECK(mock_last_request == (DP_RDBUFF | DAP_TRANSFER_RnW));
+}
+
 int main(void)
 {
     test_firmware_version_info();
@@ -243,12 +280,13 @@ int main(void)
     test_swd_write_and_completion_check();
     test_swd_posted_ap_reads();
     test_transfer_configure_retry_count();
+    test_swd_transfer_block_posted_ap_reads();
 
     if (failures != 0U) {
         fprintf(stderr, "%u CMSIS-DAP host checks failed\n", failures);
         return 1;
     }
 
-    puts("CMSIS-DAP host command checks passed: 7 cases");
+    puts("CMSIS-DAP host command checks passed: 8 cases");
     return 0;
 }
