@@ -1,6 +1,6 @@
 # DBG-C 未决问题与验证清单
 
-**文档编号：** DBG-C-OPEN-001　**版本：** V0.2　**状态：** 开放项
+**文档编号：** DBG-C-OPEN-001　**版本：** V0.3　**状态：** 开放项
 
 | ID | 问题 | 需要的证据/决策 | 影响文档 | 状态 |
 |---|---|---|---|---|
@@ -21,7 +21,13 @@
 | O15 | 当前数据手册适用修订、勘误与参考手册版本？ | WCH 官方发布页和芯片版本核对 | MCU, HW, FW | 待获取 |
 | O16 | BLE 无线下载的应用协议、镜像格式、Target 范围和断点续传规则？ | 定义 DBG-C Tool ↔ Probe 协议并选定 Target 验收板 | PRD, BLE, TEST | 待决策 |
 | O17 | USBFS/USBHS 是否可同时运行？V1 已分配 USBFS，什么实现限制会要求改用 USBHS？ | SDK 实例、官方资源限制与对照实测 | MCU, USB, SYS | 待验证 |
-| O18 | CH585M 使用哪个 Eclipse ThreadX 版本和编译器端口？上游 RISC-V32 端口如何接入青稞 RISC-V3C 启动、中断与上下文切换？ | 锁定 ThreadX/WCH SDK/工具链版本；板上验证时基、中断、抢占和线程栈 | MCU, FW, TEST | 待验证 |
+| O18 | 上游 Eclipse ThreadX RISC-V32/GNU 端口能否正确适配 CH585M QingKe V3C？ | 实现并核验 HPE、PFIC/VTF、启动入口、异常栈帧、SysTick 与 ThreadX 抢占；在 CH585M 板上运行 PoC-1 | MCU, FW, TEST | 待验证；主机 ELF 构建通过 |
+
+## O18 更新证据
+
+- ThreadX 已锁定为 `v6.5.1.202602a_rel`，提交 `b91b03b9e75fa523b17127f9e0eca09dca916459`；MounRiver Linux x64 Toolchain V2.4.0 的 GCC 12.2.0 已安装到当前用户目录。
+- PoC-1 ELF 主机交叉编译成功，但未配置 SysTick；WCH startup 默认 SysTick handler 为停机循环，且 HPE/异常栈帧/上下文切换适配未验证。
+- 没有可确认的 CH585M 板卡连接，因此 O18 仍未关闭。
 
 ## 当前确认边界
 

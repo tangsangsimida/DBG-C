@@ -1,6 +1,6 @@
 # DBG-C Open Questions and Verification List
 
-**Document ID:** DBG-C-OPEN-001　**Version:** V0.2　**Status:** Open items
+**Document ID:** DBG-C-OPEN-001　**Version:** V0.3　**Status:** Open items
 
 | ID | Question | Evidence/decision required | Affected documents | Status |
 |---|---|---|---|---|
@@ -21,7 +21,13 @@
 | O15 | Which datasheet revision/errata/reference manual apply to the current silicon? | WCH release page and chip revision check | MCU, HW, FW | To obtain |
 | O16 | What BLE wireless-download protocol, image format, target scope, and resume rules apply? | Define DBG-C Tool ↔ Probe protocol and select an acceptance target board | PRD, BLE, TEST | Decision needed |
 | O17 | Can USBFS and USBHS operate concurrently? What implementation constraint would require V1 to switch from its USBFS allocation to USBHS? | SDK examples, official resource limits, comparative measurements | MCU, USB, SYS | To verify |
-| O18 | Which Eclipse ThreadX version/compiler port will be used on CH585M, and how will it integrate with QingKe RISC-V3C startup, interrupts, and context switching? | Lock ThreadX/WCH SDK/toolchain versions; verify tick, interrupts, preemption, and thread stacks on board | MCU, FW, TEST | To verify |
+| O18 | Can the upstream Eclipse ThreadX RISC-V32/GNU port be correctly adapted to CH585M QingKe V3C? | Implement and verify HPE, PFIC/VTF, startup, exception frames, SysTick, and ThreadX preemption; run PoC-1 on CH585M | MCU, FW, TEST | To verify; host ELF build passes |
+
+## O18 Evidence Update
+
+- ThreadX is pinned to `v6.5.1.202602a_rel`, commit `b91b03b9e75fa523b17127f9e0eca09dca916459`; MounRiver Linux x64 Toolchain V2.4.0 GCC 12.2.0 is installed in the current user account.
+- The PoC-1 ELF cross-build passed on the host, but SysTick is not configured; the WCH startup default SysTick handler is a halt loop, and HPE/exception-frame/context-switch adaptation is unverified.
+- No CH585M board was identified as connected, so O18 remains open.
 
 ## Confirmed Evidence Boundary
 

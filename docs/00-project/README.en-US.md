@@ -8,12 +8,13 @@ This document set is a V0.x engineering baseline draft, not a frozen interface o
 | SYS-001 | [System Architecture](../02-system/DBG-C-SYS-001.en-US.md) | V0.1, for review |
 | IF-001 | [DBG-C Interface Specification](../03-interfaces/DBG-C-IF-001.en-US.md) | V0.1 concept draft; pins not frozen |
 | MCU-001 | [MCU Selection and Resource Assessment](../04-hardware/DBG-C-MCU-001.en-US.md) | V0.2 CH585M V1 pin-resource allocation draft; SDK/electrical review pending |
+| FW-001 | [Firmware Architecture and PoC-1 Record](../05-firmware/DBG-C-FW-001.en-US.md) | V0.1 build passes; CH585M runtime unverified |
 | RF-001 | [Private 2.4G Protocol Specification](../06-protocols/DBG-C-RF-001.en-US.md) | V0.1 framework; not ready for implementation |
 | TEST-001 | [Verification Specification](../07-verification/DBG-C-TEST-001.en-US.md) | V0.1 test plan; no results |
 | RISK-001 | [Risk Register](../08-risk/DBG-C-RISK-001.en-US.md) | V0.1 initial risks |
-| OPEN-001 | [Open Questions and Verification List](DBG-C-OPEN-001.en-US.md) | V0.2 open |
+| OPEN-001 | [Open Questions and Verification List](DBG-C-OPEN-001.en-US.md) | V0.3 open |
 
-Future phase documents DBG-C-HW-001, FW-001, USB-001, and BLE-001 have not yet been created.
+Future phase documents DBG-C-HW-001, USB-001, and BLE-001 have not yet been created.
 
 ## Source Material and Evidence Boundary
 
