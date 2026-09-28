@@ -3928,3 +3928,6 @@ WEAK   DEFAULT    1 dbgc_cmsis_compiler_weak_check
   Class:                             ELF32
   Machine:                           RISC-V
   Entry point address:               0x0
+
+
+PoC tick target update (2026-09-29): The user decided that V1 uses 1000 ticks/s. `platform/ch585/tx_user.h` now explicitly defines `TX_TIMER_TICKS_PER_SECOND` as `1000UL`, leaving the ThreadX submodule unchanged. With the source-declared 62,400,000 Hz, the low-level setup passes 62,400 to `SysTick_Config`; WCH `core_riscv.h` computes compare value 62,399. This is a source/configuration calculation, not a build result or hardware measurement. No rebuild or CH585M board runtime verification has been performed for this configuration yet. The prior 100 ticks/s build records above are historical and do not verify the updated configuration.

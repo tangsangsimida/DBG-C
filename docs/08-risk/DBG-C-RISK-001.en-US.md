@@ -1,6 +1,6 @@
 # DBG-C Risk Register
 
-**Document ID:** DBG-C-RISK-001　**Version:** V0.6　**Status:** Risk register
+**Document ID:** DBG-C-RISK-001　**Version:** V0.7　**Status:** Risk register
 
 Ratings use qualitative High/Medium/Low and await an agreed project scoring method.
 
@@ -22,5 +22,5 @@ Ratings use qualitative High/Medium/Low and await an agreed project scoring meth
 | R14 | RF antenna/matching/layout deviates from reference design | Link performance failure | High | Obtain official RF/layout guidance and review | Matching, sensitivity, radiated tests | Open |
 | R15 | Insufficient ESD/EMC/power integrity | Reset, damage, or regulatory failure | High | Protection and layout review during design | ESD/EMC/power-transient tests | Open |
 | R16 | SWD timing/target voltage tolerance is unverified | Instability or damage on some targets | High | Define target compatibility and SWD frequency range | Oscilloscope measurements and multi-target regression | Open |
-| R17 | Upstream RISC-V32 ThreadX assumptions conflict with QingKe V3C hardware stack push, WCH VTF/HPE, or exception return | Startup failure, stack corruption, tick/scheduling faults, or runtime reset | High | Keep CH585M adaptation separate from upstream context routines; do not treat a host build as board evidence | After the software gate, permit verification-board design only; verify startup, SysTick, sleep/wakeup, context restore, and sustained runtime on board | Build, ELF/link, and source static checks pass; verification-board design gate passed. ThreadX board runtime verification and product-hardware freeze have not passed; tick-target conflict remains open |
+| R17 | Upstream RISC-V32 ThreadX assumptions conflict with QingKe V3C hardware stack push, WCH VTF/HPE, or exception return | Startup failure, stack corruption, tick/scheduling faults, or runtime reset | High | Keep CH585M adaptation separate from upstream context routines; do not treat a host build as board evidence | After the software gate, permit verification-board design only; verify startup, SysTick, sleep/wakeup, context restore, and sustained runtime on board | Build, ELF/link, and source static checks pass for the earlier 100 ticks/s baseline; build review after the 1000 ticks/s change is pending and verification-board design release awaits re-review. ThreadX board runtime verification and product-hardware freeze have not passed; measured frequency remains unverified |
 | R18 | UID ROM read failure, uniqueness/stability, or authentication semantics are unverified | Incorrect device identity, wrong pairing, or ineffective security policy | High | Check ROM-command status directly; freeze Device ID/authentication rules; do not treat UID as a key | Repeated CH585M board reads/fault injection, protocol security review, and multi-device identity tests | API/algorithm have source evidence and host mock/target-link checks pass; silicon read and security guarantees remain unverified |

@@ -1,6 +1,6 @@
 # DBG-C Firmware Architecture 与 PoC-1 记录
 
-**文档编号：** DBG-C-FW-001　**版本：** V0.47　**状态：** 实验草案；通用 FIFO、单向/双向无调度字节流桥接、CMSIS-DAP 命令层、上游 SWD 引擎、请求/响应边界预检及有界 dispatch 主机检查已通过；CMSIS 编译器宏映射、SWD GPIO、Target Reset GPIO、UART0、UID 读取适配器、桥接适配器与 WCH ROM 命令库目标编译/链接检查通过；PB5/PB6、PA4、UART0、UID 读取适配器、单向/双向桥接主机检查分别为 57 项、33 项、94 项、31 项、15 项和 15 项；CMSIS-DAP SWD 引擎的 9 个主机线模型用例现经 CH585 SWD GPIO BSP 源码和模拟 GPIOB 寄存器执行，共 2759 项断言；硬件无关 Target Reset 序列服务通过 24 项主机回调检查，并纳入 PoC 静态库构建图；PoC 新增两线程创建状态及独立最近 tick 观测符号，固定路径两次 clean rebuild 的 ELF/map 散列一致；CH585 BSP/适配器纳入 PoC CMake 的 `dbgc_ch585_platform` 静态库目标；产品 DAP/USB 接入、GPIO/UART 电气行为及时序未验证；芯片 UID 实际读取、产品命令配置与边界契约仍待验证/定义；验证板设计门已通过；PoC-1 实板运行验证未执行；产品硬件冻结未放行
+**文档编号：** DBG-C-FW-001　**版本：** V0.48　**状态：** 实验草案；通用 FIFO、单向/双向无调度字节流桥接、CMSIS-DAP 命令层、上游 SWD 引擎、请求/响应边界预检及有界 dispatch 主机检查已通过；CMSIS 编译器宏映射、SWD GPIO、Target Reset GPIO、UART0、UID 读取适配器、桥接适配器与 WCH ROM 命令库目标编译/链接检查通过；PB5/PB6、PA4、UART0、UID 读取适配器、单向/双向桥接主机检查分别为 57 项、33 项、94 项、31 项、15 项和 15 项；CMSIS-DAP SWD 引擎的 9 个主机线模型用例现经 CH585 SWD GPIO BSP 源码和模拟 GPIOB 寄存器执行，共 2759 项断言；硬件无关 Target Reset 序列服务通过 24 项主机回调检查，并纳入 PoC 静态库构建图；PoC 新增两线程创建状态及独立最近 tick 观测符号，固定路径两次 clean rebuild 的 ELF/map 散列一致；CH585 BSP/适配器纳入 PoC CMake 的 `dbgc_ch585_platform` 静态库目标；产品 DAP/USB 接入、GPIO/UART 电气行为及时序未验证；芯片 UID 实际读取、产品命令配置与边界契约仍待验证/定义；1000 tick/s 配置变更后的构建复核待执行；ThreadX 实板运行验证未执行；产品硬件冻结未放行
 
 ## 1. 范围与状态
 
@@ -14,7 +14,7 @@
 | 当前工具链 | MounRiver Studio Linux x64 Toolchain V2.4.0；GCC 12.2.0，GNU assembler/linker 2.38；实际程序前缀 `riscv-wch-elf-` | 本机命令实测，非 EVT 工程工具链版本结论 |
 | 系统时钟初始化 | `highcode_init()` 移植 WCH `CH58x_sys.c` 中的复位时钟配置序列，选择 HSI PLL 62.4 MHz | 源码对应关系已核对；未在板上测量频率或时钟稳定性 |
 | ThreadX low-level | 设置 `_tx_initialize_unused_memory` 到链接符号 `_end` 对齐后的位置；配置 WCH VTF SysTick 入口、PFIC 优先级和 SysTick | 主机编译/链接通过；内存边界及中断行为未板测 |
-| ThreadX tick | PoC 使用上游 `tx_api.h` 默认 `TX_TIMER_TICKS_PER_SECOND`，其定义为 100 tick/s；以源码声明的 62.4 MHz 计算，`SysTick_Config` 输入为 624000，比较值为 623999 | 这是软件配置计算，不是实测时钟/tick；用户文字提及的 1000 tick/s 与当前源码不符，需确认需求；HPE/VTF、异常返回和调度语义尚未验证 |
+| ThreadX tick | PoC 在本地 `tx_user.h` 显式设置 `TX_TIMER_TICKS_PER_SECOND=1000UL`；以源码声明的 62.4 MHz 计算，`SysTick_Config` 输入为 62400，比较值为 62399 | 这是软件配置计算，不是实测时钟/tick；V1/PoC 目标为 1000 tick/s，实际 SysTick 频率与 tick 投递仍待 CH585M 实板测量；HPE/VTF、异常返回和调度语义尚未验证 |
 | PoC 线程 | 两个同优先级线程递增独立计数器，记录 `tx_time_get()` 并执行 `tx_thread_sleep(1U)` | 仅是待板测的可观测量设计 |
 | ELF 构建 | `text=8916`、`data=8`、`bss=5580` 字节；ELF32 little-endian RISC-V，入口 `_start=0x0`；`.highcode_init`/`.highcode` 位于链接 RAM，代码/数据装载地址位于链接 Flash | 固定构建路径两次 clean rebuild 的 ELF SHA-256 均为 `00f0e40b217d61df475f721607a6dd88b2e9f1450b511863b2984899e97e32f8`，map SHA-256 均为 `823322fcfe0849eefa6b88e4df478ac28e6bdc094a11173faaba1e85697fdfa5`；详见 `software/poc1-ch585-threadx/build-evidence.log`。仅证明固定环境下产物可重复且符合当前 linker script，不证明芯片运行 |
 | CH585M 板级运行 | 未执行，待验证 | 用户确认目前没有可用板卡；暂无下载/调试和运行证据 |
@@ -96,7 +96,7 @@ software/poc1-ch585-threadx/build.sh
 | `platform/ch585/wch/core_riscv.h` | `EVT/EXAM/SRC/RVMSIS/core_riscv.h` | `fd0099eb7fce96c1ae1c0c5c58fd5da0d8f6b6b167e2c3fb335d5910b0a5503e` |
 | `platform/ch585/highcode_init.c` clock sequence | `EVT/EXAM/SRC/StdPeriphDriver/CH58x_sys.c` | `954a8b489c8b333d482ed65e0665a1260c5f7976398ef4878f4f928251f62772` |
 
-版本与工程格式证据：`EVT/CH585_List_EN.txt`（SHA-256 `112318f05aa8764f591dcea84333fba3a0e978e234c9c2d4f9086dc915c27fc9`）标注日期 `2026.08`；该索引和下述 FreeRTOS 工程元数据没有声明独立的 WCH SDK 语义版本，因此不得把日期称为 SDK 版本。示例 `EVT/EXAM/FreeRTOS/readme.txt`（SHA-256 `ae231c158445d7d68ef7b0e534100c24afcccac903bf2475f5647c9903d1d353`）声明它移植 FreeRTOS-Kernel V11.3.0 到 CH585/CH584 QingKe V3C，并说明硬件压栈、中断栈与 SysTick 快速中断入口的约束；这只是移植参考，不证明 ThreadX 兼容。`EVT/EXAM/FreeRTOS/.project`（SHA-256 `e98d5f026b4f06d2cb6a46933c5aa85425ccdeb5a4941fbb8a40a7a0b94c8b41`）是 Eclipse CDT 工程描述，项目名为 `FreeRTOS`；`.cproject`（SHA-256 `158d9e4ff583f3bff39be61a5b19270f976ecc1d10dd5ce17170281c0d1bab81`）是 CDT managed-build 配置，选择 GCC12 RISC-V 编译器选项，RV32I 加 M/C，ilp32，配置前缀 `riscv-none-embed-`，但未标明 GCC 补丁版本。FreeRTOS 样例 `EVT/EXAM/FreeRTOS/FreeRTOS/FreeRTOSConfig.h` 的 tick 为 500 Hz；本 PoC 不复用该值。ThreadX 使用上游头文件定义的默认 100 tick/s。
+版本与工程格式证据：`EVT/CH585_List_EN.txt`（SHA-256 `112318f05aa8764f591dcea84333fba3a0e978e234c9c2d4f9086dc915c27fc9`）标注日期 `2026.08`；该索引和下述 FreeRTOS 工程元数据没有声明独立的 WCH SDK 语义版本，因此不得把日期称为 SDK 版本。示例 `EVT/EXAM/FreeRTOS/readme.txt`（SHA-256 `ae231c158445d7d68ef7b0e534100c24afcccac903bf2475f5647c9903d1d353`）声明它移植 FreeRTOS-Kernel V11.3.0 到 CH585/CH584 QingKe V3C，并说明硬件压栈、中断栈与 SysTick 快速中断入口的约束；这只是移植参考，不证明 ThreadX 兼容。`EVT/EXAM/FreeRTOS/.project`（SHA-256 `e98d5f026b4f06d2cb6a46933c5aa85425ccdeb5a4941fbb8a40a7a0b94c8b41`）是 Eclipse CDT 工程描述，项目名为 `FreeRTOS`；`.cproject`（SHA-256 `158d9e4ff583f3bff39be61a5b19270f976ecc1d10dd5ce17170281c0d1bab81`）是 CDT managed-build 配置，选择 GCC12 RISC-V 编译器选项，RV32I 加 M/C，ilp32，配置前缀 `riscv-none-embed-`，但未标明 GCC 补丁版本。FreeRTOS 样例 `EVT/EXAM/FreeRTOS/FreeRTOS/FreeRTOSConfig.h` 的 tick 为 500 Hz；本 PoC 不复用该值。PoC 的 `platform/ch585/tx_user.h` 显式将 `TX_TIMER_TICKS_PER_SECOND` 设为 `1000UL`；未修改 ThreadX 上游子模块。
 
 ## 5. 链接、时钟和中断边界
 
@@ -114,8 +114,8 @@ WCH 示例的 `highcode_init()` 初始化 HSI PLL 到 62.4 MHz，并配置相关
 
 当前无可用硬件。按“软件静态验证 → 限定用途验证板设计 → 实板运行验证 → 产品硬件冻结”设置两道放行门：
 
-1. **验证板设计门：已通过。** 两次干净构建产生相同 ELF/map；ELF 架构、入口、加载/运行段、符号与链接脚本已静态核对；源码审查覆盖 reset 初始化、ThreadX 上下文入口、异常栈切换、SysTick/VTF/PFIC/HPE 配置及 ISR 路径。允许开始限定用途的最小验证板设计，并应提供编程/恢复接入及复位、系统时钟、SysTick、中断活动的观测/测量点。该门不代表 CH585M 实板运行通过，也不允许冻结产品原理图或 PCB。主机交叉构建不是芯片运行验证。
-2. **PoC-1 实板运行验证：未执行，不能记为通过。产品硬件冻结门：未通过。** CH585M 实板运行证据尚不存在。ThreadX 启动、线程切换/休眠/唤醒、实测 SysTick/tick 投递、栈完整性、复位/睡眠唤醒和持续运行均须实测；测试时长、重复次数、负载和通过门限须在执行前写入测试方案。源码当前为 100 tick/s，需求文字提及 1000 tick/s；该冲突不阻止验证板设计，但须在冻结实板验收频率门限前解决。
+1. **验证板设计门：针对当前源码待复核。** 两次干净构建产生相同 ELF/map、ELF/链接资源核对及静态审查记录对应此前 100 tick/s 配置。当前改为 1000 tick/s 后尚未重新构建；需对当前源码重新完成两次干净构建、ELF/map 比对和资源复核，再确认验证板设计放行。放行后的验证板应提供编程/恢复接入及复位、系统时钟、SysTick、中断活动的观测/测量点。该门不代表 CH585M 实板运行通过，也不允许冻结产品原理图或 PCB。主机交叉构建不是芯片运行验证。
+2. **PoC-1 实板运行验证：未执行，不能记为通过。产品硬件冻结门：未通过。** CH585M 实板运行证据尚不存在。ThreadX 启动、线程切换/休眠/唤醒、实测 SysTick/tick 投递、栈完整性、复位/睡眠唤醒和持续运行均须实测；测试时长、重复次数、负载和通过门限须在执行前写入测试方案。PoC 配置目标为 1000 tick/s；实际频率、tick 投递和验收容差仍须通过实板测量确认。
 
 静态审查不能证明 QingKe V3C 异常压栈、VTF/HPE、中断返回或调度语义；相应运行项在 TEST-001 中保持未执行，必须通过 CH585M 实板测量。上游 ThreadX `qemu_virt` 示例使用独立的 QEMU virt 入口和链接布局，即使运行也不能替代 CH585M/WCH 路径验证。当前未安装 QEMU、Spike 或 Renode。详细软件门槛和判定见 OPEN-001 O19。
 
