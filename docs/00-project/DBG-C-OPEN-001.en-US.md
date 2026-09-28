@@ -1,6 +1,6 @@
 # DBG-C Open Questions and Verification List
 
-**Document ID:** DBG-C-OPEN-001　**Version:** V0.24　**Status:** Open items
+**Document ID:** DBG-C-OPEN-001　**Version:** V0.25　**Status:** Open items
 
 | ID | Question | Evidence/decision required | Affected documents | Status |
 |---|---|---|---|---|
@@ -23,7 +23,7 @@
 | O17 | Can USBFS and USBHS operate concurrently? What implementation constraint would require V1 to switch from its USBFS allocation to USBHS? | SDK examples, official resource limits, comparative measurements | MCU, USB, SYS | To verify |
 | O18 | Can Eclipse ThreadX RISC-V32/GNU context routines and the local CH585M low-level adapter run correctly on QingKe V3C? | Verify HPE, PFIC/VTF, startup, exception frames, SysTick, sleep/wakeup, scheduling, and sustained runtime on CH585M | MCU, FW, TEST | Board verification pending; software gate releases verification-board design, but no board is currently available and chip runtime has not been tested |
 | O19 | What is the PoC-1 software-verification gate before hardware design? | Apply the O19 criteria: two reproducible builds, ELF/link resource checks, and static review of startup/ThreadX context/interrupt paths; release verification-board design only, with product freeze gated by board tests | MCU, FW, SYS, TEST | Software gate passed for verification-hardware design only; tick-target conflict remains open; board runtime and product-hardware freeze have not passed |
-| O20 | Can the Arm CMSIS-DAP firmware core compile with the CH585M WCH RISC-V GCC, and what compiler/ISA adaptation is evidence-based? | Review compiler headers, inline assembly, and port dependencies in the pinned upstream commit; verify target compilation and host command-layer behavior without Arm ISA assembly | FW, MCU, TEST | Still open; eight command-core host checks and eight CMSIS-DAP command-to-SWD-engine callback line-model checks pass; WCH RISC-V GCC compiles separate test-configured DAP.c and SW_DP.c objects; test pins and physical transactions are modeled without WCH GPIO; product CMSIS compiler adaptation, SWD HAL/configuration, and firmware link are incomplete |
+| O20 | Can the Arm CMSIS-DAP firmware core compile with the CH585M WCH RISC-V GCC, and what compiler/ISA adaptation is evidence-based? | Review compiler headers, inline assembly, and port dependencies in the pinned upstream commit; verify target compilation and host command-layer behavior without Arm ISA assembly | FW, MCU, TEST | Still open; eight command-core host checks and nine CMSIS-DAP command-to-SWD-engine callback line-model checks pass; WCH RISC-V GCC compiles separate test-configured DAP.c and SW_DP.c objects; test pins and physical transactions are modeled without WCH GPIO; product CMSIS compiler adaptation, SWD HAL/configuration, and firmware link are incomplete |
 
 ## O18 Evidence Update
 
@@ -45,7 +45,7 @@
 - WCH RISC-V GCC compiles the SWD-enabled test configuration to an ELF32 RISC-V object; the object is not linked into PoC.
 - These results do not prove product CMSIS compiler adaptation, physical SWD transfers, product configuration, or USB integration. O20 remains open.
 
-- Eight host cases with 148 assertions cover upstream `SW_DP.c` read/write behavior, WAIT/FAULT ACKs, 10-bit SWD input/output sequences, the DAP_Connect plus DP IDCODE path, AP posted-read data returned through DP_RDBUFF in DAP_Transfer, and the two-item AP DAP_TransferBlock read sequence. Fast delay is a no-op, so counts are not frequency/timing evidence. WCH RISC-V GCC compiles `SW_DP.c` to an ELF32 RISC-V object that is not linked into product firmware.
+- Nine host cases with 168 assertions cover upstream `SW_DP.c` read/write behavior, WAIT/FAULT ACKs, 10-bit SWD input/output sequences, the DAP_Connect plus DP IDCODE path, AP posted-read data returned through DP_RDBUFF in DAP_Transfer, the two-item AP DAP_TransferBlock read sequence, and mixed output/input DAP_SWD_Sequence handling. Fast delay is a no-op, so counts are not frequency/timing evidence. WCH RISC-V GCC compiles `SW_DP.c` to an ELF32 RISC-V object that is not linked into product firmware.
 - WCH EVT GPIO header/implementation statically confirm `GPIOB_ModeCfg`, `GPIOB_SetBits`, `GPIOB_ResetBits`, and `GPIOB_ReadPortPin`. These APIs are not integrated into an SWD HAL; PB5/PB6 electrical, timing, and protection requirements remain for IF-001 and verification-board measurements.
 - O20 remains open; host models and object compilation do not prove physical SWD, GPIO, ThreadX, USB, or CH585M runtime behavior.
 

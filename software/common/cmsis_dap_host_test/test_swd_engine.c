@@ -421,6 +421,50 @@ static void test_dap_transfer_block_ap_reads_through_swd_engine(void)
     CHECK(output_enable_count == 3U);
 }
 
+static void test_dap_swd_sequence_command(void)
+{
+    static const uint8_t sequence_output_bits[] = {
+        1U, 0U, 1U, 0U, 0U, 1U, 0U, 1U, 1U, 1U
+    };
+    static const uint8_t sequence_input_bits[] = {
+        1U, 0U, 1U, 1U, 0U, 0U, 1U, 0U, 1U, 1U
+    };
+    const uint8_t request[] = {
+        ID_DAP_SWD_Sequence,
+        2U,
+        10U,
+        0xA5U,
+        0x03U,
+        SWD_SEQUENCE_DIN | 10U
+    };
+    uint8_t response[DAP_PACKET_SIZE] = {0U};
+    uint32_t result;
+    unsigned int bit;
+
+    DAP_Setup();
+    DAP_Data.fast_clock = 1U;
+    reset_line_model();
+    for (bit = 0U; bit < sizeof(sequence_input_bits); ++bit) {
+        append_input_bit(sequence_input_bits[bit]);
+    }
+
+    result = DAP_ExecuteCommand(request, response);
+
+    CHECK(result == ((6U << 16) | 4U));
+    CHECK(response[0] == ID_DAP_SWD_Sequence);
+    CHECK(response[1] == DAP_OK);
+    CHECK(response[2] == 0x4DU);
+    CHECK(response[3] == 0x03U);
+    CHECK(output_bit_count == sizeof(sequence_output_bits));
+    for (bit = 0U; bit < sizeof(sequence_output_bits); ++bit) {
+        CHECK(output_bits[bit] == sequence_output_bits[bit]);
+    }
+    CHECK(input_bit_index == input_bit_count);
+    CHECK(clock_rising_count == 20U);
+    CHECK(output_disable_count == 1U);
+    CHECK(output_enable_count == 2U);
+}
+
 int main(void)
 {
     test_swd_read_request_and_data();
@@ -431,6 +475,7 @@ int main(void)
     test_dap_transfer_through_swd_engine();
     test_dap_ap_read_through_swd_engine();
     test_dap_transfer_block_ap_reads_through_swd_engine();
+    test_dap_swd_sequence_command();
 
     if (failures != 0U) {
         fprintf(stderr, "%u of %u CMSIS-DAP SWD engine checks failed\n",
@@ -438,7 +483,7 @@ int main(void)
         return 1;
     }
 
-    printf("CMSIS-DAP SWD engine checks passed: %u assertions, 8 cases\n",
+    printf("CMSIS-DAP SWD engine checks passed: %u assertions, 9 cases\n",
            checks);
     return 0;
 }
