@@ -1,6 +1,6 @@
 # DBG-C Firmware Architecture and PoC-1 Record
 
-**Document ID:** DBG-C-FW-001　**Version:** V0.3　**Status:** Experimental draft; host cross-build passes, user confirms no board is currently available, board runtime is pending
+**Document ID:** DBG-C-FW-001　**Version:** V0.4　**Status:** Experimental draft; build and ELF static checks complete; tick-target conflict pending confirmation, verification-hardware design not released
 
 ## 1. Scope and status
 
@@ -14,9 +14,9 @@ This phase checks whether Eclipse ThreadX can be cross-built in a CH585M project
 | Installed toolchain | MounRiver Studio Linux x64 Toolchain V2.4.0; GCC 12.2.0, GNU assembler/linker 2.38; actual prefix `riscv-wch-elf-` | Measured on this host; not a claim about the EVT compiler version |
 | System clock initialization | `highcode_init()` derives from the reset-time clock sequence in WCH `CH58x_sys.c` and selects HSI PLL 62.4 MHz | Source correspondence checked; frequency and stability have not been measured on hardware |
 | ThreadX low-level setup | Sets `_tx_initialize_unused_memory` to the aligned location after linker symbol `_end`; configures WCH VTF SysTick entry, PFIC priority, and SysTick | Host compile/link passes; memory boundary and interrupt behavior are untested on board |
-| ThreadX tick | Uses upstream `tx_api.h` default `TX_TIMER_TICKS_PER_SECOND`, defined as 100 ticks/s; SysTick ISR calls `_tx_thread_context_save` and `_tx_timer_interrupt`, then clears SysTick `SR` as defined by the EVT header | ISR assembly builds; HPE/VTF, exception return, and scheduling semantics remain unverified |
+| ThreadX tick | Uses upstream `tx_api.h` default `TX_TIMER_TICKS_PER_SECOND`, defined as 100 ticks/s; based on the source-declared 62.4 MHz, `SysTick_Config` receives 624000 and sets compare value 623999 | This is a software configuration calculation, not a measured clock/tick; the user's reference to 1000 ticks/s conflicts with current source and needs confirmation; HPE/VTF, exception return, and scheduling semantics remain unverified |
 | PoC threads | Two same-priority threads increment separate counters, record `tx_time_get()`, and call `tx_thread_sleep(1U)` | Observable values are designed for later board testing only |
-| ELF build | `text=8876`, `data=8`, `bss=5564` bytes; ELF32 RISC-V, entry `0x0` | One cross-build on this host; log: `software/poc1-ch585-threadx/build-evidence.log`; not flash or runtime evidence |
+| ELF build | `text=8876`, `data=8`, `bss=5564` bytes; ELF32 little-endian RISC-V, entry `_start=0x0`; `.highcode_init`/`.highcode` are linked to RAM and code/data load images to Flash | Two clean rebuilds produced identical ELF SHA-256 `d06802e345843562221f86dfb29934442e7d15d25d55de3327ca9528c961101f` and map SHA-256 `fec0082f30bbc3022aa696f7ec13f9037dc03aa8717e19bff854645d5964f936`; see `software/poc1-ch585-threadx/build-evidence.log`. This proves reproducibility in the recorded environment and consistency with the current linker script, not chip runtime |
 | CH585M board runtime | Not run; pending | User confirms no board is currently available; no programming/debug or runtime evidence exists |
 
 ## 2. Software layers and layout
@@ -108,18 +108,27 @@ The current SysTick ISR assembly entry is placed in the highcode region used by 
 
 ## 6. Build result and remaining acceptance work
 
-The host cross-build passed. The evidence log at `software/poc1-ch585-threadx/build-evidence.log` records ThreadX commit `b91b03b9e75fa523b17127f9e0eca09dca916459`, ELF32 RISC-V, entry `0x0`, and text 8876, data 8, bss 5564 bytes. No flashing, board interrupt/scheduling test, clock measurement, or endurance run was performed.
+Two clean rebuilds produced identical ELF and map hashes. ELF header, sections, program headers, symbols, and map were statically checked against the PoC startup and `ch585.ld`: `_start` is the ELF entry, application `.highcode` is linked to RAM, and linked segments fit the Flash/RAM ranges declared by the current script. The evidence log at `software/poc1-ch585-threadx/build-evidence.log` records ThreadX commit `b91b03b9e75fa523b17127f9e0eca09dca916459`, MounRiver GCC 12.2.0, GNU assembler/linker 2.38, ELF32 RISC-V, entry `0x0`, and text 8876, data 8, bss 5564 bytes. No flashing, board interrupt/scheduling test, clock measurement, or endurance run was performed.
 
 ### 6.1 Software verification before hardware design
 
-The user confirms that no hardware is currently available and requires software verification first, followed by hardware design and then verification on actual hardware. Only the host cross-build has passed so far; this does not prove CH585M interrupt, tick, or thread-scheduling behavior. The pre-hardware software verification gate and its pass criteria have not yet been defined; see OPEN-001 O19. Do not mark this PoC software-verified or board-verified until the criteria are agreed and met.
+The user confirms that no hardware is currently available and requires software verification first, followed by hardware design and then verification on actual hardware. Release has two gates:
 
-### 6.2 Remaining work
+1. **Verification hardware design gate: not released.** Two clean builds produced identical ELF/map files; ELF architecture, entry, load/run sections, symbols, and linker ranges were statically checked against the startup and linker script. Source review covered reset initialization, ThreadX context entry, exception stack switching, SysTick/VTF/PFIC/HPE setup, and ISR flow. However, source is configured for 100 ticks/s while the stated requirement says 1000 ticks/s. The user must confirm the target and requirement/source must be aligned before reassessing release for verification-board design.
+2. **Product hardware freeze gate: not passed.** No CH585M board runtime evidence exists. ThreadX startup, thread switching/sleep/wakeup, measured SysTick/tick delivery, stack integrity, reset/wakeup, and sustained runtime require board tests. Test duration, repetitions, and load limits must be defined in the test plan before execution.
+
+Static review cannot prove QingKe V3C exception stacking, VTF/HPE, interrupt return, or scheduling semantics; runtime cases remain Not run in TEST-001. The upstream ThreadX `qemu_virt` example has its own QEMU virt entry and linker layout and cannot replace CH585M/WCH-path validation. QEMU, Spike, and Renode are not installed in the current environment. See OPEN-001 O19 for the software gate and verdict.
+
+### 6.2 Verification-board design constraints
+
+Keep the verification board minimal and provide safe programming/recovery debug access plus measurement access needed to observe reset, system clock, SysTick, and interrupt activity. Determine exact pins, probe methods, loads, and electrical protection from the CH585M datasheet, WCH EVT, and test plan; this record does not specify unchecked pins or circuitry. The verification board must not be represented as a frozen product schematic/PCB.
+
+### 6.3 Remaining work
 
 1. Confirm the exact CH585M board, programming/debug adapter, programming procedure, silicon revision, and boot behavior.
 2. Observe `thread_a_runs`, `thread_b_runs`, and `threadx_tick_observed` changing continuously; verify `tx_thread_sleep(1U)` timeout/wakeup, same-priority rotation, and stability after reset.
 3. Measure SysTick frequency and clock stability; verify VTF/PFIC/HPE behavior and exception stack integrity; retain firmware hash, board revision, programming log, and runtime log.
-4. Verify interrupt nesting, scheduler preemption, and sustained runtime before marking the port board-verified and synchronizing MCU, FW, TEST, and OPEN documents.
+4. Freeze board-test duration, repetitions, load, and pass thresholds in the test plan first. Verify interrupt nesting, scheduler preemption, and sustained runtime before closing O18 and synchronizing MCU, FW, TEST, and OPEN documents.
 
 ## 7. Sources
 

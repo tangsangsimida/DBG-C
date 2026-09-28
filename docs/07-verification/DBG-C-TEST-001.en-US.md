@@ -1,6 +1,6 @@
 # DBG-C Verification Specification
 
-**Document ID:** DBG-C-TEST-001　**Version:** V0.3　**Status:** Test-plan draft; no product test results
+**Document ID:** DBG-C-TEST-001　**Version:** V0.4　**Status:** Test-plan draft; no product test results
 
 ## 1. Pass Criteria
 
@@ -32,4 +32,4 @@ Continuous programming/Debug, long-duration RF, USB plug/unplug, target plug/unp
 
 ## 8. Current Execution Status
 
-The repository contains the CH585M datasheet, CH585EVT archive, and ThreadX PoC-1. A host cross-build log for the PoC is recorded in FW-001; the user confirms no hardware is currently available, so no CH585M programming/debug or runtime evidence exists. DBG-C product firmware, cable samples, and captures are also unavailable. All product-verification cases in this document are **Not run**; the PoC host build does not count as board or product-function testing. Software verification, hardware design, and real-board verification shall proceed in that order; see OPEN-001 O19 for the software gate. This document defines coverage and is not a hardware/firmware verification report.
+The repository contains the CH585M datasheet, CH585EVT archive, and ThreadX PoC-1. A host cross-build log for the PoC is recorded in FW-001; the user confirms no hardware is currently available, so no CH585M programming/debug or runtime evidence exists. DBG-C product firmware, cable samples, and captures are also unavailable. All product-verification cases in this document are **Not run**; the PoC host build does not count as board or product-function testing. Build and ELF static checks are complete, but the tick-target conflict is unresolved and verification-hardware design is not released; board runtime remains Not run and product hardware freeze is not released. ThreadX startup, interrupt, tick, thread switch/sleep/wakeup, clock measurement, reset recovery, and sustained-runtime cases remain Not run. Define duration, repetitions, load, and thresholds in the specific test plan before execution. See OPEN-001 O18/O19 for software and board release gates. This document defines coverage and is not a board verification report.

@@ -1,6 +1,6 @@
 # DBG-C MCU Selection and Resource Assessment
 
-**Document ID:** DBG-C-MCU-001　**Version:** V0.4　**Status:** CH585M V1 schematic resource allocation draft; software gate first, then hardware design and board verification
+**Document ID:** DBG-C-MCU-001　**Version:** V0.5　**Status:** CH585M V1 schematic resource allocation draft; software gate awaits tick-target confirmation, verification-hardware design not released
 
 ## 1. Evidence Source
 
@@ -152,7 +152,7 @@ Peripheral counts support moving this design into a **schematic draft**: USBFS, 
 
 ## 6. Additional Resource Requirements for ThreadX
 
-The project has selected ThreadX for V1 firmware. PoC-1 pins Eclipse ThreadX `v6.5.1.202602a_rel` (commit `b91b03b9e75fa523b17127f9e0eca09dca916459`), uses its `ports/risc-v32/gnu` context routines, and adds experimental CH585M low-level, SysTick, WCH startup, and clock adaptation. A host cross-build passed with MounRiver Linux x64 Toolchain V2.4.0 GCC 12.2.0; the WCH EVT `.cproject` selects a GCC12 configuration but does not record its patch version. The user confirms no hardware is currently available and requires software verification before hardware design, followed by verification on real hardware. A successful host build does not establish compatibility of QingKe RISC-V3C hardware stack push, VTF/HPE, exception return, or scheduling. The software gate is tracked in OPEN-001 O19; board validation has not run.
+The project has selected ThreadX for V1 firmware. PoC-1 pins Eclipse ThreadX `v6.5.1.202602a_rel` (commit `b91b03b9e75fa523b17127f9e0eca09dca916459`), uses its `ports/risc-v32/gnu` context routines, and adds experimental CH585M low-level, SysTick, WCH startup, and clock adaptation. A host cross-build passed with MounRiver Linux x64 Toolchain V2.4.0 GCC 12.2.0; the WCH EVT `.cproject` selects a GCC12 configuration but does not record its patch version. The user confirms no hardware is currently available and requires software verification before hardware design, followed by verification on real hardware. A successful host build does not establish compatibility of QingKe RISC-V3C hardware stack push, VTF/HPE, exception return, or scheduling. Two clean rebuilds produced identical ELF/map files and static review is complete; the OPEN-001 O19 build and ELF static checks passed, but source configuration at 100 ticks/s conflicts with the stated 1000 ticks/s requirement, so verification-hardware design is not released. Board validation has not run, and product hardware freeze still requires board runtime evidence under O18/O19.
 
 | Resource | ThreadX requirement | DBG-C allocation | Evidence boundary |
 |---|---|---|---|

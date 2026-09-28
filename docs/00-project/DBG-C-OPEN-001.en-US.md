@@ -1,6 +1,6 @@
 # DBG-C Open Questions and Verification List
 
-**Document ID:** DBG-C-OPEN-001　**Version:** V0.6　**Status:** Open items
+**Document ID:** DBG-C-OPEN-001　**Version:** V0.7　**Status:** Open items
 
 | ID | Question | Evidence/decision required | Affected documents | Status |
 |---|---|---|---|---|
@@ -21,16 +21,30 @@
 | O15 | Which datasheet revision/errata/reference manual apply to the current silicon? | WCH release page and chip revision check | MCU, HW, FW | To obtain |
 | O16 | What BLE wireless-download protocol, image format, target scope, and resume rules apply? | Define DBG-C Tool ↔ Probe protocol and select an acceptance target board | PRD, BLE, TEST | Decision needed |
 | O17 | Can USBFS and USBHS operate concurrently? What implementation constraint would require V1 to switch from its USBFS allocation to USBHS? | SDK examples, official resource limits, comparative measurements | MCU, USB, SYS | To verify |
-| O18 | Can Eclipse ThreadX RISC-V32/GNU context routines and the local CH585M low-level adapter run correctly on QingKe V3C? | Verify HPE, PFIC/VTF, startup, exception frames, SysTick, sleep/wakeup, scheduling, and sustained runtime on CH585M | MCU, FW, TEST | To verify; experimental ISR/timebase implemented, host ELF build passes |
-| O19 | What is the PoC-1 software-verification gate before hardware design? | Define reproducible build, ELF/link checks, static review, or other checks and pass criteria; proceed to hardware design after review | MCU, FW, SYS, TEST | Decision pending; host cross-build does not prove CH585M runtime behavior |
+| O18 | Can Eclipse ThreadX RISC-V32/GNU context routines and the local CH585M low-level adapter run correctly on QingKe V3C? | Verify HPE, PFIC/VTF, startup, exception frames, SysTick, sleep/wakeup, scheduling, and sustained runtime on CH585M | MCU, FW, TEST | To verify; build/ELF checks pass, tick-target conflict unresolved, verification-hardware design not released |
+| O19 | What is the PoC-1 software-verification gate before hardware design? | Apply the O19 criteria: two reproducible builds, ELF/link resource checks, and static review of startup/ThreadX context/interrupt paths; release verification-board design only, with product freeze gated by board tests | MCU, FW, SYS, TEST | Gate defined; source tick is 100 ticks/s but stated requirement is 1000 ticks/s; user confirmation pending; verification-hardware design and product freeze are not released |
 
 ## O18 Evidence Update
 
 - ThreadX is pinned to `v6.5.1.202602a_rel`, commit `b91b03b9e75fa523b17127f9e0eca09dca916459`; MounRiver Linux x64 Toolchain V2.4.0 GCC 12.2.0 is installed in the current user account.
 - PoC-1 now contains experimental clock initialization, a low-level unused-memory boundary, VTF SysTick registration, and a ThreadX tick ISR. The threads read `tx_time_get()` and sleep for one tick. Host cross-build passed; output is ELF32 RISC-V, text 8876, data 8, bss 5564 bytes.
 - The tick uses the upstream ThreadX header default of 100 ticks/s. HPE/VTF behavior, exception frames, actual SysTick frequency, tick delivery, sleep/wakeup, scheduling, and endurance remain unverified on hardware; O18 remains open.
-- The user confirms no hardware is currently available and requires software verification first, then hardware design, then real-board verification. Board runtime remains pending; O19 tracks the pre-hardware software gate.
+- The user confirms no hardware is currently available and requires software verification first, then hardware design, then real-board verification. Two clean rebuilds produced identical ELF/map SHA-256 values, and the ELF was statically checked against the linker script and startup symbols; therefore reproducible build and ELF/link static checks pass, but the software release gate has not passed. Source tick is 100 ticks/s, conflicting with the stated 1000 ticks/s requirement; user confirmation is pending. Reassess O19 after the requirement/source are aligned before releasing verification-board design. Interrupt, SysTick, scheduling, and sleep/wakeup have not been runtime-verified.
+- The upstream ThreadX `qemu_virt` example uses QEMU virt addresses, entry, and linker layout, unlike the PoC WCH CH585 startup and PFIC/VTF code. QEMU, Spike, and Renode are unavailable in the current environment; no simulator evidence exists.
+- The current PoC source sets `TX_TIMER_TICKS_PER_SECOND=100`; with the source-declared 62.4 MHz, the compare value calculates to 623999. The user's mention of 1000 ticks/s is not implemented in source and must be confirmed before changing the setting.
 - `docs/05-firmware/DBG-C-FW-001.en-US.md` records EVT provenance, archive hashes, and host setup. The WCH EVT `.cproject` establishes a GCC12 configuration but not the GCC patch version; the installed toolchain was measured as GCC 12.2.0.
+
+## O19 Release Criteria and Verdict
+
+Before **verification-hardware design**, all of these reviewable conditions are required:
+
+1. Approved software configuration requirements match the source, especially the ThreadX tick target; source repository/submodule revisions and toolchain versions are explicit. At least two clean builds produce ELF and map files with identical SHA-256 values.
+2. Check ELF architecture, endianness, entry, startup symbols, load/run addresses, and compare them with the actual startup and linker script. Every static section must fit within the Flash/RAM ranges declared by that script. Record text/data/bss and statically allocated stacks/buffers. This PoC declares two 1024-byte application thread stacks, a 2048-byte ISR stack, and a 512-byte ThreadX timer stack; ELF data is 8 bytes and bss is 5564 bytes. This does not establish stack watermarks on hardware.
+3. Review reset/clock initialization, ThreadX context save/restore, exception frame and stack switching, MIE/HPE/PFIC/VTF setup, SysTick reload/status clear, and ISR-to-scheduler call order. No discovered and unresolved source, symbol, or link inconsistency may remain.
+4. Separate statically decidable items from chip-runtime items. Hardware exception semantics, measured frequency, interrupt delivery, tick, scheduling, and sleep/wakeup that cannot be proven from source/ELF remain board-test items and must not be marked Pass.
+5. Verification-board design inputs must provide programming/recovery, reset, system-clock, SysTick, and interrupt-activity observation/measurement paths, with debug and measurement access points. Confirm exact pins and circuitry from authoritative project sources.
+
+**Current verdict: not released.** Two builds, ELF/link checks, and source static review are complete, but criterion 1 is not met: source tick is 100 ticks/s while the stated requirement is 1000 ticks/s. Confirm the target and align requirement/source, then reassess O19. Do not begin verification-hardware design or freeze product schematic/PCB before that. The eventual verification-board design must also implement criterion 5 observation/measurement paths. Before product-hardware freeze, CH585M board records must show ThreadX startup, thread run/switch/sleep/wakeup, measured SysTick frequency and tick delivery, interrupt entry/exit and context/stack integrity, reset/wakeup, and sustained operation meeting duration, repetition, load, and pass thresholds frozen in advance. O18 cannot close before board testing.
 
 ## Confirmed Evidence Boundary
 

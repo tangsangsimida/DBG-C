@@ -1,6 +1,6 @@
 # DBG-C Firmware Architecture 与 PoC-1 记录
 
-**文档编号：** DBG-C-FW-001　**版本：** V0.3　**状态：** 实验草案；主机交叉构建通过，用户确认当前无板卡，板级运行待验证
+**文档编号：** DBG-C-FW-001　**版本：** V0.4　**状态：** 实验草案；构建和 ELF 静态检查完成；tick 目标冲突待确认，验证硬件设计未放行
 
 ## 1. 范围与状态
 
@@ -14,9 +14,9 @@
 | 当前工具链 | MounRiver Studio Linux x64 Toolchain V2.4.0；GCC 12.2.0，GNU assembler/linker 2.38；实际程序前缀 `riscv-wch-elf-` | 本机命令实测，非 EVT 工程工具链版本结论 |
 | 系统时钟初始化 | `highcode_init()` 移植 WCH `CH58x_sys.c` 中的复位时钟配置序列，选择 HSI PLL 62.4 MHz | 源码对应关系已核对；未在板上测量频率或时钟稳定性 |
 | ThreadX low-level | 设置 `_tx_initialize_unused_memory` 到链接符号 `_end` 对齐后的位置；配置 WCH VTF SysTick 入口、PFIC 优先级和 SysTick | 主机编译/链接通过；内存边界及中断行为未板测 |
-| ThreadX tick | PoC 使用上游 `tx_api.h` 默认 `TX_TIMER_TICKS_PER_SECOND`，其定义为 100 tick/s；SysTick ISR 调用 `_tx_thread_context_save`、`_tx_timer_interrupt`，清除 EVT 头文件定义的 SysTick `SR` | ISR 汇编能构建；HPE/VTF、异常返回和调度语义尚未验证 |
+| ThreadX tick | PoC 使用上游 `tx_api.h` 默认 `TX_TIMER_TICKS_PER_SECOND`，其定义为 100 tick/s；以源码声明的 62.4 MHz 计算，`SysTick_Config` 输入为 624000，比较值为 623999 | 这是软件配置计算，不是实测时钟/tick；用户文字提及的 1000 tick/s 与当前源码不符，需确认需求；HPE/VTF、异常返回和调度语义尚未验证 |
 | PoC 线程 | 两个同优先级线程递增独立计数器，记录 `tx_time_get()` 并执行 `tx_thread_sleep(1U)` | 仅是待板测的可观测量设计 |
-| ELF 构建 | `text=8876`、`data=8`、`bss=5564` 字节；ELF32 RISC-V，入口地址 `0x0` | 当前主机的一次交叉构建，日志见 `software/poc1-ch585-threadx/build-evidence.log`；不等于烧录或运行证据 |
+| ELF 构建 | `text=8876`、`data=8`、`bss=5564` 字节；ELF32 little-endian RISC-V，入口 `_start=0x0`；`.highcode_init`/`.highcode` 位于链接 RAM，代码/数据装载地址位于链接 Flash | 两次 clean rebuild 的 ELF SHA-256 均为 `d06802e345843562221f86dfb29934442e7d15d25d55de3327ca9528c961101f`，map SHA-256 均为 `fec0082f30bbc3022aa696f7ec13f9037dc03aa8717e19bff854645d5964f936`；详见 `software/poc1-ch585-threadx/build-evidence.log`。仅证明固定环境下产物可重复且符合当前 linker script，不证明芯片运行 |
 | CH585M 板级运行 | 未执行，待验证 | 用户确认目前没有可用板卡；暂无下载/调试和运行证据 |
 
 ## 2. 软件层和目录
@@ -108,18 +108,27 @@ WCH 示例的 `highcode_init()` 初始化 HSI PLL 到 62.4 MHz，并配置相关
 
 ## 6. 构建结果、验收和剩余工作
 
-本轮主机交叉构建通过，证据记录在 `software/poc1-ch585-threadx/build-evidence.log`：ThreadX 精确修订 `b91b03b9e75fa523b17127f9e0eca09dca916459`，ELF 为 ELF32 RISC-V，入口 `0x0`，text 8876、data 8、bss 5564 字节。没有执行烧录、板上中断/调度、时钟测量或长时间运行测试。
+本轮完成两次 clean rebuild，ELF 与 map 散列一致。ELF header、section、program header、符号地址及 map 已与 PoC 启动代码和 `ch585.ld` 静态核对；`_start` 为 ELF 入口，应用 `.highcode` 段位于链接 RAM，链接段在当前脚本声明的 Flash/RAM 范围内。构建记录含 ThreadX 精确修订 `b91b03b9e75fa523b17127f9e0eca09dca916459`、MounRiver GCC 12.2.0、GNU assembler/linker 2.38、ELF32 RISC-V、入口 `0x0`，text 8876、data 8、bss 5564 字节。没有执行烧录、板上中断/调度、时钟测量或长时间运行测试。
 
 ### 6.1 软件验证与硬件设计顺序
 
-用户确认当前没有可用硬件，并要求先验证软件，再设计硬件，最后通过实际硬件验证。当前已通过的项目仅为主机交叉构建；这不足以证明 CH585M 上的中断、tick 和线程调度正确。硬件设计前的软件验证门槛及其通过标准尚未定义，记录在 OPEN-001 O19；在标准明确并通过评审前，不把本 PoC 标为软件验证完成或板级通过。
+用户确认当前没有可用硬件，并要求先验证软件，再设计硬件，最后通过实际硬件验证。放行分为两道门：
 
-### 6.2 尚需完成
+1. **验证硬件设计门：未放行。** 本机两次干净构建产生相同 ELF/map；ELF 架构、入口、加载/运行段、符号与链接脚本已静态核对；源码审查覆盖 reset 初始化、ThreadX 上下文入口、异常栈切换、SysTick/VTF/PFIC/HPE 配置及 ISR 路径。但源码配置为 100 tick/s，和需求描述的 1000 tick/s 冲突，须先由用户确认目标并同步需求/代码。确认后才可重新判定是否允许设计验证板。
+2. **产品硬件冻结门：未通过。** CH585M 实板运行证据尚不存在。ThreadX 启动、线程切换/休眠/唤醒、实际 SysTick/tick 投递、栈完整性、复位/唤醒和持续运行均须实测；测试时长、重复次数和负载门限须在执行前写入测试方案。
+
+静态审查不能证明 QingKe V3C 异常压栈、VTF/HPE、中断返回或调度语义；相应运行项在 TEST-001 中保持未执行。上游 ThreadX `qemu_virt` 示例使用独立的 QEMU virt 入口和链接布局，即使运行也不能替代 CH585M/WCH 路径验证。当前未安装 QEMU、Spike 或 Renode。详细软件门槛和判定见 OPEN-001 O19。
+
+### 6.2 验证用硬件设计约束
+
+验证板应保持 PoC 最小化，并提供可安全恢复/烧录的调试接入点，以及观测复位、系统时钟、SysTick 和中断活动所需的测量接入点。具体引脚、探测方法、负载和电气保护须依据 CH585M 数据手册、WCH EVT 和测试方案确定；本记录不指定未经核对的引脚或硬件电路。验证板不得宣称为产品原理图/PCB冻结版本。
+
+### 6.3 尚需完成
 
 1. 在具体 CH585M 板卡上确认编程器、下载流程、芯片修订和启动行为。
 2. 观察 `thread_a_runs`、`thread_b_runs`、`threadx_tick_observed` 的持续变化；验证 `tx_thread_sleep(1U)` 的超时/唤醒、同优先级轮转及系统复位后的稳定性。
 3. 实测 SysTick 频率、时钟稳定性、VTF/PFIC/HPE 行为和异常栈完整性；保存固件散列、板卡版本、下载日志和运行日志。
-4. 验证中断嵌套、调度抢占和长时间运行后，才能将端口状态改为板级运行通过，并同步 MCU、FW、TEST、OPEN 文档。
+4. 先在测试方案中冻结实板测试时长、重复次数、负载与通过门限；验证中断嵌套、调度抢占和长时间运行后，才能关闭 O18 并同步 MCU、FW、TEST、OPEN 文档。
 
 ## 7. 资料来源
 

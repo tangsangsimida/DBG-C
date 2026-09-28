@@ -219,3 +219,17 @@ GNU ld (xPack GNU RISC-V Embedded GCC x86_64) 2.38
   Class:                             ELF32
   Machine:                           RISC-V
   Entry point address:               0x0
+
+Software gate verification rerun:
+Source repository HEAD used: 896cb52b0f9eff0a02bcb535c26e66eafe46b453
+ThreadX submodule commit: b91b03b9e75fa523b17127f9e0eca09dca916459 (v6.5.1.202602a_rel)
+Toolchain: MounRiver Linux x64 Toolchain V2.4.0; GCC 12.2.0; GNU assembler 2.38; GNU ld 2.38; CMake 3.28.3
+Two consecutive clean rebuilds completed successfully.
+ELF SHA-256 (build 1 and 2): d06802e345843562221f86dfb29934442e7d15d25d55de3327ca9528c961101f
+Map SHA-256 (build 1 and 2): fec0082f30bbc3022aa696f7ec13f9037dc03aa8717e19bff854645d5964f936
+Static ELF review: ELF32, little-endian, RISC-V, entry 0x0 (_start); .highcode_init and .highcode VMA are in linker RAM; load images and .text are in linker Flash; .data/.bss and stack symbol fit the linker-declared RAM range.
+Static allocation: two application thread stacks are 1024 bytes each; ISR stack is 2048 bytes; ThreadX timer thread stack is configured as 512 bytes; ELF .data is 8 bytes and .bss is 5564 bytes. Runtime stack watermarks are not measured.
+Static review boundary: startup and link symbols, ThreadX context routines, exception stack switch, HPE/PFIC/VTF setup, SysTick setup/clear and ISR call sequence reviewed. Hardware exception semantics, clock frequency, actual tick delivery, thread scheduling, sleep/wakeup and sustained runtime remain unverified.
+Release result: build and ELF/link static checks passed; the software release gate is not passed because source tick is 100 ticks/s while the stated requirement is 1000 ticks/s. Verification-hardware design and product schematic/PCB freeze are not released pending user confirmation.
+Tick configuration source: TX_TIMER_TICKS_PER_SECOND is 100UL. With source-declared 62,400,000 Hz, SysTick_Config input is 624,000 and core_riscv.h sets CMP to 623,999. This calculation is not a hardware measurement. A stated 1000 ticks/s requirement conflicts with current source and remains unconfirmed.
+Simulator check: QEMU, Spike and Renode are not installed in the current host. ThreadX qemu_virt example uses its own QEMU virt startup and linker layout and does not validate the CH585M/WCH path.
