@@ -1,6 +1,6 @@
 # DBG-C Open Questions and Verification List
 
-**Document ID:** DBG-C-OPEN-001　**Version:** V0.16　**Status:** Open items
+**Document ID:** DBG-C-OPEN-001　**Version:** V0.17　**Status:** Open items
 
 | ID | Question | Evidence/decision required | Affected documents | Status |
 |---|---|---|---|---|
@@ -23,7 +23,7 @@
 | O17 | Can USBFS and USBHS operate concurrently? What implementation constraint would require V1 to switch from its USBFS allocation to USBHS? | SDK examples, official resource limits, comparative measurements | MCU, USB, SYS | To verify |
 | O18 | Can Eclipse ThreadX RISC-V32/GNU context routines and the local CH585M low-level adapter run correctly on QingKe V3C? | Verify HPE, PFIC/VTF, startup, exception frames, SysTick, sleep/wakeup, scheduling, and sustained runtime on CH585M | MCU, FW, TEST | Board verification pending; software gate releases verification-board design, but no board is currently available and chip runtime has not been tested |
 | O19 | What is the PoC-1 software-verification gate before hardware design? | Apply the O19 criteria: two reproducible builds, ELF/link resource checks, and static review of startup/ThreadX context/interrupt paths; release verification-board design only, with product freeze gated by board tests | MCU, FW, SYS, TEST | Software gate passed for verification-hardware design only; tick-target conflict remains open; board runtime and product-hardware freeze have not passed |
-| O20 | Can the Arm CMSIS-DAP firmware core compile with the CH585M WCH RISC-V GCC, and what compiler/ISA adaptation is evidence-based? | Review compiler headers, inline assembly, and port dependencies in the pinned upstream commit; verify target compilation and host command-layer behavior without Arm ISA assembly | FW, MCU, TEST | Still open; the SWD-enabled `DAP.c` test configuration compiles to an object and passes six host checks, including AP posted-read and `DP_RDBUFF` response ordering; SWD pins are no-ops and bus transactions are mocked; product CMSIS compiler adaptation, SWD HAL/configuration, and firmware link are incomplete |
+| O20 | Can the Arm CMSIS-DAP firmware core compile with the CH585M WCH RISC-V GCC, and what compiler/ISA adaptation is evidence-based? | Review compiler headers, inline assembly, and port dependencies in the pinned upstream commit; verify target compilation and host command-layer behavior without Arm ISA assembly | FW, MCU, TEST | Still open; the SWD-enabled `DAP.c` test configuration compiles to an object and passes seven host checks, including TransferConfigure retry-count behavior and AP posted-read/`DP_RDBUFF` response ordering; SWD pins are no-ops and bus transactions are mocked; product CMSIS compiler adaptation, SWD HAL/configuration, and firmware link are incomplete |
 
 ## O18 Evidence Update
 
@@ -38,7 +38,7 @@
 
 ## O20 Evidence Update
 
-- Six host checks pass for pinned CMSIS-DAP commit `12636590eec66fae2d1bba4518749426ad5a4595`: firmware-version Info, unknown Info identifier, unsupported command, DP read with WAIT retries, DP write completion, and ordered results from two AP posted reads followed by `DP_RDBUFF`.
+- Seven host checks pass for pinned CMSIS-DAP commit `12636590eec66fae2d1bba4518749426ad5a4595`: firmware-version Info, unknown Info identifier, unsupported command, DP read with WAIT retries, DP write completion, ordered results from two AP posted reads followed by `DP_RDBUFF`, and TransferConfigure retry-count behavior on a following DP read.
 - SWD command processing is enabled, but pin macros are no-ops and `SWD_Transfer()` is a deterministic mock. The test calls no GPIO, USB, ThreadX, or CH585M API. A build-directory header copy changes only the delay-branch selector; it does not define `__CC_ARM` or modify the third-party submodule.
 - WCH RISC-V GCC compiles the SWD-enabled test configuration to an ELF32 RISC-V object; the object is not linked into PoC.
 - These results do not prove product CMSIS compiler adaptation, physical SWD transfers, product configuration, or USB integration. O20 remains open.
