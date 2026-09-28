@@ -4,7 +4,7 @@ This directory is the single local holding place for the user-supplied `CH585EVT
 
 ## Use
 
-Keep the archive intact. Extract only the specific official headers, sources, or libraries needed for an implemented driver, and place those files with that driver. Preserve accompanying vendor and third-party notices. The project does not yet contain CH585 driver code from which to select specific package components.
+Keep the archive intact. Extract only the specific official headers, sources, or libraries needed for an implemented driver, and place those files with that driver. Preserve accompanying vendor and third-party notices. The repository already contains a scoped CH585 platform adaptation under `software/poc1-ch585-threadx/platform/ch585/` and the WCH ROM command header/library under `software/third_party/wch/ch585/`; these are not a wholesale extraction of the EVT package. Before adding another vendor component, identify its exact archive path and hash, preserve its notices, and record the adaptation boundary and verification status in DBG-C-FW-001. The EVT archive remains the source of truth for vendor examples and original files.
 
 The archive's English and Chinese contents indexes are `EVT/CH585_List_EN.txt` and `EVT/CH585_List.txt`.
 
