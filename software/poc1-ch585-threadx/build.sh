@@ -70,6 +70,17 @@ esac
         -o "${build_dir}/host-tests/test_dbgc_target_reset_sequence"
     "${build_dir}/host-tests/test_dbgc_target_reset_sequence"
     "${host_cc}" -std=c99 -Wall -Wextra -Werror -pedantic \
+        -DDBGC_CH585_TARGET_RESET_GPIO_HOST_TEST \
+        -I"${repo_dir}/software/common/ch585_target_reset_gpio_host_test" \
+        -I"${repo_dir}/software/common/target_reset_sequence/include" \
+        -I"${project_dir}/platform/ch585" \
+        "${project_dir}/platform/ch585/dbgc_ch585_target_reset_gpio.c" \
+        "${project_dir}/platform/ch585/dbgc_ch585_target_reset_sequence.c" \
+        "${repo_dir}/software/common/target_reset_sequence/src/dbgc_target_reset_sequence.c" \
+        "${repo_dir}/software/common/ch585_target_reset_gpio_host_test/test_ch585_target_reset_sequence.c" \
+        -o "${build_dir}/host-tests/test_ch585_target_reset_sequence"
+    "${build_dir}/host-tests/test_ch585_target_reset_sequence"
+    "${host_cc}" -std=c99 -Wall -Wextra -Werror -pedantic \
         -DDBGC_CH585_UART0_HOST_TEST \
         -I"${repo_dir}/software/common/ch585_uart0_host_test" \
         -I"${repo_dir}/software/common/byte_fifo/include" \

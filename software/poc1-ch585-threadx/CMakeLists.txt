@@ -14,6 +14,7 @@ add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../common/target_reset_sequence" t
 add_library(dbgc_ch585_platform STATIC
     platform/ch585/dbgc_ch585_swd_gpio.c
     platform/ch585/dbgc_ch585_target_reset_gpio.c
+    platform/ch585/dbgc_ch585_target_reset_sequence.c
     platform/ch585/dbgc_ch585_uart0.c
     platform/ch585/dbgc_ch585_uart0_bridge_adapter.c
     platform/ch585/dbgc_ch585_uid.c

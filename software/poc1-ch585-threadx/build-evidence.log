@@ -3931,3 +3931,1194 @@ WEAK   DEFAULT    1 dbgc_cmsis_compiler_weak_check
 
 
 PoC tick target update (2026-09-29): The user decided that V1 uses 1000 ticks/s. `platform/ch585/tx_user.h` now explicitly defines `TX_TIMER_TICKS_PER_SECOND` as `1000UL`, leaving the ThreadX submodule unchanged. With the source-declared 62,400,000 Hz, the low-level setup passes 62,400 to `SysTick_Config`; WCH `core_riscv.h` computes compare value 62,399. This is a source/configuration calculation, not a build result or hardware measurement. No rebuild or CH585M board runtime verification has been performed for this configuration yet. The prior 100 ticks/s build records above are historical and do not verify the updated configuration.
+Repository HEAD: bad08a563e80a13851edc8da5999e81edc07bbb0
+ThreadX commit: b91b03b9e75fa523b17127f9e0eca09dca916459
+ThreadX tag: v6.5.1.202602a_rel
+CMSIS-DAP commit: 12636590eec66fae2d1bba4518749426ad5a4595
+cmake version 3.28.3
+riscv-wch-elf-gcc (xPack GNU RISC-V Embedded GCC x86_64) 12.2.0
+GNU assembler (xPack GNU RISC-V Embedded GCC x86_64) 2.38
+GNU ld (xPack GNU RISC-V Embedded GCC x86_64) 2.38
+Host C compiler: cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+-- The C compiler identification is GNU 12.2.0
+-- The ASM compiler identification is GNU
+-- Found assembler: /home/dennis/.local/share/DBG-C/toolchains/MRS-2.4.0/RISC-V Embedded GCC12/bin/riscv-wch-elf-gcc
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /home/dennis/.local/share/DBG-C/toolchains/MRS-2.4.0/RISC-V Embedded GCC12/bin/riscv-wch-elf-gcc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Building standard ThreadX version
+-- THREADX_ARCH: risc-v32
+-- THREADX_TOOLCHAIN: gnu
+-- Using custom tx_user.h file from /home/dennis/Desktop/workspace/github_projects/DBG-C/software/poc1-ch585-threadx/platform/ch585/tx_user.h
+-- Configuring done (0.2s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/dennis/Desktop/workspace/github_projects/DBG-C/software/poc1-ch585-threadx/build/reset-sequence-pa4-integration
+[  2%] Building C object byte_fifo/CMakeFiles/dbgc_byte_fifo.dir/src/dbgc_byte_fifo.c.obj
+[  2%] Building C object target_reset_sequence/CMakeFiles/dbgc_target_reset_sequence.dir/src/dbgc_target_reset_sequence.c.obj
+[  4%] Building ASM object threadx/CMakeFiles/threadx.dir/ports/risc-v32/gnu/src/tx_thread_context_restore.S.obj
+[  4%] Building ASM object threadx/CMakeFiles/threadx.dir/ports/risc-v32/gnu/src/tx_thread_system_return.S.obj
+[  4%] Building ASM object threadx/CMakeFiles/threadx.dir/home/dennis/Desktop/workspace/github_projects/DBG-C/software/poc1-ch585-threadx/platform/ch585/threadx_port/tx_initialize_low_level.S.obj
+[  4%] Building C object threadx/CMakeFiles/threadx.dir/home/dennis/Desktop/workspace/github_projects/DBG-C/software/poc1-ch585-threadx/platform/ch585/threadx_port/tx_initialize_low_level.c.obj
+[  4%] Building ASM object threadx/CMakeFiles/threadx.dir/ports/risc-v32/gnu/src/tx_thread_stack_build.S.obj
+[  4%] Building ASM object threadx/CMakeFiles/threadx.dir/ports/risc-v32/gnu/src/tx_thread_schedule.S.obj
+[  4%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_block_allocate.c.obj
+[  4%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_block_pool_create.c.obj
+[  4%] Building ASM object threadx/CMakeFiles/threadx.dir/ports/risc-v32/gnu/src/tx_thread_context_save.S.obj
+[  5%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_block_pool_cleanup.c.obj
+[  5%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_delete.c.obj
+[  6%] Building ASM object threadx/CMakeFiles/threadx.dir/home/dennis/Desktop/workspace/github_projects/DBG-C/software/poc1-ch585-threadx/platform/ch585/threadx_port/tx_systick.S.obj
+[  6%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_block_pool_info_get.c.obj
+[  7%] Building ASM object threadx/CMakeFiles/threadx.dir/ports/risc-v32/gnu/src/tx_timer_interrupt.S.obj
+[  8%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_reset.c.obj
+[  9%] Building ASM object threadx/CMakeFiles/threadx.dir/ports/risc-v32/gnu/src/tx_thread_interrupt_control.S.obj
+[ 10%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_block_pool_performance_info_get.c.obj
+[ 10%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_block_pool_initialize.c.obj
+[ 11%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_block_pool_delete.c.obj
+[ 11%] Linking C static library libdbgc_target_reset_sequence.a
+[ 11%] Linking C static library libdbgc_byte_fifo.a
+[ 11%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_block_pool_performance_system_info_get.c.obj
+[ 12%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_byte_allocate.c.obj
+[ 12%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_byte_pool_cleanup.c.obj
+[ 13%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_block_pool_prioritize.c.obj
+[ 14%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_byte_pool_create.c.obj
+[ 15%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_block_release.c.obj
+[ 15%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_byte_pool_performance_info_get.c.obj
+[ 16%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_byte_pool_info_get.c.obj
+[ 16%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_byte_pool_performance_system_info_get.c.obj
+[ 16%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_byte_pool_delete.c.obj
+[ 16%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_byte_pool_prioritize.c.obj
+[ 16%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_byte_pool_initialize.c.obj
+[ 17%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_byte_pool_search.c.obj
+[ 17%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_byte_release.c.obj
+[ 18%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_event_flags_cleanup.c.obj
+[ 18%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_event_flags_create.c.obj
+[ 19%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_event_flags_performance_info_get.c.obj
+[ 20%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_event_flags_delete.c.obj
+[ 20%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_event_flags_get.c.obj
+[ 20%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_event_flags_set_notify.c.obj
+[ 21%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_event_flags_info_get.c.obj
+[ 23%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_initialize_kernel_enter.c.obj
+[ 23%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_initialize_high_level.c.obj
+[ 23%] Built target dbgc_target_reset_sequence
+[ 23%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_event_flags_initialize.c.obj
+[ 23%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_initialize_kernel_setup.c.obj
+[ 23%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_event_flags_set.c.obj
+[ 23%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_event_flags_performance_system_info_get.c.obj
+[ 24%] Built target dbgc_byte_fifo
+[ 24%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_misra.c.obj
+[ 25%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_mutex_create.c.obj
+[ 25%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_mutex_delete.c.obj
+[ 26%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_mutex_initialize.c.obj
+[ 25%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_mutex_cleanup.c.obj
+[ 27%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_mutex_get.c.obj
+[ 27%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_mutex_info_get.c.obj
+[ 27%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_mutex_performance_info_get.c.obj
+[ 28%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_mutex_priority_change.c.obj
+[ 28%] Building C object byte_stream_bridge/CMakeFiles/dbgc_byte_stream_bridge.dir/src/dbgc_byte_stream_bridge.c.obj
+[ 28%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_mutex_prioritize.c.obj
+[ 28%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_initialize.c.obj
+[ 29%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_mutex_performance_system_info_get.c.obj
+[ 29%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_delete.c.obj
+[ 30%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_mutex_put.c.obj
+[ 30%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_front_send.c.obj
+[ 31%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_flush.c.obj
+[ 33%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_create.c.obj
+[ 33%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_info_get.c.obj
+[ 33%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_cleanup.c.obj
+[ 34%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_performance_info_get.c.obj
+[ 34%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_performance_system_info_get.c.obj
+[ 35%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_send_notify.c.obj
+[ 36%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_semaphore_cleanup.c.obj
+[ 36%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_semaphore_ceiling_put.c.obj
+[ 37%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_prioritize.c.obj
+[ 38%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_semaphore_info_get.c.obj
+[ 39%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_semaphore_delete.c.obj
+[ 36%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_receive.c.obj
+[ 39%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_semaphore_create.c.obj
+[ 39%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_send.c.obj
+[ 39%] Linking C static library libdbgc_byte_stream_bridge.a
+[ 39%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_semaphore_get.c.obj
+[ 39%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_semaphore_performance_system_info_get.c.obj
+[ 40%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_semaphore_prioritize.c.obj
+[ 40%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_semaphore_initialize.c.obj
+[ 41%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_semaphore_performance_info_get.c.obj
+[ 41%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_semaphore_put.c.obj
+[ 42%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_create.c.obj
+[ 42%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_entry_exit_notify.c.obj
+[ 42%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_semaphore_put_notify.c.obj
+[ 42%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_info_get.c.obj
+[ 42%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_performance_info_get.c.obj
+[ 43%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_identify.c.obj
+[ 44%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_initialize.c.obj
+[ 45%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_performance_system_info_get.c.obj
+[ 45%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_preemption_change.c.obj
+[ 46%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_priority_change.c.obj
+[ 46%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_relinquish.c.obj
+[ 47%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_stack_analyze.c.obj
+[ 47%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_resume.c.obj
+[ 48%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_stack_error_notify.c.obj
+[ 48%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_stack_error_handler.c.obj
+[ 48%] Built target dbgc_byte_stream_bridge
+[ 49%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_sleep.c.obj
+[ 49%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_shell_entry.c.obj
+[ 49%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_suspend.c.obj
+[ 49%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_system_resume.c.obj
+[ 50%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_time_slice.c.obj
+[ 51%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_system_preempt_check.c.obj
+[ 52%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_system_suspend.c.obj
+[ 52%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_terminate.c.obj
+[ 52%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_timeout.c.obj
+[ 52%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_time_slice_change.c.obj
+[ 52%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_time_get.c.obj
+[ 53%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_time_set.c.obj
+[ 54%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_wait_abort.c.obj
+[ 55%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_delete.c.obj
+[ 55%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_deactivate.c.obj
+[ 55%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_info_get.c.obj
+[ 55%] Building C object byte_duplex_bridge/CMakeFiles/dbgc_byte_duplex_bridge.dir/src/dbgc_byte_duplex_bridge.c.obj
+[ 56%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_change.c.obj
+[ 56%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_performance_info_get.c.obj
+[ 56%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_activate.c.obj
+[ 56%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_create.c.obj
+[ 56%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_performance_system_info_get.c.obj
+[ 57%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_expiration_process.c.obj
+[ 57%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_system_deactivate.c.obj
+[ 58%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_thread_entry.c.obj
+[ 60%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_initialize.c.obj
+[ 59%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_system_activate.c.obj
+[ 60%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_trace_buffer_full_notify.c.obj
+[ 61%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_trace_disable.c.obj
+[ 61%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_trace_interrupt_control.c.obj
+[ 62%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_trace_initialize.c.obj
+[ 63%] Linking C static library libdbgc_byte_duplex_bridge.a
+[ 63%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_trace_enable.c.obj
+[ 63%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_trace_event_filter.c.obj
+[ 63%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_trace_event_unfilter.c.obj
+[ 64%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_trace_isr_enter_insert.c.obj
+[ 64%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_trace_isr_exit_insert.c.obj
+[ 64%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_trace_object_register.c.obj
+[ 65%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_block_allocate.c.obj
+[ 65%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_trace_user_event_insert.c.obj
+[ 66%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_trace_object_unregister.c.obj
+[ 66%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_block_pool_create.c.obj
+[ 67%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_block_pool_delete.c.obj
+[ 67%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_block_pool_info_get.c.obj
+[ 68%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_block_pool_prioritize.c.obj
+[ 68%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_block_release.c.obj
+[ 69%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_byte_allocate.c.obj
+[ 69%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_byte_pool_create.c.obj
+[ 70%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_byte_pool_info_get.c.obj
+[ 70%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_byte_pool_delete.c.obj
+[ 70%] Built target dbgc_byte_duplex_bridge
+[ 70%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_byte_pool_prioritize.c.obj
+[ 70%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_event_flags_create.c.obj
+[ 71%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_byte_release.c.obj
+[ 73%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_event_flags_get.c.obj
+[ 73%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_event_flags_delete.c.obj
+[ 73%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_event_flags_info_get.c.obj
+[ 73%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_mutex_prioritize.c.obj
+[ 73%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_mutex_create.c.obj
+[ 73%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_event_flags_set.c.obj
+[ 74%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_event_flags_set_notify.c.obj
+[ 75%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_mutex_delete.c.obj
+[ 75%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_mutex_put.c.obj
+[ 76%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_queue_delete.c.obj
+[ 76%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_mutex_info_get.c.obj
+[ 77%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_queue_flush.c.obj
+[ 78%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_queue_create.c.obj
+[ 78%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_queue_front_send.c.obj
+[ 78%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_mutex_get.c.obj
+[ 78%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_queue_prioritize.c.obj
+[ 80%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_queue_receive.c.obj
+[ 81%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_queue_info_get.c.obj
+[ 81%] Building C object CMakeFiles/dbgc_ch585_platform.dir/platform/ch585/dbgc_ch585_swd_gpio.c.obj
+[ 82%] Building C object CMakeFiles/dbgc_ch585_platform.dir/platform/ch585/dbgc_ch585_target_reset_sequence.c.obj
+[ 82%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_queue_send.c.obj
+[ 82%] Building C object CMakeFiles/dbgc_ch585_platform.dir/platform/ch585/dbgc_ch585_target_reset_gpio.c.obj
+[ 83%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_queue_send_notify.c.obj
+[ 83%] Building C object CMakeFiles/dbgc_ch585_platform.dir/platform/ch585/dbgc_ch585_uart0.c.obj
+[ 84%] Building C object CMakeFiles/dbgc_ch585_platform.dir/platform/ch585/dbgc_ch585_uart0_bridge_adapter.c.obj
+[ 84%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_semaphore_ceiling_put.c.obj
+[ 85%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_semaphore_create.c.obj
+[ 85%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_semaphore_delete.c.obj
+[ 86%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_semaphore_info_get.c.obj
+[ 86%] Building C object CMakeFiles/dbgc_ch585_platform.dir/platform/ch585/dbgc_ch585_uid.c.obj
+[ 87%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_entry_exit_notify.c.obj
+[ 88%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_semaphore_put.c.obj
+[ 88%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_semaphore_get.c.obj
+[ 88%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_priority_change.c.obj
+[ 89%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_create.c.obj
+[ 89%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_semaphore_prioritize.c.obj
+[ 89%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_semaphore_put_notify.c.obj
+[ 90%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_preemption_change.c.obj
+[ 89%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_delete.c.obj
+[ 90%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_info_get.c.obj
+[ 91%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_relinquish.c.obj
+[ 92%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_reset.c.obj
+[ 92%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_time_slice_change.c.obj
+[ 92%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_resume.c.obj
+[ 93%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_suspend.c.obj
+[ 93%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_timer_change.c.obj
+[ 94%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_timer_activate.c.obj
+[ 93%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_timer_deactivate.c.obj
+[ 94%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_terminate.c.obj
+[ 94%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_wait_abort.c.obj
+[ 96%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_timer_create.c.obj
+[ 96%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_timer_delete.c.obj
+[ 96%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_timer_info_get.c.obj
+[ 96%] Linking C static library libdbgc_ch585_platform.a
+[ 97%] Linking C static library libthreadx.a
+[ 97%] Built target dbgc_ch585_platform
+[ 97%] Built target threadx
+[100%] Building ASM object CMakeFiles/dbgc_poc1.dir/platform/ch585/startup/startup_CH585.S.obj
+[100%] Building C object CMakeFiles/dbgc_poc1.dir/src/main.c.obj
+[100%] Building C object CMakeFiles/dbgc_poc1.dir/platform/ch585/highcode_init.c.obj
+[100%] Linking C executable dbgc_poc1.elf
+[100%] Built target dbgc_poc1
+PASS: 3683 byte FIFO checks
+Byte stream bridge checks passed: 15
+Byte duplex bridge checks passed: 15
+Target reset sequence checks passed: 24
+software/poc1-ch585-threadx/build.sh: line 276: 1804269 Segmentation fault      (core dumped) "${build_dir}/host-tests/test_ch585_target_reset_sequence"
+Repository HEAD: bad08a563e80a13851edc8da5999e81edc07bbb0
+ThreadX commit: b91b03b9e75fa523b17127f9e0eca09dca916459
+ThreadX tag: v6.5.1.202602a_rel
+CMSIS-DAP commit: 12636590eec66fae2d1bba4518749426ad5a4595
+cmake version 3.28.3
+riscv-wch-elf-gcc (xPack GNU RISC-V Embedded GCC x86_64) 12.2.0
+GNU assembler (xPack GNU RISC-V Embedded GCC x86_64) 2.38
+GNU ld (xPack GNU RISC-V Embedded GCC x86_64) 2.38
+Host C compiler: cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+-- The C compiler identification is GNU 12.2.0
+-- The ASM compiler identification is GNU
+-- Found assembler: /home/dennis/.local/share/DBG-C/toolchains/MRS-2.4.0/RISC-V Embedded GCC12/bin/riscv-wch-elf-gcc
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /home/dennis/.local/share/DBG-C/toolchains/MRS-2.4.0/RISC-V Embedded GCC12/bin/riscv-wch-elf-gcc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Building standard ThreadX version
+-- THREADX_ARCH: risc-v32
+-- THREADX_TOOLCHAIN: gnu
+-- Using custom tx_user.h file from /home/dennis/Desktop/workspace/github_projects/DBG-C/software/poc1-ch585-threadx/platform/ch585/tx_user.h
+-- Configuring done (0.1s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/dennis/Desktop/workspace/github_projects/DBG-C/software/poc1-ch585-threadx/build/reset-sequence-pa4-pass1
+[  2%] Building C object byte_fifo/CMakeFiles/dbgc_byte_fifo.dir/src/dbgc_byte_fifo.c.obj
+[  2%] Building C object target_reset_sequence/CMakeFiles/dbgc_target_reset_sequence.dir/src/dbgc_target_reset_sequence.c.obj
+[  4%] Building ASM object threadx/CMakeFiles/threadx.dir/ports/risc-v32/gnu/src/tx_thread_context_restore.S.obj
+[  4%] Building ASM object threadx/CMakeFiles/threadx.dir/home/dennis/Desktop/workspace/github_projects/DBG-C/software/poc1-ch585-threadx/platform/ch585/threadx_port/tx_systick.S.obj
+[  4%] Building ASM object threadx/CMakeFiles/threadx.dir/ports/risc-v32/gnu/src/tx_thread_schedule.S.obj
+[  4%] Building ASM object threadx/CMakeFiles/threadx.dir/ports/risc-v32/gnu/src/tx_thread_interrupt_control.S.obj
+[  4%] Building ASM object threadx/CMakeFiles/threadx.dir/ports/risc-v32/gnu/src/tx_thread_system_return.S.obj
+[  5%] Building ASM object threadx/CMakeFiles/threadx.dir/ports/risc-v32/gnu/src/tx_thread_context_save.S.obj
+[  6%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_reset.c.obj
+[  7%] Building ASM object threadx/CMakeFiles/threadx.dir/ports/risc-v32/gnu/src/tx_timer_interrupt.S.obj
+[  8%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_block_pool_cleanup.c.obj
+[  9%] Building ASM object threadx/CMakeFiles/threadx.dir/ports/risc-v32/gnu/src/tx_thread_stack_build.S.obj
+[  8%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_delete.c.obj
+[  9%] Building ASM object threadx/CMakeFiles/threadx.dir/home/dennis/Desktop/workspace/github_projects/DBG-C/software/poc1-ch585-threadx/platform/ch585/threadx_port/tx_initialize_low_level.S.obj
+[  9%] Building C object threadx/CMakeFiles/threadx.dir/home/dennis/Desktop/workspace/github_projects/DBG-C/software/poc1-ch585-threadx/platform/ch585/threadx_port/tx_initialize_low_level.c.obj
+[ 10%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_block_pool_create.c.obj
+[ 10%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_block_pool_delete.c.obj
+[ 10%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_block_allocate.c.obj
+[ 10%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_block_pool_info_get.c.obj
+[ 11%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_block_pool_performance_system_info_get.c.obj
+[ 11%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_block_pool_performance_info_get.c.obj
+[ 12%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_block_pool_prioritize.c.obj
+[ 12%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_block_release.c.obj
+[ 12%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_block_pool_initialize.c.obj
+[ 12%] Linking C static library libdbgc_target_reset_sequence.a
+[ 12%] Linking C static library libdbgc_byte_fifo.a
+[ 14%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_byte_pool_create.c.obj
+[ 14%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_byte_allocate.c.obj
+[ 14%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_byte_pool_performance_system_info_get.c.obj
+[ 15%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_byte_pool_info_get.c.obj
+[ 16%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_byte_pool_performance_info_get.c.obj
+[ 16%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_byte_pool_delete.c.obj
+[ 16%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_byte_pool_cleanup.c.obj
+[ 16%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_byte_pool_initialize.c.obj
+[ 17%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_byte_pool_search.c.obj
+[ 17%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_byte_release.c.obj
+[ 18%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_event_flags_cleanup.c.obj
+[ 18%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_event_flags_create.c.obj
+[ 18%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_byte_pool_prioritize.c.obj
+[ 19%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_event_flags_delete.c.obj
+[ 19%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_event_flags_initialize.c.obj
+[ 19%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_event_flags_get.c.obj
+[ 20%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_event_flags_info_get.c.obj
+[ 20%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_event_flags_performance_system_info_get.c.obj
+[ 22%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_event_flags_set.c.obj
+[ 22%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_event_flags_performance_info_get.c.obj
+[ 22%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_initialize_high_level.c.obj
+[ 22%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_event_flags_set_notify.c.obj
+[ 22%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_initialize_kernel_setup.c.obj
+[ 22%] Built target dbgc_target_reset_sequence
+[ 23%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_initialize_kernel_enter.c.obj
+[ 23%] Built target dbgc_byte_fifo
+[ 24%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_misra.c.obj
+[ 24%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_mutex_performance_info_get.c.obj
+[ 24%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_mutex_cleanup.c.obj
+[ 25%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_mutex_create.c.obj
+[ 26%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_mutex_initialize.c.obj
+[ 26%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_mutex_delete.c.obj
+[ 27%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_mutex_get.c.obj
+[ 27%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_mutex_info_get.c.obj
+[ 28%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_mutex_performance_system_info_get.c.obj
+[ 28%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_mutex_priority_change.c.obj
+[ 28%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_mutex_prioritize.c.obj
+[ 28%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_cleanup.c.obj
+[ 29%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_mutex_put.c.obj
+[ 30%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_create.c.obj
+[ 31%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_flush.c.obj
+[ 31%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_delete.c.obj
+[ 31%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_front_send.c.obj
+[ 33%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_performance_info_get.c.obj
+[ 32%] Building C object byte_stream_bridge/CMakeFiles/dbgc_byte_stream_bridge.dir/src/dbgc_byte_stream_bridge.c.obj
+[ 33%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_send.c.obj
+[ 34%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_send_notify.c.obj
+[ 35%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_info_get.c.obj
+[ 36%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_initialize.c.obj
+[ 36%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_receive.c.obj
+[ 36%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_semaphore_ceiling_put.c.obj
+[ 36%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_prioritize.c.obj
+[ 37%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_semaphore_delete.c.obj
+[ 37%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_performance_system_info_get.c.obj
+[ 38%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_semaphore_cleanup.c.obj
+[ 38%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_semaphore_create.c.obj
+[ 38%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_semaphore_get.c.obj
+[ 38%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_semaphore_initialize.c.obj
+[ 39%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_semaphore_info_get.c.obj
+[ 39%] Linking C static library libdbgc_byte_stream_bridge.a
+[ 40%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_semaphore_prioritize.c.obj
+[ 41%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_semaphore_performance_info_get.c.obj
+[ 41%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_entry_exit_notify.c.obj
+[ 41%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_preemption_change.c.obj
+[ 41%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_semaphore_performance_system_info_get.c.obj
+[ 41%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_semaphore_put.c.obj
+[ 41%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_relinquish.c.obj
+[ 42%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_priority_change.c.obj
+[ 43%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_initialize.c.obj
+[ 44%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_create.c.obj
+[ 41%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_semaphore_put_notify.c.obj
+[ 45%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_identify.c.obj
+[ 46%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_info_get.c.obj
+[ 46%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_performance_system_info_get.c.obj
+[ 45%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_performance_info_get.c.obj
+[ 46%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_resume.c.obj
+[ 47%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_shell_entry.c.obj
+[ 47%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_stack_error_handler.c.obj
+[ 48%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_stack_analyze.c.obj
+[ 47%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_sleep.c.obj
+[ 48%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_suspend.c.obj
+[ 49%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_stack_error_notify.c.obj
+[ 50%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_system_preempt_check.c.obj
+[ 50%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_terminate.c.obj
+[ 50%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_time_slice_change.c.obj
+[ 50%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_system_resume.c.obj
+[ 51%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_time_slice.c.obj
+[ 51%] Built target dbgc_byte_stream_bridge
+[ 52%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_system_suspend.c.obj
+[ 52%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_timeout.c.obj
+[ 53%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_wait_abort.c.obj
+[ 53%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_activate.c.obj
+[ 54%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_time_set.c.obj
+[ 55%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_change.c.obj
+[ 55%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_time_get.c.obj
+[ 55%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_create.c.obj
+[ 55%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_delete.c.obj
+[ 56%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_deactivate.c.obj
+[ 57%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_expiration_process.c.obj
+[ 57%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_performance_system_info_get.c.obj
+[ 57%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_info_get.c.obj
+[ 57%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_performance_info_get.c.obj
+[ 57%] Building C object byte_duplex_bridge/CMakeFiles/dbgc_byte_duplex_bridge.dir/src/dbgc_byte_duplex_bridge.c.obj
+[ 59%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_thread_entry.c.obj
+[ 58%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_initialize.c.obj
+[ 60%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_system_activate.c.obj
+[ 60%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_trace_enable.c.obj
+[ 60%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_system_deactivate.c.obj
+[ 60%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_trace_buffer_full_notify.c.obj
+[ 62%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_trace_disable.c.obj
+[ 62%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_trace_initialize.c.obj
+[ 62%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_trace_interrupt_control.c.obj
+[ 63%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_trace_event_filter.c.obj
+[ 64%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_trace_isr_enter_insert.c.obj
+[ 64%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_trace_event_unfilter.c.obj
+[ 64%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_trace_isr_exit_insert.c.obj
+[ 65%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_trace_object_unregister.c.obj
+[ 66%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_block_allocate.c.obj
+[ 66%] Linking C static library libdbgc_byte_duplex_bridge.a
+[ 66%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_block_pool_create.c.obj
+[ 66%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_trace_object_register.c.obj
+[ 66%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_trace_user_event_insert.c.obj
+[ 68%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_block_pool_prioritize.c.obj
+[ 68%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_block_pool_delete.c.obj
+[ 68%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_block_pool_info_get.c.obj
+[ 68%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_block_release.c.obj
+[ 69%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_byte_allocate.c.obj
+[ 70%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_byte_pool_delete.c.obj
+[ 70%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_byte_pool_create.c.obj
+[ 70%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_byte_pool_info_get.c.obj
+[ 70%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_event_flags_create.c.obj
+[ 70%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_event_flags_set.c.obj
+[ 70%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_byte_pool_prioritize.c.obj
+[ 70%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_event_flags_get.c.obj
+[ 70%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_mutex_create.c.obj
+[ 71%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_byte_release.c.obj
+[ 72%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_event_flags_info_get.c.obj
+[ 73%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_event_flags_delete.c.obj
+[ 73%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_mutex_prioritize.c.obj
+[ 74%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_mutex_info_get.c.obj
+[ 75%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_event_flags_set_notify.c.obj
+[ 76%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_mutex_delete.c.obj
+[ 76%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_mutex_put.c.obj
+[ 76%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_queue_front_send.c.obj
+[ 77%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_queue_create.c.obj
+[ 77%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_mutex_get.c.obj
+[ 77%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_queue_delete.c.obj
+[ 78%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_queue_flush.c.obj
+[ 78%] Built target dbgc_byte_duplex_bridge
+[ 79%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_queue_info_get.c.obj
+[ 79%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_queue_send.c.obj
+[ 80%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_semaphore_info_get.c.obj
+[ 80%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_semaphore_ceiling_put.c.obj
+[ 81%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_semaphore_create.c.obj
+[ 81%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_queue_prioritize.c.obj
+[ 82%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_queue_send_notify.c.obj
+[ 83%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_queue_receive.c.obj
+[ 83%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_semaphore_put_notify.c.obj
+[ 83%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_semaphore_get.c.obj
+[ 84%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_semaphore_put.c.obj
+[ 84%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_semaphore_prioritize.c.obj
+[ 84%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_semaphore_delete.c.obj
+[ 84%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_delete.c.obj
+[ 86%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_create.c.obj
+[ 86%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_reset.c.obj
+[ 85%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_entry_exit_notify.c.obj
+[ 87%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_preemption_change.c.obj
+[ 87%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_priority_change.c.obj
+[ 87%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_info_get.c.obj
+[ 87%] Building C object CMakeFiles/dbgc_ch585_platform.dir/platform/ch585/dbgc_ch585_target_reset_gpio.c.obj
+[ 88%] Building C object CMakeFiles/dbgc_ch585_platform.dir/platform/ch585/dbgc_ch585_uart0_bridge_adapter.c.obj
+[ 88%] Building C object CMakeFiles/dbgc_ch585_platform.dir/platform/ch585/dbgc_ch585_uid.c.obj
+[ 89%] Building C object CMakeFiles/dbgc_ch585_platform.dir/platform/ch585/dbgc_ch585_swd_gpio.c.obj
+[ 90%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_relinquish.c.obj
+[ 91%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_time_slice_change.c.obj
+[ 91%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_resume.c.obj
+[ 91%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_terminate.c.obj
+[ 92%] Building C object CMakeFiles/dbgc_ch585_platform.dir/platform/ch585/dbgc_ch585_target_reset_sequence.c.obj
+[ 92%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_timer_change.c.obj
+[ 92%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_wait_abort.c.obj
+[ 93%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_suspend.c.obj
+[ 94%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_timer_activate.c.obj
+[ 94%] Building C object CMakeFiles/dbgc_ch585_platform.dir/platform/ch585/dbgc_ch585_uart0.c.obj
+[ 95%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_timer_delete.c.obj
+[ 95%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_timer_deactivate.c.obj
+[ 96%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_timer_create.c.obj
+[ 96%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_timer_info_get.c.obj
+[ 96%] Linking C static library libdbgc_ch585_platform.a
+[ 97%] Linking C static library libthreadx.a
+[ 97%] Built target dbgc_ch585_platform
+[ 97%] Built target threadx
+[100%] Building C object CMakeFiles/dbgc_poc1.dir/platform/ch585/highcode_init.c.obj
+[100%] Building ASM object CMakeFiles/dbgc_poc1.dir/platform/ch585/startup/startup_CH585.S.obj
+[100%] Building C object CMakeFiles/dbgc_poc1.dir/src/main.c.obj
+[100%] Linking C executable dbgc_poc1.elf
+[100%] Built target dbgc_poc1
+PASS: 3683 byte FIFO checks
+Byte stream bridge checks passed: 15
+Byte duplex bridge checks passed: 15
+Target reset sequence checks passed: 24
+PASS: 31 CH585 Target Reset sequence integration checks
+CH585 UART0 host register checks passed: 94
+PASS: 57 CH585 SWD GPIO register-model checks
+PASS: 33 CH585 Target Reset GPIO register-model checks
+PASS: 31 CH585 UID adapter checks
+DAP.h source SHA-256: 1fa6a1489d199de159a0bd1a814845ac8e1f6e0335d349b883f341f84c1b73c5
+DAP.c source SHA-256: 87f72c3e84fec0a4a5cf6970a83cdfa08bd864a3127666e1e371fac3fecc0ad3
+CMSIS-DAP commit: 12636590eec66fae2d1bba4518749426ad5a4595
+Test adaptation: select upstream C-loop delay branch without defining __CC_ARM
+CMSIS-DAP bounds checks passed: 102 checks
+CMSIS-DAP host checks passed: 8 command-core and 5 bounded-dispatch cases
+CMSIS-DAP SWD engine checks passed: 2759 assertions, 9 cases
+  Class:                             ELF32
+  Machine:                           RISC-V
+  Class:                             ELF32
+  Machine:                           RISC-V
+  Class:                             ELF32
+  Machine:                           RISC-V
+  Class:                             ELF32
+  Machine:                           RISC-V
+  Class:                             ELF32
+  Machine:                           RISC-V
+         U memcpy
+  Class:                             ELF32
+  Machine:                           RISC-V
+WEAK   DEFAULT    1 dbgc_cmsis_compiler_weak_check
+  12:	0001                	nop
+  Class:                             ELF32
+  Machine:                           RISC-V
+  Class:                             ELF32
+  Machine:                           RISC-V
+   text	   data	    bss	    dec	    hex	filename
+   8916	      8	   5580	  14504	   38a8	/home/dennis/Desktop/workspace/github_projects/DBG-C/software/poc1-ch585-threadx/build/reset-sequence-pa4-pass1/dbgc_poc1.elf
+  Class:                             ELF32
+  Machine:                           RISC-V
+  Entry point address:               0x0
+Repository HEAD: bad08a563e80a13851edc8da5999e81edc07bbb0
+ThreadX commit: b91b03b9e75fa523b17127f9e0eca09dca916459
+ThreadX tag: v6.5.1.202602a_rel
+CMSIS-DAP commit: 12636590eec66fae2d1bba4518749426ad5a4595
+cmake version 3.28.3
+riscv-wch-elf-gcc (xPack GNU RISC-V Embedded GCC x86_64) 12.2.0
+GNU assembler (xPack GNU RISC-V Embedded GCC x86_64) 2.38
+GNU ld (xPack GNU RISC-V Embedded GCC x86_64) 2.38
+Host C compiler: cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+-- The C compiler identification is GNU 12.2.0
+-- The ASM compiler identification is GNU
+-- Found assembler: /home/dennis/.local/share/DBG-C/toolchains/MRS-2.4.0/RISC-V Embedded GCC12/bin/riscv-wch-elf-gcc
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /home/dennis/.local/share/DBG-C/toolchains/MRS-2.4.0/RISC-V Embedded GCC12/bin/riscv-wch-elf-gcc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Building standard ThreadX version
+-- THREADX_ARCH: risc-v32
+-- THREADX_TOOLCHAIN: gnu
+-- Using custom tx_user.h file from /home/dennis/Desktop/workspace/github_projects/DBG-C/software/poc1-ch585-threadx/platform/ch585/tx_user.h
+-- Configuring done (0.2s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/dennis/Desktop/workspace/github_projects/DBG-C/software/poc1-ch585-threadx/build/reset-sequence-pa4-pass2
+[  1%] Building C object target_reset_sequence/CMakeFiles/dbgc_target_reset_sequence.dir/src/dbgc_target_reset_sequence.c.obj
+[  2%] Building C object byte_fifo/CMakeFiles/dbgc_byte_fifo.dir/src/dbgc_byte_fifo.c.obj
+[  5%] Building ASM object threadx/CMakeFiles/threadx.dir/ports/risc-v32/gnu/src/tx_thread_schedule.S.obj
+[  5%] Building ASM object threadx/CMakeFiles/threadx.dir/ports/risc-v32/gnu/src/tx_thread_context_save.S.obj
+[  5%] Building ASM object threadx/CMakeFiles/threadx.dir/home/dennis/Desktop/workspace/github_projects/DBG-C/software/poc1-ch585-threadx/platform/ch585/threadx_port/tx_initialize_low_level.S.obj
+[  5%] Building ASM object threadx/CMakeFiles/threadx.dir/ports/risc-v32/gnu/src/tx_thread_system_return.S.obj
+[  5%] Building ASM object threadx/CMakeFiles/threadx.dir/ports/risc-v32/gnu/src/tx_timer_interrupt.S.obj
+[  5%] Building ASM object threadx/CMakeFiles/threadx.dir/ports/risc-v32/gnu/src/tx_thread_interrupt_control.S.obj
+[  5%] Building ASM object threadx/CMakeFiles/threadx.dir/ports/risc-v32/gnu/src/tx_thread_context_restore.S.obj
+[  5%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_delete.c.obj
+[  6%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_reset.c.obj
+[  6%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_block_allocate.c.obj
+[  5%] Building ASM object threadx/CMakeFiles/threadx.dir/ports/risc-v32/gnu/src/tx_thread_stack_build.S.obj
+[  8%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_block_pool_cleanup.c.obj
+[  8%] Building C object threadx/CMakeFiles/threadx.dir/home/dennis/Desktop/workspace/github_projects/DBG-C/software/poc1-ch585-threadx/platform/ch585/threadx_port/tx_initialize_low_level.c.obj
+[  9%] Building ASM object threadx/CMakeFiles/threadx.dir/home/dennis/Desktop/workspace/github_projects/DBG-C/software/poc1-ch585-threadx/platform/ch585/threadx_port/tx_systick.S.obj
+[  9%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_block_pool_create.c.obj
+[ 10%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_block_pool_delete.c.obj
+[ 10%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_block_pool_info_get.c.obj
+[ 10%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_block_pool_initialize.c.obj
+[ 10%] Linking C static library libdbgc_target_reset_sequence.a
+[ 10%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_block_release.c.obj
+[ 13%] Linking C static library libdbgc_byte_fifo.a
+[ 13%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_block_pool_performance_info_get.c.obj
+[ 13%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_block_pool_prioritize.c.obj
+[ 13%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_byte_allocate.c.obj
+[ 13%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_block_pool_performance_system_info_get.c.obj
+[ 14%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_byte_pool_create.c.obj
+[ 14%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_byte_pool_cleanup.c.obj
+[ 15%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_byte_pool_performance_info_get.c.obj
+[ 16%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_byte_pool_info_get.c.obj
+[ 16%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_byte_pool_initialize.c.obj
+[ 14%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_byte_pool_delete.c.obj
+[ 16%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_byte_release.c.obj
+[ 16%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_byte_pool_prioritize.c.obj
+[ 17%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_byte_pool_search.c.obj
+[ 17%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_byte_pool_performance_system_info_get.c.obj
+[ 18%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_event_flags_delete.c.obj
+[ 19%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_event_flags_cleanup.c.obj
+[ 19%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_event_flags_initialize.c.obj
+[ 19%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_event_flags_create.c.obj
+[ 20%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_event_flags_info_get.c.obj
+[ 21%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_event_flags_performance_info_get.c.obj
+[ 21%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_event_flags_performance_system_info_get.c.obj
+[ 21%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_event_flags_get.c.obj
+[ 21%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_event_flags_set_notify.c.obj
+[ 22%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_event_flags_set.c.obj
+[ 22%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_initialize_high_level.c.obj
+[ 23%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_initialize_kernel_enter.c.obj
+[ 23%] Built target dbgc_byte_fifo
+[ 23%] Built target dbgc_target_reset_sequence
+[ 23%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_mutex_delete.c.obj
+[ 23%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_mutex_performance_info_get.c.obj
+[ 23%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_mutex_cleanup.c.obj
+[ 24%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_misra.c.obj
+[ 24%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_mutex_prioritize.c.obj
+[ 25%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_mutex_create.c.obj
+[ 25%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_initialize_kernel_setup.c.obj
+[ 27%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_mutex_performance_system_info_get.c.obj
+[ 27%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_cleanup.c.obj
+[ 27%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_front_send.c.obj
+[ 26%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_mutex_put.c.obj
+[ 27%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_mutex_info_get.c.obj
+[ 29%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_mutex_get.c.obj
+[ 30%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_mutex_initialize.c.obj
+[ 30%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_create.c.obj
+[ 30%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_delete.c.obj
+[ 29%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_mutex_priority_change.c.obj
+[ 31%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_flush.c.obj
+[ 32%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_info_get.c.obj
+[ 33%] Building C object byte_stream_bridge/CMakeFiles/dbgc_byte_stream_bridge.dir/src/dbgc_byte_stream_bridge.c.obj
+[ 34%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_performance_info_get.c.obj
+[ 34%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_initialize.c.obj
+[ 35%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_prioritize.c.obj
+[ 35%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_performance_system_info_get.c.obj
+[ 36%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_semaphore_cleanup.c.obj
+[ 36%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_send.c.obj
+[ 37%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_semaphore_delete.c.obj
+[ 37%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_receive.c.obj
+[ 37%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_semaphore_get.c.obj
+[ 37%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_semaphore_performance_system_info_get.c.obj
+[ 37%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_semaphore_ceiling_put.c.obj
+[ 38%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_send_notify.c.obj
+[ 39%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_semaphore_prioritize.c.obj
+[ 39%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_semaphore_initialize.c.obj
+[ 39%] Linking C static library libdbgc_byte_stream_bridge.a
+[ 39%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_semaphore_create.c.obj
+[ 40%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_semaphore_info_get.c.obj
+[ 40%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_semaphore_put.c.obj
+[ 41%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_identify.c.obj
+[ 42%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_semaphore_performance_info_get.c.obj
+[ 42%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_entry_exit_notify.c.obj
+[ 42%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_info_get.c.obj
+[ 43%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_create.c.obj
+[ 43%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_semaphore_put_notify.c.obj
+[ 44%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_preemption_change.c.obj
+[ 44%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_resume.c.obj
+[ 44%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_initialize.c.obj
+[ 44%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_performance_info_get.c.obj
+[ 46%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_performance_system_info_get.c.obj
+[ 45%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_priority_change.c.obj
+[ 46%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_stack_error_handler.c.obj
+[ 47%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_relinquish.c.obj
+[ 47%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_shell_entry.c.obj
+[ 48%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_stack_error_notify.c.obj
+[ 48%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_sleep.c.obj
+[ 49%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_stack_analyze.c.obj
+[ 49%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_suspend.c.obj
+[ 49%] Built target dbgc_byte_stream_bridge
+[ 50%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_system_preempt_check.c.obj
+[ 50%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_time_get.c.obj
+[ 50%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_system_resume.c.obj
+[ 50%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_time_slice_change.c.obj
+[ 50%] Building C object byte_duplex_bridge/CMakeFiles/dbgc_byte_duplex_bridge.dir/src/dbgc_byte_duplex_bridge.c.obj
+[ 51%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_system_suspend.c.obj
+[ 52%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_change.c.obj
+[ 53%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_time_slice.c.obj
+[ 54%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_wait_abort.c.obj
+[ 54%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_timeout.c.obj
+[ 54%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_activate.c.obj
+[ 54%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_terminate.c.obj
+[ 55%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_deactivate.c.obj
+[ 55%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_create.c.obj
+[ 56%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_time_set.c.obj
+[ 57%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_expiration_process.c.obj
+[ 57%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_info_get.c.obj
+[ 57%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_delete.c.obj
+[ 58%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_initialize.c.obj
+[ 58%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_performance_info_get.c.obj
+[ 58%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_performance_system_info_get.c.obj
+[ 58%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_system_deactivate.c.obj
+[ 59%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_thread_entry.c.obj
+[ 60%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_system_activate.c.obj
+[ 60%] Linking C static library libdbgc_byte_duplex_bridge.a
+[ 62%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_trace_event_filter.c.obj
+[ 62%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_trace_disable.c.obj
+[ 62%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_trace_buffer_full_notify.c.obj
+[ 62%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_trace_event_unfilter.c.obj
+[ 62%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_trace_enable.c.obj
+[ 62%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_trace_interrupt_control.c.obj
+[ 63%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_trace_isr_enter_insert.c.obj
+[ 64%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_trace_initialize.c.obj
+[ 64%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_trace_isr_exit_insert.c.obj
+[ 64%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_trace_object_register.c.obj
+[ 65%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_trace_object_unregister.c.obj
+[ 65%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_trace_user_event_insert.c.obj
+[ 66%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_block_pool_create.c.obj
+[ 66%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_block_allocate.c.obj
+[ 67%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_block_pool_delete.c.obj
+[ 67%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_block_pool_info_get.c.obj
+[ 68%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_block_pool_prioritize.c.obj
+[ 69%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_byte_pool_create.c.obj
+[ 69%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_byte_pool_delete.c.obj
+[ 69%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_byte_pool_prioritize.c.obj
+[ 69%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_block_release.c.obj
+[ 69%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_byte_pool_info_get.c.obj
+[ 70%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_byte_allocate.c.obj
+[ 72%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_event_flags_delete.c.obj
+[ 71%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_byte_release.c.obj
+[ 73%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_event_flags_info_get.c.obj
+[ 73%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_event_flags_create.c.obj
+[ 73%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_event_flags_get.c.obj
+[ 74%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_event_flags_set_notify.c.obj
+[ 74%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_mutex_create.c.obj
+[ 74%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_event_flags_set.c.obj
+[ 75%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_mutex_info_get.c.obj
+[ 76%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_mutex_delete.c.obj
+[ 76%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_mutex_prioritize.c.obj
+[ 76%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_mutex_put.c.obj
+[ 76%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_mutex_get.c.obj
+[ 76%] Built target dbgc_byte_duplex_bridge
+[ 76%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_queue_delete.c.obj
+[ 77%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_queue_create.c.obj
+[ 78%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_queue_flush.c.obj
+[ 78%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_queue_front_send.c.obj
+[ 79%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_queue_info_get.c.obj
+[ 80%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_queue_receive.c.obj
+[ 80%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_queue_prioritize.c.obj
+[ 80%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_semaphore_ceiling_put.c.obj
+[ 80%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_queue_send.c.obj
+[ 81%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_queue_send_notify.c.obj
+[ 82%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_semaphore_create.c.obj
+[ 82%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_semaphore_delete.c.obj
+[ 83%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_semaphore_info_get.c.obj
+[ 83%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_semaphore_get.c.obj
+[ 83%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_semaphore_prioritize.c.obj
+[ 83%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_semaphore_put_notify.c.obj
+[ 84%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_semaphore_put.c.obj
+[ 86%] Building C object CMakeFiles/dbgc_ch585_platform.dir/platform/ch585/dbgc_ch585_target_reset_sequence.c.obj
+[ 86%] Building C object CMakeFiles/dbgc_ch585_platform.dir/platform/ch585/dbgc_ch585_uart0.c.obj
+[ 85%] Building C object CMakeFiles/dbgc_ch585_platform.dir/platform/ch585/dbgc_ch585_swd_gpio.c.obj
+[ 87%] Building C object CMakeFiles/dbgc_ch585_platform.dir/platform/ch585/dbgc_ch585_uart0_bridge_adapter.c.obj
+[ 87%] Building C object CMakeFiles/dbgc_ch585_platform.dir/platform/ch585/dbgc_ch585_uid.c.obj
+[ 87%] Building C object CMakeFiles/dbgc_ch585_platform.dir/platform/ch585/dbgc_ch585_target_reset_gpio.c.obj
+[ 88%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_create.c.obj
+[ 88%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_delete.c.obj
+[ 89%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_entry_exit_notify.c.obj
+[ 90%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_relinquish.c.obj
+[ 90%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_info_get.c.obj
+[ 91%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_preemption_change.c.obj
+[ 91%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_timer_change.c.obj
+[ 91%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_terminate.c.obj
+[ 92%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_time_slice_change.c.obj
+[ 91%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_priority_change.c.obj
+[ 92%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_reset.c.obj
+[ 92%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_resume.c.obj
+[ 93%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_suspend.c.obj
+[ 94%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_timer_create.c.obj
+[ 95%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_timer_activate.c.obj
+[ 95%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_timer_deactivate.c.obj
+[ 96%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_wait_abort.c.obj
+[ 96%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_timer_delete.c.obj
+[ 96%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_timer_info_get.c.obj
+[ 96%] Linking C static library libdbgc_ch585_platform.a
+[ 97%] Linking C static library libthreadx.a
+[ 97%] Built target dbgc_ch585_platform
+[ 97%] Built target threadx
+[ 98%] Building C object CMakeFiles/dbgc_poc1.dir/src/main.c.obj
+[ 98%] Building C object CMakeFiles/dbgc_poc1.dir/platform/ch585/highcode_init.c.obj
+[100%] Building ASM object CMakeFiles/dbgc_poc1.dir/platform/ch585/startup/startup_CH585.S.obj
+[100%] Linking C executable dbgc_poc1.elf
+[100%] Built target dbgc_poc1
+PASS: 3683 byte FIFO checks
+Byte stream bridge checks passed: 15
+Byte duplex bridge checks passed: 15
+Target reset sequence checks passed: 24
+PASS: 31 CH585 Target Reset sequence integration checks
+CH585 UART0 host register checks passed: 94
+PASS: 57 CH585 SWD GPIO register-model checks
+PASS: 33 CH585 Target Reset GPIO register-model checks
+PASS: 31 CH585 UID adapter checks
+DAP.h source SHA-256: 1fa6a1489d199de159a0bd1a814845ac8e1f6e0335d349b883f341f84c1b73c5
+DAP.c source SHA-256: 87f72c3e84fec0a4a5cf6970a83cdfa08bd864a3127666e1e371fac3fecc0ad3
+CMSIS-DAP commit: 12636590eec66fae2d1bba4518749426ad5a4595
+Test adaptation: select upstream C-loop delay branch without defining __CC_ARM
+CMSIS-DAP bounds checks passed: 102 checks
+CMSIS-DAP host checks passed: 8 command-core and 5 bounded-dispatch cases
+CMSIS-DAP SWD engine checks passed: 2759 assertions, 9 cases
+  Class:                             ELF32
+  Machine:                           RISC-V
+  Class:                             ELF32
+  Machine:                           RISC-V
+  Class:                             ELF32
+  Machine:                           RISC-V
+  Class:                             ELF32
+  Machine:                           RISC-V
+  Class:                             ELF32
+  Machine:                           RISC-V
+         U memcpy
+  Class:                             ELF32
+  Machine:                           RISC-V
+WEAK   DEFAULT    1 dbgc_cmsis_compiler_weak_check
+  12:	0001                	nop
+  Class:                             ELF32
+  Machine:                           RISC-V
+  Class:                             ELF32
+  Machine:                           RISC-V
+   text	   data	    bss	    dec	    hex	filename
+   8916	      8	   5580	  14504	   38a8	/home/dennis/Desktop/workspace/github_projects/DBG-C/software/poc1-ch585-threadx/build/reset-sequence-pa4-pass2/dbgc_poc1.elf
+  Class:                             ELF32
+  Machine:                           RISC-V
+  Entry point address:               0x0
+Repository HEAD: bad08a563e80a13851edc8da5999e81edc07bbb0
+ThreadX commit: b91b03b9e75fa523b17127f9e0eca09dca916459
+ThreadX tag: v6.5.1.202602a_rel
+CMSIS-DAP commit: 12636590eec66fae2d1bba4518749426ad5a4595
+cmake version 3.28.3
+riscv-wch-elf-gcc (xPack GNU RISC-V Embedded GCC x86_64) 12.2.0
+GNU assembler (xPack GNU RISC-V Embedded GCC x86_64) 2.38
+GNU ld (xPack GNU RISC-V Embedded GCC x86_64) 2.38
+Host C compiler: cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+-- The C compiler identification is GNU 12.2.0
+-- The ASM compiler identification is GNU
+-- Found assembler: /home/dennis/.local/share/DBG-C/toolchains/MRS-2.4.0/RISC-V Embedded GCC12/bin/riscv-wch-elf-gcc
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /home/dennis/.local/share/DBG-C/toolchains/MRS-2.4.0/RISC-V Embedded GCC12/bin/riscv-wch-elf-gcc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Building standard ThreadX version
+-- THREADX_ARCH: risc-v32
+-- THREADX_TOOLCHAIN: gnu
+-- Using custom tx_user.h file from /home/dennis/Desktop/workspace/github_projects/DBG-C/software/poc1-ch585-threadx/platform/ch585/tx_user.h
+-- Configuring done (0.2s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/dennis/Desktop/workspace/github_projects/DBG-C/software/poc1-ch585-threadx/build/reset-sequence-pa4-repro
+[  2%] Building C object target_reset_sequence/CMakeFiles/dbgc_target_reset_sequence.dir/src/dbgc_target_reset_sequence.c.obj
+[  2%] Building C object byte_fifo/CMakeFiles/dbgc_byte_fifo.dir/src/dbgc_byte_fifo.c.obj
+[  5%] Building ASM object threadx/CMakeFiles/threadx.dir/home/dennis/Desktop/workspace/github_projects/DBG-C/software/poc1-ch585-threadx/platform/ch585/threadx_port/tx_initialize_low_level.S.obj
+[  5%] Building ASM object threadx/CMakeFiles/threadx.dir/ports/risc-v32/gnu/src/tx_thread_context_save.S.obj
+[  5%] Building ASM object threadx/CMakeFiles/threadx.dir/ports/risc-v32/gnu/src/tx_thread_context_restore.S.obj
+[  5%] Building ASM object threadx/CMakeFiles/threadx.dir/home/dennis/Desktop/workspace/github_projects/DBG-C/software/poc1-ch585-threadx/platform/ch585/threadx_port/tx_systick.S.obj
+[  5%] Building ASM object threadx/CMakeFiles/threadx.dir/ports/risc-v32/gnu/src/tx_thread_interrupt_control.S.obj
+[  5%] Building C object threadx/CMakeFiles/threadx.dir/home/dennis/Desktop/workspace/github_projects/DBG-C/software/poc1-ch585-threadx/platform/ch585/threadx_port/tx_initialize_low_level.c.obj
+[  5%] Building ASM object threadx/CMakeFiles/threadx.dir/ports/risc-v32/gnu/src/tx_thread_schedule.S.obj
+[  6%] Building ASM object threadx/CMakeFiles/threadx.dir/ports/risc-v32/gnu/src/tx_thread_stack_build.S.obj
+[  6%] Building ASM object threadx/CMakeFiles/threadx.dir/ports/risc-v32/gnu/src/tx_thread_system_return.S.obj
+[  7%] Building ASM object threadx/CMakeFiles/threadx.dir/ports/risc-v32/gnu/src/tx_timer_interrupt.S.obj
+[  7%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_delete.c.obj
+[  8%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_reset.c.obj
+[  9%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_block_allocate.c.obj
+[  9%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_block_pool_cleanup.c.obj
+[  9%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_block_pool_info_get.c.obj
+[  9%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_block_pool_create.c.obj
+[ 10%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_block_pool_delete.c.obj
+[ 10%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_block_pool_initialize.c.obj
+[ 11%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_block_pool_performance_system_info_get.c.obj
+[ 11%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_block_pool_performance_info_get.c.obj
+[ 11%] Linking C static library libdbgc_target_reset_sequence.a
+[ 12%] Linking C static library libdbgc_byte_fifo.a
+[ 12%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_byte_allocate.c.obj
+[ 13%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_block_pool_prioritize.c.obj
+[ 14%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_byte_pool_create.c.obj
+[ 14%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_byte_pool_delete.c.obj
+[ 14%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_block_release.c.obj
+[ 15%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_byte_pool_performance_info_get.c.obj
+[ 15%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_byte_pool_cleanup.c.obj
+[ 16%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_byte_pool_info_get.c.obj
+[ 16%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_byte_pool_initialize.c.obj
+[ 16%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_byte_pool_prioritize.c.obj
+[ 16%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_byte_pool_performance_system_info_get.c.obj
+[ 16%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_byte_release.c.obj
+[ 17%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_event_flags_cleanup.c.obj
+[ 18%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_byte_pool_search.c.obj
+[ 19%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_event_flags_delete.c.obj
+[ 19%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_event_flags_create.c.obj
+[ 20%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_event_flags_info_get.c.obj
+[ 20%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_event_flags_get.c.obj
+[ 20%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_event_flags_performance_system_info_get.c.obj
+[ 20%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_event_flags_initialize.c.obj
+[ 21%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_event_flags_performance_info_get.c.obj
+[ 22%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_event_flags_set.c.obj
+[ 22%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_event_flags_set_notify.c.obj
+[ 22%] Built target dbgc_target_reset_sequence
+[ 22%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_initialize_high_level.c.obj
+[ 23%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_misra.c.obj
+[ 23%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_mutex_delete.c.obj
+[ 22%] Built target dbgc_byte_fifo
+[ 24%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_initialize_kernel_enter.c.obj
+[ 25%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_mutex_get.c.obj
+[ 26%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_mutex_put.c.obj
+[ 27%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_mutex_create.c.obj
+[ 27%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_initialize_kernel_setup.c.obj
+[ 28%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_mutex_performance_system_info_get.c.obj
+[ 28%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_mutex_info_get.c.obj
+[ 28%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_mutex_priority_change.c.obj
+[ 28%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_mutex_cleanup.c.obj
+[ 28%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_cleanup.c.obj
+[ 28%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_mutex_performance_info_get.c.obj
+[ 29%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_mutex_initialize.c.obj
+[ 29%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_mutex_prioritize.c.obj
+[ 30%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_create.c.obj
+[ 30%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_delete.c.obj
+[ 31%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_flush.c.obj
+[ 32%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_info_get.c.obj
+[ 32%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_receive.c.obj
+[ 32%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_performance_system_info_get.c.obj
+[ 33%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_performance_info_get.c.obj
+[ 33%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_semaphore_ceiling_put.c.obj
+[ 34%] Building C object byte_stream_bridge/CMakeFiles/dbgc_byte_stream_bridge.dir/src/dbgc_byte_stream_bridge.c.obj
+[ 34%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_semaphore_get.c.obj
+[ 34%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_send.c.obj
+[ 35%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_prioritize.c.obj
+[ 35%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_front_send.c.obj
+[ 36%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_semaphore_cleanup.c.obj
+[ 36%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_semaphore_create.c.obj
+[ 36%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_initialize.c.obj
+[ 37%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_queue_send_notify.c.obj
+[ 38%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_semaphore_delete.c.obj
+[ 39%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_semaphore_info_get.c.obj
+[ 40%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_semaphore_prioritize.c.obj
+[ 40%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_semaphore_performance_system_info_get.c.obj
+[ 40%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_semaphore_initialize.c.obj
+[ 41%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_create.c.obj
+[ 42%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_semaphore_performance_info_get.c.obj
+[ 43%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_identify.c.obj
+[ 43%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_semaphore_put_notify.c.obj
+[ 43%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_semaphore_put.c.obj
+[ 43%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_info_get.c.obj
+[ 43%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_performance_info_get.c.obj
+[ 43%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_entry_exit_notify.c.obj
+[ 44%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_priority_change.c.obj
+[ 44%] Linking C static library libdbgc_byte_stream_bridge.a
+[ 44%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_preemption_change.c.obj
+[ 45%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_initialize.c.obj
+[ 46%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_performance_system_info_get.c.obj
+[ 46%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_resume.c.obj
+[ 46%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_relinquish.c.obj
+[ 46%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_sleep.c.obj
+[ 47%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_shell_entry.c.obj
+[ 48%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_stack_analyze.c.obj
+[ 49%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_system_preempt_check.c.obj
+[ 49%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_suspend.c.obj
+[ 50%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_system_suspend.c.obj
+[ 51%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_time_slice.c.obj
+[ 52%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_stack_error_notify.c.obj
+[ 52%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_terminate.c.obj
+[ 52%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_stack_error_handler.c.obj
+[ 52%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_system_resume.c.obj
+[ 52%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_time_slice_change.c.obj
+[ 52%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_timeout.c.obj
+[ 52%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_time_get.c.obj
+[ 53%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_thread_wait_abort.c.obj
+[ 54%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_time_set.c.obj
+[ 55%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_deactivate.c.obj
+[ 55%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_delete.c.obj
+[ 55%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_activate.c.obj
+[ 55%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_create.c.obj
+[ 55%] Built target dbgc_byte_stream_bridge
+[ 56%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_change.c.obj
+[ 56%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_performance_system_info_get.c.obj
+[ 57%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_info_get.c.obj
+[ 57%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_initialize.c.obj
+[ 58%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_expiration_process.c.obj
+[ 58%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_performance_info_get.c.obj
+[ 59%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_system_activate.c.obj
+[ 60%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_thread_entry.c.obj
+[ 61%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_trace_event_filter.c.obj
+[ 61%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_trace_buffer_full_notify.c.obj
+[ 61%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_timer_system_deactivate.c.obj
+[ 62%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_trace_interrupt_control.c.obj
+[ 63%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_trace_isr_enter_insert.c.obj
+[ 62%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_trace_disable.c.obj
+[ 63%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_trace_enable.c.obj
+[ 63%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_trace_event_unfilter.c.obj
+[ 64%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_trace_initialize.c.obj
+[ 64%] Building C object byte_duplex_bridge/CMakeFiles/dbgc_byte_duplex_bridge.dir/src/dbgc_byte_duplex_bridge.c.obj
+[ 64%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_trace_isr_exit_insert.c.obj
+[ 64%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_block_pool_create.c.obj
+[ 64%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_trace_object_register.c.obj
+[ 64%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_trace_user_event_insert.c.obj
+[ 66%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_block_pool_delete.c.obj
+[ 66%] Building C object threadx/CMakeFiles/threadx.dir/common/src/tx_trace_object_unregister.c.obj
+[ 67%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_block_allocate.c.obj
+[ 67%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_block_pool_info_get.c.obj
+[ 68%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_block_pool_prioritize.c.obj
+[ 68%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_byte_pool_create.c.obj
+[ 68%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_block_release.c.obj
+[ 69%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_byte_allocate.c.obj
+[ 70%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_byte_pool_delete.c.obj
+[ 70%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_byte_pool_info_get.c.obj
+[ 70%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_byte_pool_prioritize.c.obj
+[ 70%] Linking C static library libdbgc_byte_duplex_bridge.a
+[ 71%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_event_flags_info_get.c.obj
+[ 72%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_event_flags_delete.c.obj
+[ 72%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_event_flags_create.c.obj
+[ 73%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_byte_release.c.obj
+[ 73%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_event_flags_get.c.obj
+[ 74%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_event_flags_set_notify.c.obj
+[ 74%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_event_flags_set.c.obj
+[ 75%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_mutex_delete.c.obj
+[ 75%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_mutex_put.c.obj
+[ 75%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_mutex_create.c.obj
+[ 76%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_queue_create.c.obj
+[ 77%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_mutex_prioritize.c.obj
+[ 77%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_mutex_info_get.c.obj
+[ 77%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_mutex_get.c.obj
+[ 77%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_queue_delete.c.obj
+[ 78%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_queue_flush.c.obj
+[ 78%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_queue_front_send.c.obj
+[ 78%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_queue_prioritize.c.obj
+[ 79%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_queue_info_get.c.obj
+[ 80%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_queue_send_notify.c.obj
+[ 80%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_queue_send.c.obj
+[ 82%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_semaphore_create.c.obj
+[ 82%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_queue_receive.c.obj
+[ 82%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_semaphore_ceiling_put.c.obj
+[ 82%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_semaphore_delete.c.obj
+[ 82%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_semaphore_prioritize.c.obj
+[ 83%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_semaphore_info_get.c.obj
+[ 83%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_semaphore_get.c.obj
+[ 83%] Built target dbgc_byte_duplex_bridge
+[ 83%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_semaphore_put_notify.c.obj
+[ 83%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_info_get.c.obj
+[ 84%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_create.c.obj
+[ 84%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_priority_change.c.obj
+[ 84%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_delete.c.obj
+[ 85%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_preemption_change.c.obj
+[ 86%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_semaphore_put.c.obj
+[ 87%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_entry_exit_notify.c.obj
+[ 88%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_relinquish.c.obj
+[ 88%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_reset.c.obj
+[ 88%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_resume.c.obj
+[ 88%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_terminate.c.obj
+[ 89%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_suspend.c.obj
+[ 90%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_time_slice_change.c.obj
+[ 91%] Building C object CMakeFiles/dbgc_ch585_platform.dir/platform/ch585/dbgc_ch585_uid.c.obj
+[ 91%] Building C object CMakeFiles/dbgc_ch585_platform.dir/platform/ch585/dbgc_ch585_swd_gpio.c.obj
+[ 92%] Building C object CMakeFiles/dbgc_ch585_platform.dir/platform/ch585/dbgc_ch585_target_reset_sequence.c.obj
+[ 93%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_timer_activate.c.obj
+[ 93%] Building C object CMakeFiles/dbgc_ch585_platform.dir/platform/ch585/dbgc_ch585_target_reset_gpio.c.obj
+[ 94%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_timer_create.c.obj
+[ 94%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_thread_wait_abort.c.obj
+[ 95%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_timer_delete.c.obj
+[ 95%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_timer_deactivate.c.obj
+[ 95%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_timer_change.c.obj
+[ 95%] Building C object CMakeFiles/dbgc_ch585_platform.dir/platform/ch585/dbgc_ch585_uart0.c.obj
+[ 96%] Building C object CMakeFiles/dbgc_ch585_platform.dir/platform/ch585/dbgc_ch585_uart0_bridge_adapter.c.obj
+[ 96%] Building C object threadx/CMakeFiles/threadx.dir/common/src/txe_timer_info_get.c.obj
+[ 97%] Linking C static library libthreadx.a
+[ 97%] Linking C static library libdbgc_ch585_platform.a
+[ 97%] Built target dbgc_ch585_platform
+[ 97%] Built target threadx
+[100%] Building C object CMakeFiles/dbgc_poc1.dir/src/main.c.obj
+[100%] Building C object CMakeFiles/dbgc_poc1.dir/platform/ch585/highcode_init.c.obj
+[100%] Building ASM object CMakeFiles/dbgc_poc1.dir/platform/ch585/startup/startup_CH585.S.obj
+[100%] Linking C executable dbgc_poc1.elf
+[100%] Built target dbgc_poc1
+PASS: 3683 byte FIFO checks
+Byte stream bridge checks passed: 15
+Byte duplex bridge checks passed: 15
+Target reset sequence checks passed: 24
+PASS: 31 CH585 Target Reset sequence integration checks
+CH585 UART0 host register checks passed: 94
+PASS: 57 CH585 SWD GPIO register-model checks
+PASS: 33 CH585 Target Reset GPIO register-model checks
+PASS: 31 CH585 UID adapter checks
+DAP.h source SHA-256: 1fa6a1489d199de159a0bd1a814845ac8e1f6e0335d349b883f341f84c1b73c5
+DAP.c source SHA-256: 87f72c3e84fec0a4a5cf6970a83cdfa08bd864a3127666e1e371fac3fecc0ad3
+CMSIS-DAP commit: 12636590eec66fae2d1bba4518749426ad5a4595
+Test adaptation: select upstream C-loop delay branch without defining __CC_ARM
+CMSIS-DAP bounds checks passed: 102 checks
+CMSIS-DAP host checks passed: 8 command-core and 5 bounded-dispatch cases
+CMSIS-DAP SWD engine checks passed: 2759 assertions, 9 cases
+  Class:                             ELF32
+  Machine:                           RISC-V
+  Class:                             ELF32
+  Machine:                           RISC-V
+  Class:                             ELF32
+  Machine:                           RISC-V
+  Class:                             ELF32
+  Machine:                           RISC-V
+  Class:                             ELF32
+  Machine:                           RISC-V
+         U memcpy
+  Class:                             ELF32
+  Machine:                           RISC-V
+WEAK   DEFAULT    1 dbgc_cmsis_compiler_weak_check
+  12:	0001                	nop
+  Class:                             ELF32
+  Machine:                           RISC-V
+  Class:                             ELF32
+  Machine:                           RISC-V
+   text	   data	    bss	    dec	    hex	filename
+   8916	      8	   5580	  14504	   38a8	/home/dennis/Desktop/workspace/github_projects/DBG-C/software/poc1-ch585-threadx/build/reset-sequence-pa4-repro/dbgc_poc1.elf
+  Class:                             ELF32
+  Machine:                           RISC-V
+  Entry point address:               0x0
+Repository HEAD: bad08a563e80a13851edc8da5999e81edc07bbb0
+ThreadX commit: b91b03b9e75fa523b17127f9e0eca09dca916459
+ThreadX tag: v6.5.1.202602a_rel
+CMSIS-DAP commit: 12636590eec66fae2d1bba4518749426ad5a4595
+cmake version 3.28.3
+riscv-wch-elf-gcc (xPack GNU RISC-V Embedded GCC x86_64) 12.2.0
+GNU assembler (xPack GNU RISC-V Embedded GCC x86_64) 2.38
+GNU ld (xPack GNU RISC-V Embedded GCC x86_64) 2.38
+Host C compiler: cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+-- Building standard ThreadX version
+-- THREADX_ARCH: risc-v32
+-- THREADX_TOOLCHAIN: gnu
+-- Using custom tx_user.h file from /home/dennis/Desktop/workspace/github_projects/DBG-C/software/poc1-ch585-threadx/platform/ch585/tx_user.h
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/dennis/Desktop/workspace/github_projects/DBG-C/software/poc1-ch585-threadx/build/reset-sequence-pa4-repro
+[  2%] Built target dbgc_byte_fifo
+[  2%] Built target dbgc_target_reset_sequence
+[  3%] Built target dbgc_byte_stream_bridge
+[ 94%] Built target threadx
+[ 94%] Built target dbgc_byte_duplex_bridge
+[ 97%] Built target dbgc_ch585_platform
+[100%] Built target dbgc_poc1
+PASS: 3683 byte FIFO checks
+Byte stream bridge checks passed: 15
+Byte duplex bridge checks passed: 15
+Target reset sequence checks passed: 24
+PASS: 37 CH585 Target Reset sequence integration checks
+CH585 UART0 host register checks passed: 94
+PASS: 57 CH585 SWD GPIO register-model checks
+PASS: 33 CH585 Target Reset GPIO register-model checks
+PASS: 31 CH585 UID adapter checks
+DAP.h source SHA-256: 1fa6a1489d199de159a0bd1a814845ac8e1f6e0335d349b883f341f84c1b73c5
+DAP.c source SHA-256: 87f72c3e84fec0a4a5cf6970a83cdfa08bd864a3127666e1e371fac3fecc0ad3
+CMSIS-DAP commit: 12636590eec66fae2d1bba4518749426ad5a4595
+Test adaptation: select upstream C-loop delay branch without defining __CC_ARM
+CMSIS-DAP bounds checks passed: 102 checks
+CMSIS-DAP host checks passed: 8 command-core and 5 bounded-dispatch cases
+CMSIS-DAP SWD engine checks passed: 2759 assertions, 9 cases
+  Class:                             ELF32
+  Machine:                           RISC-V
+  Class:                             ELF32
+  Machine:                           RISC-V
+  Class:                             ELF32
+  Machine:                           RISC-V
+  Class:                             ELF32
+  Machine:                           RISC-V
+  Class:                             ELF32
+  Machine:                           RISC-V
+         U memcpy
+  Class:                             ELF32
+  Machine:                           RISC-V
+WEAK   DEFAULT    1 dbgc_cmsis_compiler_weak_check
+  12:	0001                	nop
+  Class:                             ELF32
+  Machine:                           RISC-V
+  Class:                             ELF32
+  Machine:                           RISC-V
+   text	   data	    bss	    dec	    hex	filename
+   8916	      8	   5580	  14504	   38a8	/home/dennis/Desktop/workspace/github_projects/DBG-C/software/poc1-ch585-threadx/build/reset-sequence-pa4-repro/dbgc_poc1.elf
+  Class:                             ELF32
+  Machine:                           RISC-V
+  Entry point address:               0x0
+
+
+CH585 PA4 reset-sequence adapter and 1000 ticks/s verification (2026-09-29)
+
+Implementation evidence:
+- `platform/ch585/dbgc_ch585_target_reset_sequence.c` adapts the existing generic reset-order service to the PA4 raw-level GPIO BSP. The caller supplies the asserted raw level and hold callback; the caller must configure PA4 output mode first. No reset polarity, output mode, hold duration, delay unit, or ThreadX scheduling behavior is selected by this adapter.
+- The existing `dbgc_ch585_platform` static library includes the adapter. The PoC application does not call the adapter; linker garbage collection may omit it from `dbgc_poc1.elf`.
+- The host integration test calls the actual PA4 BSP source against ordinary variables modeling GPIOA registers. Both raw assertion values, assertion-before-hold, release, hold-error release, and invalid-input no-register-access are covered. The selected high/low levels and 5 mA GPIO mode are fixture values only. Final result: 37 checks pass.
+
+Build and reproducibility commands (repository root):
+- `DBGC_BUILD_DIR=build/reset-sequence-pa4-repro software/poc1-ch585-threadx/build.sh` passed the full host-check suite, the WCH RISC-V cross-build, target-object checks, and ELF checks. The PA4 integration executable reports `PASS: 37 CH585 Target Reset sequence integration checks`.
+- `cmake --build software/poc1-ch585-threadx/build/reset-sequence-pa4-repro --clean-first --parallel` completed clean target rebuilds at the same fixed path; the ELF and map hashes were identical after each rebuild.
+- ELF SHA-256: `a20dcb47748976a5a078172870dd0d28d0ddd0362b5745cc1f1382c6c7e78c9a`.
+- Map SHA-256: `848f2798e04bf21dab0c7ba88a41f4a79e94e3e5459937548589cc32bf3c81a0`.
+- ELF size: text 8916, data 8, bss 5580 bytes; ELF32 RISC-V; entry 0x0.
+
+A first integration-test attempt crashed because the test fixture supplied a valid asserted level and callback with a null fixture context. Null callback context is not invalid in the adapter contract; the test fixture was corrected to test asserted level 2 as the invalid argument instead. The corrected test now also checks all modeled GPIOA registers remain unchanged for invalid configurations. Subsequent full build-script execution passes. This failure and correction are retained here rather than counted as a passing run.
+
+The successful commands ran at repository HEAD `bad08a563e80a13851edc8da5999e81edc07bbb0` with the new adapter/build-script/test changes present in the worktree. `software/poc1-ch585-threadx/src/main.c` also had a pre-existing user formatting-only modification and was left out of the adapter change. This cross-build and modeled-register test do not verify actual PA4 behavior or CH585M ThreadX startup, interrupt delivery, SysTick frequency/tick delivery, context switching, scheduling, sleep/wakeup, or sustained runtime.

@@ -1,6 +1,6 @@
 # DBG-C MCU 选型与资源评估
 
-**文档编号：** DBG-C-MCU-001　**版本：** V0.9　**状态：** CH585M V1 原理图资源分配草案；PoC tick 目标 1000 tick/s；变更后构建复核待执行；实板验证未执行
+**文档编号：** DBG-C-MCU-001　**版本：** V0.10　**状态：** CH585M V1 原理图资源分配草案；PoC tick 目标 1000 tick/s；1000 tick/s 配置已完成两次固定路径干净构建复核；实板验证未执行
 
 ## 1. 证据来源
 
@@ -152,11 +152,11 @@ SPI、I2C、ADC、NFC、TouchKey、LCD/LED Matrix、USBHS、SWO/JTAG、Target Po
 
 ## 6. ThreadX 对资源分配的增量要求
 
-项目已确定 V1 固件运行 ThreadX。PoC-1 固定 Eclipse ThreadX `v6.5.1.202602a_rel`（commit `b91b03b9e75fa523b17127f9e0eca09dca916459`），使用其 `ports/risc-v32/gnu` 上下文例程，并加入实验性 CH585M low-level、SysTick 和 WCH 启动/时钟适配。MounRiver Linux x64 Toolchain V2.4.0 的 GCC 12.2.0 主机交叉构建通过；WCH EVT `.cproject` 选择 GCC12 配置但未记载补丁版本。用户确认目前没有可用板卡，且要求软件验证通过后才能设计硬件，再以实物验证。主机编译通过不证明 QingKe RISC-V3C 的硬件压栈、VTF/HPE、异常返回或调度兼容；此前 100 tick/s 配置的两次 clean rebuild ELF/map 一致并完成静态核对。当前改为 1000 tick/s 后尚未重新构建和复核；按 OPEN-001 O19，须对当前源码重新完成两次干净构建、ELF/map 比对和资源复核后，方可确认验证板设计放行。这不代表实板运行通过，也不允许冻结产品硬件。PoC 已按决策设置 1000 tick/s；实际频率和 tick 投递仍须实板验证，验收容差在测试方案中冻结。板上验证尚未执行，产品硬件冻结还须实板运行通过，见 O18/O19。
+项目已确定 V1 固件运行 ThreadX。PoC-1 固定 Eclipse ThreadX `v6.5.1.202602a_rel`（commit `b91b03b9e75fa523b17127f9e0eca09dca916459`），使用其 `ports/risc-v32/gnu` 上下文例程，并加入实验性 CH585M low-level、SysTick 和 WCH 启动/时钟适配。MounRiver Linux x64 Toolchain V2.4.0 的 GCC 12.2.0 主机交叉构建通过；WCH EVT `.cproject` 选择 GCC12 配置但未记载补丁版本。用户确认目前没有可用板卡，且要求软件验证通过后才能设计硬件，再以实物验证。主机编译通过不证明 QingKe RISC-V3C 的硬件压栈、VTF/HPE、异常返回或调度兼容；此前 100 tick/s 配置的两次 clean rebuild ELF/map 一致并完成静态核对。当前 1000 tick/s 配置已在固定路径下完成两次干净构建，ELF/map 散列一致并完成链接资源复核；按 OPEN-001 O19，验证板设计软件门复核通过。这不代表实板运行通过，也不允许冻结产品硬件。PoC 已按决策设置 1000 tick/s；实际频率和 tick 投递仍须实板验证，验收容差在测试方案中冻结。板上验证尚未执行，产品硬件冻结还须实板运行通过，见 O18/O19。
 
 | 资源 | ThreadX 需求 | DBG-C 分配 | 当前证据边界 |
 |---|---|---|---|
-| Kernel tick | 周期性时基和中断 | 指定芯片内置 32 位 SysTick 作为 ThreadX kernel tick 来源；不占用 TMR0 至 TMR3 | PoC 已使用 EVT 定义的 SysTick API/IRQ 并显式配置为 1000 tick/s；配置变更后尚未重新构建，实际频率、VTF/HPE、tick 投递和唤醒未板测 |
+| Kernel tick | 周期性时基和中断 | 指定芯片内置 32 位 SysTick 作为 ThreadX kernel tick 来源；不占用 TMR0 至 TMR3 | PoC 已使用 EVT 定义的 SysTick API/IRQ 并显式配置为 1000 tick/s；已完成主机交叉构建，实际频率、VTF/HPE、tick 投递和唤醒未板测 |
 | Context switch | CPU 上下文保存/恢复、调度入口 | 实验性接入 WCH 启动与中断框架；产品线程/ISR 边界仍待定义 | 使用上游 RISC-V32 上下文例程并添加本地 tick ISR；硬件异常栈帧、VTF/HPE 和恢复路径仍待 CH585M 实板验证 |
 | Interrupt | 外设 ISR 到 ThreadX 调度接口 | 在固件架构中分别定义 USB、Radio/BLE、Timer ISR 的 ThreadX API 使用边界 | 中断嵌套、优先级和 SDK ISR 约束需读取 SDK |
 | SRAM | ThreadX 内核对象、系统栈、线程栈及应用缓冲 | 在 128 KB SRAM 链接布局中统一预算 USB DAP/CDC、RF 重组、BLE 栈、SWD 工作区 | 各项字节数由选定 ThreadX/SDK、线程数、栈水位和链接映射测量后分配；不填猜测值 |
