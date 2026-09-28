@@ -6,7 +6,7 @@
 
 static unsigned int checks;
 static unsigned int failures;
-static uint8_t input_bits[40];
+static uint8_t input_bits[80];
 static unsigned int input_bit_count;
 static unsigned int input_bit_index;
 static uint8_t output_bits[64];
@@ -317,6 +317,53 @@ static void test_dap_transfer_through_swd_engine(void)
     CHECK(input_bit_index == input_bit_count);
 }
 
+static void test_dap_ap_read_through_swd_engine(void)
+{
+    const uint32_t posted_value = 0xA5A55A5AU;
+    const uint32_t expected_value = 0x1234ABCDU;
+    const uint8_t connect_request[] = {
+        ID_DAP_Connect,
+        DAP_PORT_SWD
+    };
+    const uint8_t transfer_request[] = {
+        ID_DAP_Transfer,
+        0U,
+        1U,
+        DAP_TRANSFER_APnDP | DAP_TRANSFER_RnW
+    };
+    uint8_t response[DAP_PACKET_SIZE] = {0U};
+    uint32_t result;
+
+    DAP_Setup();
+    result = DAP_ExecuteCommand(connect_request, response);
+    CHECK((result & 0xFFFFU) == 2U);
+    CHECK(response[1] == DAP_PORT_SWD);
+
+    reset_line_model();
+    append_read_response(DAP_TRANSFER_OK,
+                         posted_value,
+                         word_parity(posted_value));
+    append_read_response(DAP_TRANSFER_OK,
+                         expected_value,
+                         word_parity(expected_value));
+    result = DAP_ExecuteCommand(transfer_request, response);
+
+    CHECK(result == ((4U << 16) | 7U));
+    CHECK(response[0] == ID_DAP_Transfer);
+    CHECK(response[1] == 1U);
+    CHECK(response[2] == DAP_TRANSFER_OK);
+    CHECK(response[3] == (uint8_t)expected_value);
+    CHECK(response[4] == (uint8_t)(expected_value >> 8));
+    CHECK(response[5] == (uint8_t)(expected_value >> 16));
+    CHECK(response[6] == (uint8_t)(expected_value >> 24));
+    CHECK(input_bit_index == input_bit_count);
+    CHECK(input_bit_count == 72U);
+    CHECK(output_bit_count == 18U);
+    CHECK(clock_rising_count == 92U);
+    CHECK(output_disable_count == 2U);
+    CHECK(output_enable_count == 2U);
+}
+
 int main(void)
 {
     test_swd_read_request_and_data();
@@ -325,6 +372,7 @@ int main(void)
     test_swd_wait_and_fault_acknowledgements();
     test_swd_sequence_output_and_input();
     test_dap_transfer_through_swd_engine();
+    test_dap_ap_read_through_swd_engine();
 
     if (failures != 0U) {
         fprintf(stderr, "%u of %u CMSIS-DAP SWD engine checks failed\n",
@@ -332,7 +380,7 @@ int main(void)
         return 1;
     }
 
-    printf("CMSIS-DAP SWD engine checks passed: %u assertions, 6 cases\n",
+    printf("CMSIS-DAP SWD engine checks passed: %u assertions, 7 cases\n",
            checks);
     return 0;
 }
