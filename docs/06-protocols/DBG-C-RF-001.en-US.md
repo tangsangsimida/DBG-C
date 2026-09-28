@@ -8,7 +8,7 @@ The protocol carries Debug, UART, control, and future update data between two id
 
 ## 2. Physical Layer and Pairing
 
-Candidate PHY/channel, hopping, address, power, rate, regional regulations, and WCH RF SDK API: **TBD**. The datasheet confirms integrated BLE/2.4 GHz RF and mentions “2.4G mode”; this does not establish that an arbitrary private PHY is available.
+The IC manual does not specify private-RF PHY, channel, hopping, address, power, rate, or WCH RF SDK API. Read the SDK/official protocol materials and define each before implementation. The datasheet confirms integrated BLE/2.4 GHz RF and mentions “2.4G mode”; this does not establish that an arbitrary private PHY is available.
 
 Define Device ID, Peer ID, and Pair ID semantics and uniqueness. Width/encoding are not frozen in V0.1. Define user authorization, pairing window, authentication, unpair, persistence, re-pair, replay protection, and key management.
 

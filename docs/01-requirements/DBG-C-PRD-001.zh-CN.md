@@ -17,7 +17,7 @@ DBG-C Platform 是统一有线、私有 2.4G 与 BLE 管理能力的 MCU 调试�
 1. **有线调试：** PC 通过 USB 连接单台 Probe；PC 使用 CMSIS-DAP v2，目标侧通过 DBG-C Interface 提供 SWDIO、SWCLK、nRESET 和 UART。
 2. **无线调试：** 两台 Probe 完成明确的配对及角色建立；PC 侧 Probe 通过 USB 暴露 CMSIS-DAP v2，目标侧 Probe 连接 Target；调试命令、响应及 UART 数据经 DBG-C RF Protocol 传输。
 3. **BLE 管理与下载：** DBG-C Tool 经 PC Bluetooth 发现设备、读取信息、配置、配对/解绑、查看状态、目标复位，并执行计划中的目标无线下载及 Probe 自身固件升级。应用层下载协议、目标 MCU 支持范围及 PC OS/适配器兼容性待定义；BLE 不直接暴露原生 CMSIS-DAP 给 Keil/IAR/OpenOCD/pyOCD。
-5. **无线故障恢复：** RF 断开时停止或失败返回未完成操作，状态可恢复；不得静默重复可能产生副作用的命令。恢复策略和时限待协议阶段冻结。
+4. **无线故障恢复：** RF 断开时停止或失败返回未完成操作，状态可恢复；不得静默重复可能产生副作用的命令。恢复策略和时限待协议阶段冻结。
 
 ## 4. V1 范围
 
@@ -55,7 +55,7 @@ V1 验收不包含 SWO、JTAG、Target Power/电流检测、离线烧录、多 T
 
 ## 9. 未决需求
 
-设备插 USB 是否影响角色、角色切换规则、配对是否持久、自动/手动配对、并发 USB 多设备规则、PC OS/IDE 矩阵、CDC 参数、目标电压范围、无线恢复时限、OTA 回滚与授权、BLE 目标下载协议/Target 范围、接口电缆能力，均待需求评审决议。详见 `DBG-C-OPEN-001.md`。
+设备插 USB 是否影响角色、角色切换规则、配对是否持久、自动/手动配对、并发 USB 多设备规则、PC OS/IDE 矩阵、CDC 参数、目标电压范围、无线恢复时限、OTA 回滚与授权、BLE 目标下载协议/Target 范围、接口电缆能力，均待需求评审决议。详见 [DBG-C-OPEN-001](../00-project/DBG-C-OPEN-001.zh-CN.md)。
 
 ## 10. 产品表述（需求输入，非验证结论）
 

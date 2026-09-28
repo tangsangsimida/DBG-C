@@ -27,6 +27,8 @@ Application / Role & Pair Manager / OTA
 
 Transports feed shared command and target-control paths. USB, BLE, and RF shall not have separate SWD Engine and Target Manager implementations. HAL/BSP isolate CH585M registers and SDK dependencies. DAP command semantics over RF, batching, and replay safety must be frozen in the RF specification.
 
+The PC debug protocol target is **CMSIS-DAP v2**. DAPLink is an optional open-source firmware system/implementation source, not a “DAPLink v2” protocol version. V1 may reuse portable protocol and algorithm layers from CMSIS-DAP/DAPLink, while CH585M USB, GPIO, clocks, and wireless functions must be adapted to the WCH SDK/HAL/BSP. Porting the full DAPLink firmware requires separate architecture, license, and toolchain review.
+
 ## 3. Device Roles and States
 
 Role set: Standalone, Host, Target. Both units have identical hardware/BOM/MCU. Role-selection source, transition conditions, USB insertion behavior, conflict arbitration, and persistence are not frozen.
@@ -39,7 +41,7 @@ Draft state set: `Standalone`; pairing-management; `Host`/`Target` role establis
 - **UART:** Target UART service ↔ USB CDC (standalone wired/Host side). In wireless mode, UART data uses a separate logical RF channel with QoS scheduling.
 - **BLE management:** BLE Transport → application management commands; it must not bypass identity, authorization, or OTA state machines.
 - **BLE target download (planned):** DBG-C Tool initiates this over BLE Application Protocol. It carries defined download/management commands and is not transparent BLE CMSIS-DAP. Target types, algorithms/image format, resume behavior, and PC compatibility remain for DBG-C-BLE-001.
-- **USB selection:** USBFS is the current first V1 candidate for verification. USBHS performance optimization is outside V1 goals. Endpoint/buffer sufficiency, SDK Device capability, and constraints remain unverified; this is not a resource freeze.
+- **USB allocation:** V1 uses USBFS; USBHS is not enabled. Check USBFS endpoint/buffer requirements and WCH SDK Device support for CMSIS-DAP v2 Bulk + CDC against SDK examples.
 - **OTA:** Image reception, validation, installation, boot confirmation, and failure recovery depend on SDK/Boot evidence and remain unverified.
 
 ## 5. Hardware Layers

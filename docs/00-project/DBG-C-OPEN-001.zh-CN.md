@@ -5,7 +5,7 @@
 | ID | 问题 | 需要的证据/决策 | 影响文档 | 状态 |
 |---|---|---|---|---|
 | O01 | CH585M 可用私有 RF PHY/API、BLE 与私有 RF 并发限制是什么？ | WCH 官方参考手册、SDK/例程版本及实测 | MCU, RF, FW, TEST | 待获取 |
-| O02 | USBFS 或 USBHS 哪个能满足 Device + DAP v2 + CDC？ | 官方 SDK Device 示例、端点 API、Host OS 实测 | MCU, USB, SYS | 待验证 |
+| O02 | WCH SDK 的 USBFS Device 栈能否提供 CMSIS-DAP v2 Bulk + CDC 所需端点与缓冲？ | CH585M USBFS Device SDK 示例、端点 API、Host OS 实测 | MCU, USB, SYS | 待验证 |
 | O03 | RF DAP 往返延迟和重试边界如何满足常见调试器？ | CMSIS-DAP Host 实测及 RF 原型 | RF, TEST, PRD | 待验证 |
 | O04 | DBG-C Basic/Full 在 Type-C 上的合法/可靠引脚及线缆方案？ | USB-IF 最新 Type-C 规范、线缆结构证据、电气评审 | IF, HW, TEST | 待研究 |
 | O05 | USB 插入、用户选择、无线连接如何决定 Standalone/Host/Target？ | 产品状态机评审，含冲突/切换规则 | PRD, SYS, RF, BLE | 待决策 |
@@ -20,11 +20,13 @@
 | O14 | PC OS、IDE/OpenOCD/pyOCD 支持矩阵？ | 产品支持策略与逐项互操作测试 | PRD, USB, TEST | 待决策 |
 | O15 | 当前数据手册适用修订、勘误与参考手册版本？ | WCH 官方发布页和芯片版本核对 | MCU, HW, FW | 待获取 |
 | O16 | BLE 无线下载的应用协议、镜像格式、Target 范围和断点续传规则？ | 定义 DBG-C Tool ↔ Probe 协议并选定 Target 验收板 | PRD, BLE, TEST | 待决策 |
-| O17 | USBFS/USBHS 是否可分别或同时运行、USBHS 是否为 V1 必要条件？ | SDK 实例、官方资源限制与对照实测 | MCU, USB, SYS | 待验证 |
+| O17 | USBFS/USBHS 是否可同时运行？V1 已分配 USBFS，什么实现限制会要求改用 USBHS？ | SDK 实例、官方资源限制与对照实测 | MCU, USB, SYS | 待验证 |
+
+| O18 | CH585M 使用哪个 Eclipse ThreadX 版本和编译器端口？上游 RISC-V32 端口如何接入青稞 RISC-V3C 启动、中断与上下文切换？ | 锁定 ThreadX/WCH SDK/工具链版本；板上验证时基、中断、抢占和线程栈 | MCU, FW, TEST | 待验证 |
 
 ## 当前确认边界
 
 - 仓库当前仅发现 `docs/09-references/CH585-CH584_Datasheet_V1.6.pdf`；未发现 SDK、参考手册、源代码、原理图、测试记录或抓包。
 - 因此芯片评估是数据手册层面的摘录，不代表 SDK API、并发可行性或板级验证。
 - DBG-C Interface 的 Pin 映射、RF 帧字段、USB 描述符、角色切换规则均未冻结。
-- 用户补充明确了 BLE 无 Dongle 目标下载和 USBFS 优先的产品方向；前者仍缺应用协议与目标范围，后者是待验证的实现建议，不是已证实的端点/资源充分性结论。
+- 用户补充明确了 BLE 无 Dongle 目标下载和 USBFS 优先的产品方向；前者仍缺应用协议与目标范围，后者已经确定为 V1 USB 分配；端点和 SDK Device 栈兼容性仍需验证。

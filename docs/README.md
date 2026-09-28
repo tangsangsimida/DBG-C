@@ -32,3 +32,7 @@ This directory is organized by engineering domain. Each controlled document has 
 - [风险登记册 RISK-001 中文](08-risk/DBG-C-RISK-001.zh-CN.md) · [English](08-risk/DBG-C-RISK-001.en-US.md)
 
 每次修改任一语言版本时，必须同步检查另一版本、相关文档和版本历史。不得只改一侧造成要求或状态不一致。
+
+术语基线：PC 调试协议写作 **CMSIS-DAP v2**；**DAPLink** 指可选的开源固件体系/实现来源，不写作“DAPLink v2”协议。V1 的 USB 目标是 CMSIS-DAP v2 Bulk + CDC，底层移植策略后续评审。
+
+Terminology baseline: call the PC debug protocol **CMSIS-DAP v2**. **DAPLink** is an optional open-source firmware system/source, not a “DAPLink v2” protocol. The V1 USB target is CMSIS-DAP v2 Bulk + CDC; the porting strategy remains for later review.

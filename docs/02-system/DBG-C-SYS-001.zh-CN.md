@@ -27,6 +27,8 @@ Application / Role & Pair Manager / OTA
 
 传输承载进入共用命令与目标控制路径；SWD Engine 和 Target Manager 不得按 USB、BLE、RF 复制三份。HAL/BSP 隔离 CH585M 寄存器及 SDK 依赖。DAP command 在 RF 链路上的语义、批处理及副作用重放规则须在 RF 规范冻结。
 
+PC 调试协议目标是 **CMSIS-DAP v2**。DAPLink 是可选的开源固件体系/实现来源，不是“DAPLink v2”协议版本。V1 可以复用 CMSIS-DAP/DAPLink 中可移植的协议层和算法，但 CH585M 的 USB、GPIO、时钟和无线部分必须适配 WCH SDK/HAL/BSP；是否移植完整 DAPLink 固件需单独做架构/许可/工具链审查。
+
 ## 3. 设备角色与状态
 
 角色集合：Standalone、Host、Target。两台设备硬件/BOM/MCU相同。具体角色选择来源、切换条件、USB 插入行为、冲突仲裁和持久化规则均未冻结。
@@ -39,7 +41,7 @@ Application / Role & Pair Manager / OTA
 - UART：Target UART service ↔ USB CDC（有线单机/Host 侧）；无线模式的 UART 数据通过 RF 独立逻辑通道并受 QoS 调度。
 - BLE 管理：BLE Transport → 应用管理命令；不得绕过身份、权限和 OTA 状态机。
 - BLE 目标下载（计划）：由 DBG-C Tool 通过 BLE Application Protocol 发起；传输对象是定义好的下载/管理命令，不等同于透明 BLE CMSIS-DAP。Target 类型、下载算法/镜像格式、断点续传及 PC 兼容矩阵待 DBG-C-BLE-001 设计。
-- USB 选型：USBFS 是当前优先验证的 V1 候选；USBHS 性能优化不属于 V1 目标。端点/缓冲充分性、SDK Device 能力及是否存在必要限制均未验证，因此该候选不构成资源冻结。
+- USB 分配：V1 使用 USBFS；USBHS 不启用。USBFS 端点/缓冲与 WCH SDK Device 栈对 CMSIS-DAP v2 Bulk + CDC 的支持，需要按 SDK 示例核对。
 - OTA：镜像接收、校验、安装、启动确认/失败恢复具体实现依赖 SDK/Boot 证据，当前待验证。
 
 ## 5. 硬件分层
