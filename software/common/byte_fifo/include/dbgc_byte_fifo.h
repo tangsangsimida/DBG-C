@@ -7,11 +7,13 @@
 /*
  * Caller-owned byte FIFO for transport payload buffering.
  *
- * Initialize before using any operation. This type is not thread-safe;
- * callers must serialize access when shared between execution contexts.
- * Writes never overwrite unread bytes and may accept fewer bytes than
- * requested when capacity is limited. Data pointers passed to read/write must
- * not overlap the caller-owned storage.
+ * Initialize before using any operation and do not modify fields directly.
+ * The FIFO object and backing storage must be separate memory regions. The
+ * backing storage must remain valid for the FIFO lifetime. This type is not
+ * thread-safe; callers must serialize access when shared between execution
+ * contexts. Writes never overwrite unread bytes and may accept fewer bytes
+ * than requested when capacity is limited. Data pointers passed to read/write
+ * must not overlap the FIFO object or backing storage.
  */
 typedef struct {
     uint8_t *storage;
