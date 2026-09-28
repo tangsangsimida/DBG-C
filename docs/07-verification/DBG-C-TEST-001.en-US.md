@@ -1,6 +1,6 @@
 # DBG-C Verification Specification
 
-**Document ID:** DBG-C-TEST-001　**Version:** V0.27　**Status:** Test-plan draft; FIFO, CMSIS-DAP command-core, upstream SWD-engine host model, CMSIS compiler mapping, and CH585 SWD GPIO and Target Reset GPIO host register-model/target-object checks executed; upstream command-request bounds have not been verified; ThreadX board tests have not run
+**Document ID:** DBG-C-TEST-001　**Version:** V0.28　**Status:** Test-plan draft; FIFO, CMSIS-DAP command-core, upstream SWD-engine host model, bounds preflight, CMSIS compiler mapping, and CH585 SWD GPIO and Target Reset GPIO host register-model/target-object checks executed; product command bounds and ThreadX board tests have not run
 
 ## 1. Pass Criteria
 
@@ -104,7 +104,9 @@ Reproduction command from the repository root: `DBGC_BUILD_DIR=build/target-rese
 
 | Check | Required coverage | Status |
 |---|---|---|
-| DAP-GUARD-01 | Minimum/maximum input lengths for all enabled commands and vendor path, `DAP_ExecuteCommands` count/subcommand truncation, variable-field truncation, integer overflow, and packet-capacity bounds | Not run; bounds adapter is not implemented, and DAP_PACKET_SIZE/USB receive contract are not frozen |
-| DAP-GUARD-02 | Worst-case response/write lengths and output-buffer bounds for read `DAP_Transfer`, `DAP_TransferBlock`, `DAP_SWD_Sequence`, `DAP_ExecuteCommands`, vendor commands, and each Info string callback | Not run; product response capacity and maximum string-info callback output are undefined |
+| DAP-GUARD-01 | Product-enabled pinned command and vendor-path input boundaries, truncation, integer ranges, and USB packet limit | Product-level Not run; product configuration/USB-length contract is not frozen, and vendor commands fail closed |
+| DAP-GUARD-02 | Worst-case response writes and response-buffer limits under actual product callbacks/command configuration | Product-level Not run; product profile, callback bounds, and buffer capacities are undefined |
+| DAP-BOUNDS-HOST-01 | Hardware-independent preflight: fixed/variable commands, Transfer/TransferBlock, SWD/JTAG Sequence, ExecuteCommands, truncation, capacity failure, packed-length limits, and fail-closed paths | Pass; 102 checks with an explicit test profile, not product configuration |
+| DAP-BOUNDS-TARGET-OBJ-01 | Compile the bounds preflight with WCH RISC-V GCC and inspect object architecture | Pass; ELF32 RISC-V object, not linked into PoC/DAP |
 
-The upstream command APIs receive no request length or response capacity; `DAP_ExecuteCommands` follows a request count, vendor handling can be overridden, and Info string callbacks receive no capacity. Host-fixture configuration does not define product configuration. The existing eight command checks use complete arrays and do not prove truncated-packet safety. Freeze the product command/callback/USB-buffer contract and implement the bounds adapter before executing these cases; record exact capacities. See OPEN-001 O21.
+Reproduction command from the repository root: `DBGC_BUILD_DIR=build/cmsis-dap-bounds software/poc1-ch585-threadx/build.sh`. This existing build entry passes 102 preflight checks and compiles the module to an ELF32 RISC-V object; tests provide an explicit host profile, and the module is not integrated into product USB receive or CMSIS-DAP dispatch. Upstream vendor, SWO, and CMSIS-DAP UART commands are rejected; Info checks depend on the caller supplying the actual maximum write size. These results do not prove product call-path coverage, actual USB packet length, callback behavior, or CH585M runtime. O21 remains open and product-level cases remain Not run.

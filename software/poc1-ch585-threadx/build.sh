@@ -64,6 +64,15 @@ esac
     cmsis_dap_host_dir="${build_dir}/host-tests/cmsis-dap"
     python3 "${repo_dir}/software/common/cmsis_dap_host_test/prepare_upstream.py" \
         "${repo_dir}/software/third_party/cmsis-dap" "${cmsis_dap_host_dir}"
+    "${host_cc}" -std=c99 -Wall -Wextra -Werror -pedantic \
+        -DDBGC_CMSIS_DAP_TEST_C_LOOP \
+        -I"${repo_dir}/software/common/cmsis_dap_bounds/include" \
+        -I"${repo_dir}/software/common/cmsis_dap_host_test" \
+        -I"${cmsis_dap_host_dir}/include" \
+        "${repo_dir}/software/common/cmsis_dap_bounds/src/dbgc_cmsis_dap_bounds.c" \
+        "${repo_dir}/software/common/cmsis_dap_bounds/tests/test_cmsis_dap_bounds.c" \
+        -o "${build_dir}/host-tests/test_cmsis_dap_bounds"
+    "${build_dir}/host-tests/test_cmsis_dap_bounds"
     "${host_cc}" -std=c99 -Wall -Wextra -Werror \
         -Wno-unused-parameter -Wno-unused-variable -pedantic \
         -DDBGC_CMSIS_DAP_TEST_C_LOOP \
@@ -85,6 +94,18 @@ esac
         -o "${build_dir}/host-tests/test_cmsis_dap_swd_engine"
     "${build_dir}/host-tests/test_cmsis_dap_swd_engine"
     mkdir -p "${build_dir}/target-tests"
+    "${toolchain_bin}/riscv-wch-elf-gcc" -std=gnu99 -Wall -Wextra -Werror \
+        -march=rv32imac -mabi=ilp32 -mcmodel=medany \
+        -I"${repo_dir}/software/common/cmsis_dap_bounds/include" \
+        -I"${project_dir}/platform/ch585" \
+        -I"${project_dir}/platform/ch585/wch" \
+        -I"${repo_dir}/software/common/cmsis_dap_host_test" \
+        -I"${cmsis_dap_host_dir}/include" \
+        -c "${repo_dir}/software/common/cmsis_dap_bounds/src/dbgc_cmsis_dap_bounds.c" \
+        -o "${build_dir}/target-tests/cmsis_dap_bounds.o"
+    "${toolchain_bin}/riscv-wch-elf-readelf" -h \
+        "${build_dir}/target-tests/cmsis_dap_bounds.o" | \
+        rg 'Class:|Machine:'
     "${toolchain_bin}/riscv-wch-elf-gcc" -std=gnu99 -Wall -Wextra -Werror \
         -march=rv32imac -mabi=ilp32 -mcmodel=medany \
         -I"${project_dir}/platform/ch585" \

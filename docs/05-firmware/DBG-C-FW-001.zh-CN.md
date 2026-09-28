@@ -1,6 +1,6 @@
 # DBG-C Firmware Architecture 与 PoC-1 记录
 
-**文档编号：** DBG-C-FW-001　**版本：** V0.30　**状态：** 实验草案；通用 FIFO、CMSIS-DAP 命令层和上游 SWD 引擎主机检查已通过；CMSIS 编译器宏映射、SWD GPIO 与 Target Reset GPIO 目标对象编译通过；PB5/PB6 与 PA4 模拟寄存器主机检查分别为 57 项和 33 项；产品 DAP 接入、GPIO 电气模式及时序未验证；CMSIS-DAP 请求长度安全边界待设计；验证板设计门已通过；PoC-1 实板运行验证未执行；产品硬件冻结未放行
+**文档编号：** DBG-C-FW-001　**版本：** V0.31　**状态：** 实验草案；通用 FIFO、CMSIS-DAP 命令层、上游 SWD 引擎和请求/响应边界预检主机检查已通过；CMSIS 编译器宏映射、SWD GPIO、Target Reset GPIO 与边界预检器目标对象编译通过；PB5/PB6 与 PA4 模拟寄存器主机检查分别为 57 项和 33 项；产品 DAP/USB 接入、GPIO 电气模式及时序未验证；产品命令配置与边界契约仍待定义；验证板设计门已通过；PoC-1 实板运行验证未执行；产品硬件冻结未放行
 
 ## 1. 范围与状态
 
@@ -146,6 +146,7 @@ WCH 示例的 `highcode_init()` 初始化 HSI PLL 到 62.4 MHz，并配置相关
 |---|---|---|---|
 | 通用字节 FIFO | `software/common/byte_fifo/`；对应 MCU-001 规划的 USB CDC、UART 与 RF 收发缓冲 | 调用方提供固定存储；支持任意非零容量、部分读写、不覆盖未读数据、清空与容量查询；无动态分配、无芯片寄存器/中断/ThreadX API；不保证并发安全，调用方必须串行化访问 | 已加入现有 CMake 构建并通过 CH585 交叉编译；既有构建脚本中的主机验证运行通过 3683 项断言；当前未接入 USB/UART/RF，未做实板测试；不是冻结的产品 ABI |
 | CMSIS-DAP / DAP command core | MCU-001 USBFS 分配；PRD 的 CMSIS-DAP v2 目标；Arm 官方源码固定于 `software/third_party/cmsis-dap/` 提交 `12636590eec66fae2d1bba4518749426ad5a4595` | `DAP.h` 声明 `DAP_ProcessCommand()`/`DAP_ExecuteCommand()`，固件版本宏为 2.1.2；上游依赖缺失的 `cmsis_compiler.h`，非 ArmCC 分支使用 Arm `subs` 内联汇编，不能直接用于 WCH RISC-V GCC | 8 项主机用例覆盖 Info/错误响应、TransferConfigure 重试配置、DP 读写、WAIT 重试、DAP_Transfer AP posted-read 与 `DP_RDBUFF` 响应顺序，以及 AP DAP_TransferBlock 读；WCH RISC-V GCC 将启用 SWD 命令分支的 `DAP.c` 编译为 ELF32 RISC-V 对象。测试 pin 宏为空操作、SWD 事务为模拟桩、JTAG 关闭；对象未链接到 PoC。这不是产品 HAL/配置，不验证 GPIO、电气时序、USB、线程或实板 |
+| CMSIS-DAP 请求/响应边界预检 | `software/common/cmsis_dap_bounds/`；命令 ID 和 transfer 标志取自固定 CMSIS-DAP `DAP.h` | API 接收实际请求长度、响应容量及显式 profile；计算上游 `DAP_ExecuteCommand()` 将消费的请求字节数和响应最大字节数；vendor、SWO、CMSIS-DAP UART 命令，以及未提供 Info payload 上限的 profile 失败关闭。profile 必须与最终 DAP 编译配置一致 | 102 项主机检查通过；WCH RISC-V GCC 生成 ELF32 RISC-V 对象。该对象尚未接入 USB 收包或 CMSIS-DAP 调用路径；产品 profile、Info 回调上限、USB 实际收包长度和产品缓冲容量未定义，因此不构成产品请求边界安全证明 |
 | CMSIS-DAP SWD I/O engine | 固定上游 `Firmware/Source/SW_DP.c`；MCU-001 分配 PB5=SWDIO、PB6=SWCLK | 上游位级算法经 `DAP_config.h` 的 pin 宏调用 IO；本项目 host-test 用回调式线模型，未连接 WCH GPIO API；fast 延时为空操作 | 九项主机用例共 168 项断言，覆盖 SWD 读/写数据与奇偶校验、WAIT/FAULT ACK、10 位输入/输出序列及 DAP_SWD_Sequence 命令解析、DAP_Connect 后的 DP IDCODE 读取，以及 AP DAP_Transfer / DAP_TransferBlock posted-read 经 DP_RDBUFF 返回数据的端到端响应；WCH RISC-V GCC 将上游 `SW_DP.c` 编译成 ELF32 RISC-V 对象。对象未与产品 HAL 链接，也未在 Target 或 CH585M 板上运行；不证明 PB5/PB6 波形、频率、电平或时序 |
 | CH585 SWD GPIO BSP | `software/poc1-ch585-threadx/platform/ch585/dbgc_ch585_swd_gpio.c`；MCU-001 PB5=SWDIO、PB6=SWCLK；WCH EVT `CH58x_gpio.c` 的 `GPIOB_ModeCfg()` 实现及本地 `CH585SFR.h` GPIOB 寄存器定义 | 封装 SWDIO/SWCLK 的方向/上下拉/驱动模式选择、输出置位/清零和输入读取；模式由调用方传入；不设默认电气状态，不提供临界区或时序延迟，尚未接入 CMSIS-DAP | 同一 BSP 源码以模拟寄存器运行 57 项主机检查，覆盖两根信号的五种寄存器模式、读写和无效参数；WCH RISC-V GCC 以 `-Werror` 编译为 ELF32 RISC-V 对象，未链接 PoC。主机模型不证明真实寄存器、目标电平兼容、输出电流、SWD 波形、方向切换时序或板级行为 |
 | CH585 Target Reset GPIO BSP | `software/poc1-ch585-threadx/platform/ch585/dbgc_ch585_target_reset_gpio.c`；MCU-001 的 PA4 QFN48-36 分配；WCH EVT GPIOA 模式实现及本地 `CH585SFR.h` GPIOA 寄存器定义 | 封装 PA4 模式选择、原始高/低电平写入与电平读取；调用方显式选择模式；不定义有效电平转换、脉冲宽度、默认态或同步机制 | 33 项模拟寄存器主机检查覆盖五种模式、读写、无效模式和空输出指针；WCH RISC-V GCC `-Werror` 生成 ELF32 RISC-V 对象，未链接 PoC。仅验证软件寄存器操作，不验证 PA4 引脚、电气输出、目标复位效果或时序；这些仍待验证板测量 |
@@ -190,6 +191,8 @@ Arm 官方 CMSIS-DAP 仓库已作为 Git 子模块固定到提交 `12636590eec66
 
 #### 请求长度边界
 
-固定上游 `DAP.h` 中 `DAP_ExecuteCommand()` 与 `DAP_ProcessCommand()` 只接收请求和响应指针；`DAP.c` 的 `DAP_Transfer`、`DAP_TransferBlock`、`DAP_SWD_Sequence` 根据请求字段遍历变长数据。`DAP_ExecuteCommands` 读取请求中的命令计数并据各子命令返回长度推进指针，没有可用输入长度或响应容量参数。命令 ID `0x80` 至 `0x9F` 会分派到源码标为可覆盖的 `DAP_ProcessVendorCommand()`；产品是否覆盖、接受哪些厂商命令尚未确定。`DAP_Info()` 调用字符串回调时只传入 `char *` 并接收 8 位长度，回调接口没有输出容量参数，产品字符串最大长度尚未定义。现有命令层主机测试使用完整、手工构造的请求，不覆盖截断输入或输出容量不足。
+固定上游 `DAP.h` 中 `DAP_ExecuteCommand()` 与 `DAP_ProcessCommand()` 只接收请求和响应指针；`DAP.c` 的 Transfer、TransferBlock、SWD/JTAG Sequence 根据请求字段遍历变长数据。`DAP_ExecuteCommands` 读取请求中的命令计数并据各子命令返回长度推进指针，没有可用输入长度或响应容量参数。命令 ID `0x80` 至 `0x9F` 会分派到源码标为可覆盖的 `DAP_ProcessVendorCommand()`；产品是否覆盖、接受哪些厂商命令尚未确定。`DAP_Info()` 调用字符串回调时只传入 `char *` 并接收 8 位长度，回调接口没有输出容量参数，产品字符串最大长度尚未定义。
 
-仓库尚无 USB 收包路径或 DBG-C 产品 `DAP_config.h`。主机夹具中的 `DAP_PACKET_SIZE=64`、`DAP_PACKET_COUNT=1` 和空字符串回调仅供测试，不能作为产品值。边界层实现前仍需确定产品启用的 CMSIS-DAP 命令/功能、厂商命令覆盖策略、各字符串回调的最大写入量、USB 实际接收长度以及请求/响应缓冲容量。随后才可为所有启用命令、`DAP_ExecuteCommands` 和厂商命令路径建立有界解析/响应预算并验证截断、整数范围及容量边界；不得先按测试夹具值实现。该问题跟踪在 OPEN-001 O21。
+新增 `software/common/cmsis_dap_bounds/` 纯软件预检器，使用固定上游命令 ID/标志解析受支持的固定及变长标准命令，计算已消费请求长度与响应最大值；它不调用上游命令、不访问 CH585M、不写响应内容。profile 显式传入 SWD/JTAG/timestamp 能力、JTAG 设备上限及全部 Info payload 的最大写入字节数。vendor handler、SWO、CMSIS-DAP UART 命令及 Info 上限为零时失败关闭。102 项主机检查和 WCH GCC ELF32 RISC-V 对象编译通过；复现命令：`DBGC_BUILD_DIR=build/cmsis-dap-bounds software/poc1-ch585-threadx/build.sh`。对象未接入产品 USB/DAP 路径，也未链接 PoC。
+
+仓库尚无 USB 收包路径或 DBG-C 产品 `DAP_config.h`。主机夹具中的 `DAP_PACKET_SIZE=64`、`DAP_PACKET_COUNT=1` 和空字符串回调仅供测试，不能作为产品值。产品启用命令/功能、vendor 命令策略、各 Info 回调的最大写入量、USB 实际接收长度、请求/响应容量，以及最终编译配置到 profile 的映射仍待确定。现有检查只证明预检器对其覆盖输入的解析与上限计算，不证明产品调用方一定先调用，也不证明回调遵守配置上限；O21 保持开放。
