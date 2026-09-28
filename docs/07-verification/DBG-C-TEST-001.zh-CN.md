@@ -1,6 +1,6 @@
 # DBG-C Verification Specification
 
-**文档编号：** DBG-C-TEST-001　**版本：** V0.39　**状态：** 测试计划草案；FIFO、单向/双向字节流桥接、CMSIS-DAP 命令层、有界 dispatch、SWD 引擎主机模型、边界预检器、CMSIS 编译器映射及 CH585 SWD GPIO、Target Reset GPIO 与 UART0、UID 读取适配器主机/目标静态链接检查已执行；产品 UART/命令边界、硅片 UID 与 ThreadX 实板测试未执行
+**文档编号：** DBG-C-TEST-001　**版本：** V0.40　**状态：** 测试计划草案；FIFO、单向/双向字节流桥接、CMSIS-DAP 命令层、有界 dispatch、SWD 引擎主机模型、边界预检器、CMSIS 编译器映射及 CH585 SWD GPIO、Target Reset GPIO 与 UART0、UID 读取适配器主机/目标静态链接检查已执行；PoC ThreadX 创建状态/tick 观测代码已加入并随目标交叉构建；产品 UART/命令边界、硅片 UID 与 ThreadX 实板测试未执行
 
 ## 1. 通过规则
 
@@ -29,6 +29,20 @@ Discovery、设备信息、Pair/Unpair、配置、状态、OTA、中断恢复、
 ## 7. 压力与故障注入
 
 连续烧录/Debug、RF 长时间运行、USB 插拔、Target 插拔、RF 断连、Target 掉电、DBG-C 重启；检查无静默伪成功、无危险重复命令、能恢复到定义状态。时长、次数、门限待冻结。
+
+### 7.1 ThreadX PoC 实板运行检查
+
+以下检查须在 CH585M 验证板上执行。记录 PoC ELF SHA-256、板卡版本、硅片标识、工具链/下载工具版本、接线、环境、采样时长、重复次数、负载、调试器观察记录及复位/中断日志。采样时长和通过门限由测试评审先行冻结；当前均未定义，因此这些用例保持“未执行”。
+
+| 用例 | 检查内容 | 通过条件 | 状态 |
+|---|---|---|---|
+| TX-POC-01 | 检查 `thread_a_create_status` 与 `thread_b_create_status` | 均等于 ThreadX `TX_SUCCESS`；记录确切值 | 未执行 |
+| TX-POC-02 | 观察 `thread_a_runs`、`thread_b_runs`、`thread_a_last_tick`、`thread_b_last_tick` 和 `threadx_tick_observed` | 两线程运行计数和各自 tick 采样按预先冻结的时长/次数门限推进；无未解释停滞 | 未执行 |
+| TX-POC-03 | 观察 `tx_thread_sleep(1U)` 后的线程恢复和同优先级轮转 | 两线程均能按冻结的观测条件休眠、恢复和轮转；无未解释丢 tick 或挂起 | 未执行 |
+| TX-POC-04 | 使用外部测量点测量 SysTick 频率，并对照 `TX_TIMER_TICKS_PER_SECOND` | 实测频率与经决策冻结的目标和容差一致；目标/容差须先解决源码 100 tick/s 与需求 1000 tick/s 的冲突 | 未执行 |
+| TX-POC-05 | 复位、睡眠/唤醒及持续运行期间检查中断进入/退出、上下文恢复与栈完整性 | 时长、重复次数、负载和观测方式预先冻结；无未解释异常、栈损坏、复位或停滞 | 未执行 |
+
+观测符号只提供软件状态，不是中断/tick/栈正确性的自检结论。主机交叉构建只证明目标 ELF 构建/链接，不得将其记为以上任何实板用例通过。
 
 ## 8. 通用字节 FIFO 主机测试计划
 

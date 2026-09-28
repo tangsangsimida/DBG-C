@@ -8,9 +8,9 @@
 | SYS-001 | [系统架构设计](../02-system/DBG-C-SYS-001.zh-CN.md) | V0.2，待评审 |
 | IF-001 | [DBG-C Interface Specification](../03-interfaces/DBG-C-IF-001.zh-CN.md) | V0.1 概念草案，Pin 未冻结 |
 | MCU-001 | [MCU 选型与资源评估](../04-hardware/DBG-C-MCU-001.zh-CN.md) | V0.8；UID ROM 命令与 8 字节构造有 EVT 依据；硅片读取和 Device ID 安全语义待验证 |
-| FW-001 | [固件架构与 PoC-1 记录](../05-firmware/DBG-C-FW-001.zh-CN.md) | V0.42；已增加依据 WCH ROM 命令构造 8 字节 UID 的适配器（31 项 mock 检查），硅片读取未验证；UART0 PB4/PB7 轮询 BSP/桥接适配器主机模型 94 项、单向/双向无调度字节流桥接分别 15/15 项，并提供 SFR 驱动的帧格式编码与 WCH EVT 除数计算 helper 及目标对象编译通过；产品 USB/CDC、ThreadX 实板运行验证未执行 |
+| FW-001 | [固件架构与 PoC-1 记录](../05-firmware/DBG-C-FW-001.zh-CN.md) | V0.43；增加 ThreadX 两线程创建状态和独立最近 tick 观测符号，便于验证板调试；目标交叉构建通过，不代表实板运行验证；UID 适配器及 UART0/桥接检查记录见文档 |
 | RF-001 | [Private 2.4G Protocol Specification](../06-protocols/DBG-C-RF-001.zh-CN.md) | V0.1 协议框架，不可据此编码 |
-| TEST-001 | [Verification Specification](../07-verification/DBG-C-TEST-001.zh-CN.md) | V0.39；UID 适配器 31 项 mock 检查和目标对象编译已执行，硅片读取未执行；UART0 BSP 检查覆盖帧格式字段组合、WCH UART 除数计算及 FIFO 配置，并含单向/双向字节流桥接主机检查；产品 UART、产品边界及 ThreadX 实板用例未执行 |
+| TEST-001 | [Verification Specification](../07-verification/DBG-C-TEST-001.zh-CN.md) | V0.40；新增 ThreadX 实板观测用例，当前全部未执行；UID 适配器 31 项 mock 检查和目标对象编译已执行，硅片读取未执行；UART0 与桥接主机检查结果见文档 |
 | RISK-001 | [Risk Register](../08-risk/DBG-C-RISK-001.zh-CN.md) | V0.6 风险清单；ThreadX 移植待实板验证，tick 目标待决策 |
 | OPEN-001 | [未决问题与验证清单](DBG-C-OPEN-001.zh-CN.md) | V0.36；UID API/输出宽度部分确认，Device ID 安全语义与实板读取仍开放；验证板设计已放行；PoC-1 实板运行验证未执行，产品硬件冻结未放行；O11/O21 仍开放 |
 

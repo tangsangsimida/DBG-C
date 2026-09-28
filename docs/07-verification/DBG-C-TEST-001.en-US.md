@@ -1,6 +1,6 @@
 # DBG-C Verification Specification
 
-**Document ID:** DBG-C-TEST-001　**Version:** V0.39　**Status:** Test-plan draft; FIFO, single/duplex byte-stream bridges, CMSIS-DAP command-core, upstream SWD-engine host model, bounded dispatch, bounds preflight, CMSIS compiler mapping, and CH585 SWD GPIO, Target Reset GPIO, UART0 and UID-read adapter host and target relocatable-link checks executed; product UART/command bounds, silicon UID, and ThreadX board tests have not run
+**Document ID:** DBG-C-TEST-001　**Version:** V0.40　**Status:** Test-plan draft; FIFO, single/duplex byte-stream bridges, CMSIS-DAP command-core, upstream SWD-engine host model, bounded dispatch, bounds preflight, CMSIS compiler mapping, and CH585 SWD GPIO, Target Reset GPIO, UART0 and UID-read adapter host and target relocatable-link checks executed; PoC ThreadX creation-status/tick-observation code is included in the target cross-build; product UART/command bounds, silicon UID, and ThreadX board tests have not run
 
 ## 1. Pass Criteria
 
@@ -29,6 +29,20 @@ Discovery, device information, Pair/Unpair, configuration, status, OTA, interrup
 ## 7. Stress and Fault Injection
 
 Continuous programming/Debug, long-duration RF, USB plug/unplug, target plug/unplug, RF loss, target power loss, and DBG-C reboot. Check for no silent false success or dangerous command replay and recovery to the defined state. Duration, repetitions, and thresholds remain open.
+
+### 7.1 ThreadX PoC Board Runtime Checks
+
+Run these checks on a CH585M verification board. Record the PoC ELF SHA-256, board revision, silicon identifier, toolchain/programmer versions, wiring, environment, sampling duration, repetitions, load, debugger observations, and reset/interrupt logs. Review and freeze sampling duration and pass thresholds before execution; these are currently undefined, so every case remains Not run.
+
+| Case | Check | Pass condition | Status |
+|---|---|---|---|
+| TX-POC-01 | Inspect `thread_a_create_status` and `thread_b_create_status` | Both equal ThreadX `TX_SUCCESS`; record exact values | Not run |
+| TX-POC-02 | Observe `thread_a_runs`, `thread_b_runs`, `thread_a_last_tick`, `thread_b_last_tick`, and `threadx_tick_observed` | Both run counters and per-thread tick samples advance within the pre-frozen duration/repetition thresholds, without unexplained stalls | Not run |
+| TX-POC-03 | Observe thread resume after `tx_thread_sleep(1U)` and same-priority rotation | Both threads sleep, resume, and rotate under the pre-frozen observation criteria, without unexplained lost ticks or hangs | Not run |
+| TX-POC-04 | Measure SysTick externally and compare with `TX_TIMER_TICKS_PER_SECOND` | Measured frequency matches the decided/frozen target and tolerance; resolve the source setting of 100 ticks/s versus the 1000 ticks/s requirement before freezing the target/tolerance | Not run |
+| TX-POC-05 | Check interrupt entry/exit, context restore, and stack integrity during reset, sleep/wakeup, and sustained runtime | Duration, repetitions, load, and observation method are frozen first; no unexplained exception, stack damage, reset, or stall | Not run |
+
+Observation symbols expose software state; they do not self-certify interrupt, tick, or stack correctness. A host cross-build proves target ELF build/link only and must not be recorded as a pass for any board case above.
 
 ## 8. Generic Byte FIFO Host Test Plan
 
