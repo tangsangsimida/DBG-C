@@ -80,7 +80,7 @@ DBGC_BUILD_DIR="build-local" \
 software/poc1-ch585-threadx/build.sh
 ```
 
-Build output stays under the PoC directory; `software/poc1-ch585-threadx/.gitignore` excludes `/build*/`. The script records tool versions, repository and ThreadX revisions, build output, ELF size, and ELF header summary in `build-evidence.log`. The repository-root `.gitignore` does not need build-output changes.
+The build directory must stay under the PoC directory and defaults to `build/`; `software/poc1-ch585-threadx/.gitignore` excludes only `/build/`. The script records tool versions, repository and ThreadX revisions, build output, ELF size, and ELF header summary in `build-evidence.log`. The repository-root `.gitignore` does not need build-output changes.
 
 ## 4. WCH source provenance
 

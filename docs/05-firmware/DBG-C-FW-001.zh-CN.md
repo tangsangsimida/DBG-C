@@ -80,7 +80,7 @@ DBGC_BUILD_DIR="build-local" \
 software/poc1-ch585-threadx/build.sh
 ```
 
-构建目录在 PoC 子目录中，`software/poc1-ch585-threadx/.gitignore` 排除 `/build*/`。脚本把工具版本、仓库与 ThreadX 修订、构建输出、ELF 大小和 ELF 头摘要写入 `build-evidence.log`。根目录 `.gitignore` 无需为构建产物修改。
+构建目录必须位于 PoC 子目录中，默认目录为 `build/`；`software/poc1-ch585-threadx/.gitignore` 仅排除 `/build/`。脚本把工具版本、仓库与 ThreadX 修订、构建输出、ELF 大小和 ELF 头摘要写入 `build-evidence.log`。根目录 `.gitignore` 无需为构建产物修改。
 
 ## 4. WCH 来源与文件清单
 

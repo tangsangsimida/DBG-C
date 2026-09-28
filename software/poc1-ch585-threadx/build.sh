@@ -8,6 +8,14 @@ build_dir="${DBGC_BUILD_DIR:-${project_dir}/build}"
 if [[ "${build_dir}" != /* ]]; then
     build_dir="${project_dir}/${build_dir}"
 fi
+build_dir="$(realpath -m -- "${build_dir}")"
+case "${build_dir}" in
+    "${project_dir}"/*) ;;
+    *)
+        printf 'Build directory must remain under %s\n' "${project_dir}" >&2
+        exit 2
+        ;;
+esac
 
 {
     printf 'Repository HEAD: '

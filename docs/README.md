@@ -13,7 +13,7 @@ This directory is organized by engineering domain. Each controlled document has 
 | `02-system/` | 系统架构 | System architecture |
 | `03-interfaces/` | DBG-C Interface 规范 | DBG-C Interface specifications |
 | `04-hardware/` | MCU 与硬件设计资料 | MCU and hardware design |
-| `05-firmware/` | 固件架构与实现计划（后续阶段） | Firmware architecture and implementation plan (later phase) |
+| `05-firmware/` | 固件架构、实现计划与当前 ThreadX PoC | Firmware architecture, implementation plan, and current ThreadX PoC |
 | `06-protocols/` | RF、BLE、USB 协议（USB/BLE 文档后续阶段） | RF, BLE, and USB protocols (USB/BLE docs in later phase) |
 | `07-verification/` | 验证规范与结果 | Verification specifications and results |
 | `08-risk/` | 风险登记册 | Risk register |
