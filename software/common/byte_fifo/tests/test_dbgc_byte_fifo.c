@@ -20,6 +20,8 @@ static void test_initialize_boundaries(void)
 {
     dbgc_byte_fifo_t fifo;
     uint8_t storage[3];
+    const uint8_t one_byte = 0x7DU;
+    uint8_t readback = 0U;
 
     (void)memset(&fifo, 0xA5, sizeof(fifo));
     CHECK(dbgc_byte_fifo_initialize(NULL, storage, sizeof(storage)) != 0);
@@ -31,6 +33,11 @@ static void test_initialize_boundaries(void)
     CHECK(fifo.capacity == 0U);
     CHECK(dbgc_byte_fifo_initialize(&fifo, storage, 1U) == 0);
     CHECK(dbgc_byte_fifo_capacity(&fifo) == 1U);
+    CHECK(dbgc_byte_fifo_write(&fifo, &one_byte, 1U) == 1U);
+    CHECK(dbgc_byte_fifo_count(&fifo) == 1U);
+    CHECK(dbgc_byte_fifo_write(&fifo, &one_byte, 1U) == 0U);
+    CHECK(dbgc_byte_fifo_read(&fifo, &readback, 1U) == 1U);
+    CHECK(readback == one_byte);
     CHECK(dbgc_byte_fifo_initialize(&fifo, storage, sizeof(storage)) == 0);
     CHECK(dbgc_byte_fifo_capacity(&fifo) == sizeof(storage));
     CHECK(dbgc_byte_fifo_initialize(NULL, NULL, 0U) != 0);
