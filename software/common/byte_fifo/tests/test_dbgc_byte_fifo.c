@@ -39,31 +39,34 @@ static void test_initialize_boundaries(void)
 static void test_write_read_and_full(void)
 {
     dbgc_byte_fifo_t fifo;
-    uint8_t storage[3];
+    uint8_t guarded_storage[5] = {0xA5U, 0U, 0U, 0U, 0x5AU};
     const uint8_t input[] = {0x11U, 0x22U, 0x33U, 0x44U};
     uint8_t output[4] = {0U};
 
-    CHECK(dbgc_byte_fifo_initialize(&fifo, storage, sizeof(storage)) == 0);
+    CHECK(dbgc_byte_fifo_initialize(&fifo, &guarded_storage[1], 3U) == 0);
     CHECK(dbgc_byte_fifo_read(&fifo, output, sizeof(output)) == 0U);
     CHECK(dbgc_byte_fifo_write(&fifo, input, 2U) == 2U);
     CHECK(dbgc_byte_fifo_write(&fifo, &input[2], 2U) == 1U);
-    CHECK(dbgc_byte_fifo_count(&fifo) == sizeof(storage));
+    CHECK(dbgc_byte_fifo_count(&fifo) == 3U);
     CHECK(dbgc_byte_fifo_space(&fifo) == 0U);
     CHECK(dbgc_byte_fifo_write(&fifo, &input[3], 1U) == 0U);
-    CHECK(dbgc_byte_fifo_read(&fifo, output, sizeof(output)) == sizeof(storage));
-    CHECK(memcmp(output, input, sizeof(storage)) == 0);
+    CHECK(dbgc_byte_fifo_read(&fifo, output, 1U) == 1U);
+    CHECK(output[0] == input[0]);
+    CHECK(dbgc_byte_fifo_read(&fifo, &output[1], sizeof(output) - 1U) == 2U);
+    CHECK(output[1] == input[1] && output[2] == input[2]);
     CHECK(dbgc_byte_fifo_count(&fifo) == 0U);
+    CHECK(guarded_storage[0] == 0xA5U && guarded_storage[4] == 0x5AU);
 }
 
 static void test_wraparound(void)
 {
     dbgc_byte_fifo_t fifo;
-    uint8_t storage[3];
+    uint8_t guarded_storage[5] = {0xA5U, 0U, 0U, 0U, 0x5AU};
     const uint8_t first[] = {1U, 2U, 3U};
     const uint8_t second[] = {4U, 5U};
     uint8_t output[4] = {0U};
 
-    CHECK(dbgc_byte_fifo_initialize(&fifo, storage, sizeof(storage)) == 0);
+    CHECK(dbgc_byte_fifo_initialize(&fifo, &guarded_storage[1], 3U) == 0);
     CHECK(dbgc_byte_fifo_write(&fifo, first, sizeof(first)) == sizeof(first));
     CHECK(dbgc_byte_fifo_read(&fifo, output, 2U) == 2U);
     CHECK(output[0] == 1U && output[1] == 2U);
@@ -71,6 +74,7 @@ static void test_wraparound(void)
     CHECK(dbgc_byte_fifo_read(&fifo, output, sizeof(output)) == 3U);
     CHECK(output[0] == 3U && output[1] == 4U && output[2] == 5U);
     CHECK(dbgc_byte_fifo_count(&fifo) == 0U);
+    CHECK(guarded_storage[0] == 0xA5U && guarded_storage[4] == 0x5AU);
 }
 
 static void test_invalid_buffers_and_zero_length(void)
