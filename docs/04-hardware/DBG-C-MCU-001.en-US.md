@@ -1,6 +1,6 @@
 # DBG-C MCU Selection and Resource Assessment
 
-**Document ID:** DBG-C-MCU-001　**Version:** V0.1　**Status:** Preliminary datasheet extract; resource allocation not frozen
+**Document ID:** DBG-C-MCU-001　**Version:** V0.2　**Status:** CH585M V1 schematic resource allocation draft; SDK and electrical review pending
 
 ## 1. Evidence Source
 
@@ -18,30 +18,72 @@
 | UART | Four instances; 8-level FIFO; datasheet states up to 9 Mbps | Pins, clock accuracy, and target levels TBD |
 | SPI | Two instances, Master/Slave, DMA | No evidence yet whether RF needs an external transceiver; internal RF path TBD from SDK |
 | ADC | 12-bit; 14 external + 3 internal channels (overview) | Not mandatory in V1; package/mux channel check required |
-| GPIO | 40 GPIO; two support 5 V input; 32 support interrupt/wake input | Does not imply 5 V output. Review every pin mux and voltage constraint |
+| GPIO | The overview states 40 GPIOs, two with 5 V input tolerance and 32 with interrupt/wake capability | The CH585M package pin table lists a different number of GPIOs; counting the GPIO pads listed for this package gives 25. WCH clarification is required before the total is frozen. 5VT does not imply 5 V output |
 | BLE/RF | BLE 5.4; integrated 2.4 GHz RF; 1/2 Mbps; mentions 2.4G mode up to 8 kHz report rate | Meaning of 2.4G mode, private PHY/API, RF DMA capability/API, BLE coexistence, and performance require SDK/reference-manual confirmation. Local datasheet extract does not confirm RF DMA |
 | Timers/PWM | Four 26-bit timers; four capture channels; PWM resources in datasheet | Applicability to SWD timing requires SDK and waveform validation |
 | UID/security | AES-128 and unique chip ID | UID API, length, immutability, and key-storage boundaries TBD from SDK/security review |
 | Boot/OTA | Datasheet states ICP/ISP/IAP and OTA wireless update support | Boot protocol, OTA APIs, rollback/signature/power-fail recovery require official evidence |
 | Package | CH585M: QFN48 | Verify land pattern, dimensions, and pin table against package documentation |
-| Clocks | On-chip PLL, 16 MHz and 32 kHz clocks; external crystal requirements not confirmed in this extract | USB/BLE/RF accuracy and component requirements TBD from reference manual/SDK |
+| Clocks | Pin table identifies 32 MHz HSE crystal pins X32MO/X32MI and 32 kHz crystal functions on PA10/PA11 | Allocate the 32 MHz crystal network to QFN48 pads 31/32; confirm whether a 32 kHz crystal is required from WCH BLE/low-power SDK configuration |
 | Debug | Single/dual-wire emulation debug; datasheet says PB15/PB14 are used when enabled | Production debug access, mux conflict, and production lock policy TBD |
 
-## 3. Preliminary Pin/Peripheral Conflicts
+## 3. CH585M QFN48 Pin Allocation Matrix
 
-The datasheet mux table shows UART/SPI/TMR/ADC/emulation-debug alternatives; PB15/PB14 may be occupied by emulation debug. Since no approved USB/RF/DBG-C Interface pin plan exists, no final GPIO is assigned here. Build a QFN48 matrix and verify it against WCH SDK initialization/mux definitions.
+Package pin numbers below are read from the **CH585M column** of datasheet Table 1-1 (printed pages 5–8). MCU-side resources are allocated as schematic inputs; this does not freeze the Type-C contact mapping on DBG-C Interface. Verify pin-mux initialization with the WCH SDK. Target voltage, pulls, drive topology, and protection remain subject to the interface electrical specification.
+
+| QFN48 pad | GPIO/pin | V1 net allocation | Mux conflict/constraint |
+|---:|---|---|---|
+| 1 | VDCID | Connect per datasheet power circuit | Capacitor and DC-DC connection per datasheet |
+| 2 | VSW | Connect per datasheet power circuit | DC-DC inductor/bypass per datasheet |
+| 3 | VDD33 / VIO33 | Supply and I/O supply net | Verify decoupling and USB supply relationship against reference design |
+| 6 | PA9 | Optional pairing/function button GPIO reserve | Button population requires PRD confirmation; do not enable TMR0, TXD1, or ADC A13 mux |
+| 7 | PB9 | Unallocated reserve | GPIO/NFCI; NFC disabled in V1 |
+| 8 | PB8 | Unallocated reserve | GPIO/NFCM; NFC disabled in V1 |
+| 9 | PB17 | Unallocated reserve | GPIO/NFC+; NFC disabled in V1 |
+| 10 | PB16 | Unallocated reserve | GPIO/NFC−; NFC disabled in V1 |
+| 11 | PB15 / TCK | Probe emulation-debug clock | Dedicated to TCK when emulation debug is enabled; do not allocate to Target SWD |
+| 12 | PB14 / TIO | Probe emulation-debug data | Dedicated to TIO when emulation debug is enabled; do not allocate to Target SWD |
+| 13 | PB13 / U2D+ | Reserve; USBHS disabled in V1 | Do not connect to USBFS D+ |
+| 14 | PB12 / U2D− | Reserve; USBHS disabled in V1 | Do not connect to USBFS D− |
+| 15 | PB11 / UD+ | USBFS D+ | Do not use as ordinary GPIO |
+| 16 | PB10 / UD− | USBFS D− | Do not use as ordinary GPIO |
+| 17 | PB7 / TXD0 | Probe UART TX, connected toward Target RX | UART0 TXD0; MODEM signals unused |
+| 18 | PB6 | Target SWCLK | GPIO-driven; do not enable RTS/PWM8 mux |
+| 19 | PB5 | Target SWDIO | Bidirectional GPIO; do not enable UART0 DTR mux |
+| 20 | PB4 / RXD0 | Probe UART RX, connected from Target TX | UART0 RXD0 |
+| 25 | PB23 | Unallocated reserve | Do not enable TMR0 remap, TXD2, or PWM11 |
+| 26 | PB22 / RST | Probe active-low chip reset input | Reserve per datasheet; do not connect as Target_nRESET output |
+| 31 | X32MO | One side of 32 MHz crystal network | HSE crystal pin per datasheet; crystal parameters/load per WCH reference design |
+| 32 | X32MI | Other side of 32 MHz crystal network | HSE crystal pin per datasheet; crystal parameters/load per WCH reference design |
+| 33 | VINTA | Decoupling capacitor per datasheet | Value and routing per datasheet/reference design |
+| 34 | ANT | RF network/antenna connection | The datasheet describes an RF input/output and recommends direct antenna connection. Verify the actual network against the WCH CH585M RF reference design, which is not present in this repository |
+| 35 | VDCIA | Decoupling capacitor per datasheet | VDCIA/VDCID connection per datasheet |
+| 36 | PA4 | Target_nRESET control output | GPIO; do not enable UART3 RXD3, LEDC, or ADC A0 mux; output stage/default state pending electrical design |
+| 37 | PA5 | Optional status LED GPIO reserve | LED population requires PRD/hardware review; do not enable UART3 TXD3, LED4, or ADC A1 mux |
+| 43 | PA15 | Unallocated reserve | Do not enable SPI0 MISO or UART0 RXD0 remap |
+| 44 | PA14 | Unallocated reserve | Do not enable SPI0 MOSI or UART0 TXD0 remap |
+| 45 | PA13 | Unallocated reserve | Do not enable SPI0 SCK or PWM5 |
+| 46 | PA12 | Unallocated reserve | Do not enable SPI0 SCS or PWM4 |
+| 47 | PA11 / X32KO | Reserve for 32 kHz clock review; no external signal | Low-frequency oscillator output; WCH BLE/low-power SDK configuration must confirm whether a 32 kHz crystal is needed |
+| 48 | PA10 / X32KI | Reserve for 32 kHz clock review; no external signal | Low-frequency oscillator input; WCH BLE/low-power SDK configuration must confirm whether a 32 kHz crystal is needed |
+
+Note: pad numbers come from the CH585M column of datasheet Table 1-1 (printed pages 5–8). Only pins relevant to DBG-C allocation and explicitly numbered in that column are listed. Do not infer electrical use for unlisted QFN48 pads. The overview GPIO count conflicts with the count in the CH585M pin table; tracked as open question O20.
 
 ## 4. Resource Allocation Status
 
 | Function | Planned need | MCU resource/pin allocation | Status |
 |---|---|---|---|
-| USB Device | CMSIS-DAP v2 + CDC | USBFS; PB10/PB11; USBHS unused for now | SDK/descriptors TBD |
-| SWD Engine | SWDIO/SWCLK timing | Reserve two general GPIOs; Timer as needed | GPIO timing/rate TBD |
-| Target UART | CDC bridge | UART0; PB4/PB7 | SDK/concurrency TBD |
+| USB Device | CMSIS-DAP v2 + CDC | USBFS; PB10 QFN48-16=UD−, PB11 QFN48-15=UD+; USBHS disabled | SDK/descriptors TBD |
+| SWD Engine | SWDIO/SWCLK timing | PB5 QFN48-19=SWDIO; PB6 QFN48-18=SWCLK; GPIO bit-bang | GPIO timing/rate TBD |
+| Target Reset | Hardware reset | PA4 QFN48-36=Target_nRESET | Output stage, default state, and voltage pending electrical design |
+| Target UART | CDC bridge | UART0; PB4 QFN48-20=Probe RX/Target TX, PB7 QFN48-17=Probe TX/Target RX | SDK/concurrency TBD |
 | RF/BLE | Private 2.4 GHz with BLE management | Integrated shared Radio resource | SDK coexistence TBD |
-| ADC/LED/Button | Status/extensions | No ADC; reserve one GPIO each for LED/button | Button product decision TBD |
-| DBG-C Interface | Basic/Full signals | No pin map; must not freeze | TBD |
-| Debug/Boot/Reserve | Production and recovery | Pins/storage partitions unassigned | TBD |
+| LED/Button | Status/pairing GPIO reserve | PA5 QFN48-37=LED reserve; PA9 QFN48-6=optional button reserve | PRD/hardware review decides population; polarity, current limit, pulls, and interrupt config TBD |
+| HSE clock | 32 MHz external crystal | X32MO QFN48-31; X32MI QFN48-32 | Crystal parameters/layout per WCH reference design |
+| LSE clock | Optional 32 kHz crystal | Reserve PA10 QFN48-48 and PA11 QFN48-47 | Need for external crystal TBD from WCH BLE/low-power SDK configuration |
+| RF | BLE/private 2.4 GHz | ANT QFN48-34 to RF network/antenna | Datasheet recommends direct antenna connection; verify the final network against the WCH CH585M RF reference design, not yet obtained |
+| DBG-C Interface | Basic/Full signals | MCU-side SWD/UART/Reset nets assigned; Type-C contact map not frozen | IF-001 must freeze connector mapping and electrical parameters |
+| Probe Debug/Reset | Production/recovery | PB15 QFN48-11=TCK; PB14 QFN48-12=TIO; PB22 QFN48-26=chip RST | Preserve Probe programming/reset function |
 
 ## 5. V1 Peripheral Requirements and Schematic Pre-allocation
 
@@ -49,12 +91,14 @@ This is a **V1 schematic-input baseline**. It is not proof of MCU performance an
 
 | Function | MCU resource assignment | Schematic assignment | Notes and verification boundary |
 |---|---|---|---|
-| PC USB Device | USBFS controller/PHY + USB DMA | PB10=UD−, PB11=UD+; upstream USB-C connector | Use USBFS in V1 for CMSIS-DAP v2 Bulk + CDC. Verify descriptors and SDK USB Device stack during firmware work; leave USBHS disabled |
-| Target UART/CDC | UART0 + USB CDC virtual COM port | UART0 PB4=RXD0, PB7=TXD0; connector pins to DBG-C Interface wait for interface freeze | UART0 modem signals are not needed. CDC enumerates over USBFS and bridges to UART0 |
-| Target SWD | Two general GPIOs controlled by shared SWD Engine | Reserve MCU nets for SWDIO and SWCLK; GPIO numbers and connector pins wait for pin matrix/interface freeze | GPIO-driven SWD; do not consume SPI in V1. Verify timing and achievable SWD frequency with firmware/oscilloscope |
-| Target Reset | One general GPIO output | Reserve a TARGET_nRESET MCU net; pin number waits for pin matrix | Do not connect to CH585M's own RST. Open-drain/push-pull, series/protection, and default state belong to electrical design |
-| BLE + private 2.4 GHz | Integrated Radio/Baseband and ANT pin | Connect CH585M ANT through matching/antenna network per WCH RF reference design | Shared wireless subsystem; simultaneous use requires SDK confirmation. No external RF SPI assigned |
-| Status/pairing interaction | GPIO | Reserve one LED and one button GPIO; pin numbers wait for pin matrix | Confirm production button need in UX review; LED polarity/current wait for component selection |
+| PC USB Device | USBFS controller/PHY + USB DMA | PB10 QFN48-16=UD−, PB11 QFN48-15=UD+; upstream USB-C | Use USBFS in V1 for CMSIS-DAP v2 Bulk + CDC. Verify descriptors and SDK Device stack; leave USBHS disabled |
+| Target UART/CDC | UART0 + USB CDC virtual COM port | PB4 QFN48-20=Probe RX/Target TX, PB7 QFN48-17=Probe TX/Target RX; connector pins wait for IF-001 freeze | UART0 MODEM signals unused. CDC enumerates over USBFS and bridges to UART0 |
+| Target SWD | Two GPIOs controlled by shared SWD Engine | PB5 QFN48-19=SWDIO, PB6 QFN48-18=SWCLK; connector pins wait for IF-001 freeze | GPIO-driven SWD; no SPI allocation. Verify timing and achievable SWD frequency with firmware waveform measurement |
+| Target Reset | One GPIO control output | PA4 QFN48-36=Target_nRESET; connector pin waits for IF-001 freeze | Keep separate from CH585M PB22/RST; output stage/default state/target voltage pending electrical design |
+| BLE + private 2.4 GHz | Integrated Radio/Baseband and ANT | ANT QFN48-34 to RF network/antenna | Datasheet recommends direct antenna connection; verify the final network against the WCH CH585M RF reference design, not yet obtained. Coexistence requires SDK confirmation; no external RF SPI assigned |
+| Status/pairing interaction | GPIO reserves | PA5 QFN48-37=LED reserve; PA9 QFN48-6=optional button reserve | PRD/hardware review decides population; LED polarity/current limit and button pulls/debounce/wake policy TBD |
+| HSE clock | External 32 MHz crystal network | X32MO QFN48-31; X32MI QFN48-32 | Datasheet marks external 32 MHz HSE crystal; verify component parameters against WCH reference design |
+| LSE clock | Optional 32 kHz crystal network | Reserve PA10 QFN48-48 and PA11 QFN48-47 | Need for external crystal TBD from WCH BLE/low-power SDK configuration |
 | USB/connection detection | GPIO only if selected circuit requires it | Reserve a VBUS/connection-detect net location; pin TBD | Do not assume USBFS automatically provides VBUS sensing; decide from SDK and power/connector design |
 | Unique identity/pair settings | Chip UID + DataFlash | Firmware reads UID; DataFlash is unassigned until pairing-persistence requirements are frozen | UID API/length, write policy/endurance require SDK review; storage layout and pair persistence remain open |
 | OTA and firmware | CodeFlash + BootLoader | Include programming/recovery circuitry per official programming/update design | Do not assume dual-image fits in 448 KB CodeFlash; signature, rollback, and power-fail safety are unverified |
@@ -63,11 +107,13 @@ This is a **V1 schematic-input baseline**. It is not proof of MCU performance an
 
 ### GPIO/Pin Reservation Constraints
 
-1. Use PB10/PB11 for USBFS and PB4/PB7 for UART0. The manual defines them as UD−/UD+ and RXD0/TXD0 respectively; check CH585M SDK initialization before layout release.
-2. Allocate SWDIO, SWCLK, TARGET_nRESET, LED, and button from remaining GPIOs. Do not assign pin numbers yet because the target-side Type-C pin map is not frozen.
-3. PB14/PB15 are used as TIO/TCK when emulation debug is enabled. Exclude them from the allocatable GPIO pool and preserve Probe programming/recovery access.
-4. PB12/PB13 are labeled USBHS U2D−/U2D+; V1 leaves USBHS unused. Do not confuse them with USBFS PB10/PB11.
-5. The CH585M's own external reset input is shown as PB22/RST in the datasheet mux table. It is not the Target_nRESET output; keep the nets distinct.
+1. MCU-side assignments: PB10 QFN48-16=USBFS UD−, PB11 QFN48-15=USBFS UD+, PB4 QFN48-20=Probe RX/Target TX, and PB7 QFN48-17=Probe TX/Target RX. Verify WCH SDK mux initialization before layout release.
+2. MCU-side assignments: PB5 QFN48-19=SWDIO, PB6 QFN48-18=SWCLK, and PA4 QFN48-36=Target_nRESET. Reserve PA5 QFN48-37 for LED and PA9 QFN48-6 for an optional button. DBG-C Interface Type-C contact mapping remains unfrozen.
+3. CH585M QFN48 pads 11/12 are PB15/TCK and PB14/TIO. Preserve them for Probe emulation debug; do not allocate them to Target SWD.
+4. PB12 QFN48-14/PB13 QFN48-13 are USBHS U2D−/U2D+; V1 leaves USBHS unused. Do not confuse them with USBFS PB10/PB11.
+5. The CH585M's own active-low reset input is PB22/RST at QFN48 pad 26. It is not the Target_nRESET output; keep the nets separate.
+6. PB5/PB6 also have UART0 DTR/RTS and PWM8 alternate functions, unused in V1. PA4/PA5/PA9 UART/LED/ADC alternate functions are also unused by this allocation.
+7. The selected pins are not marked 5VT in the datasheet. Do not directly connect target signals until DBG-C Interface voltage and protection design is complete.
 
 ### Peripherals Not Enabled in V1
 
@@ -112,4 +158,4 @@ The upstream root [LICENSE.txt](https://github.com/eclipse-threadx/threadx/blob/
 
 ## 7. Required Materials
 
-Obtain the official WCH CH585M reference manual, matching SDK/example version, package drawing, silicon revision/errata, USBFS Device example, RF/BLE coexistence guidance, OTA/ISP/IAP examples and interfaces, and clock/electrical requirements. Record file version/hash and review date when updating this document.
+Obtain the matching WCH SDK/example version, official package drawing, silicon revision/errata, USBFS Device example, CH585M RF antenna reference design, RF/BLE coexistence guidance, OTA/ISP/IAP examples and interfaces, and clock/electrical requirements. Record file version/hash and review date when updating this document.
