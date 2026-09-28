@@ -84,7 +84,7 @@ The build directory must stay under the PoC directory and defaults to `build/`; 
 
 ## 4. WCH source provenance
 
-The original material remains in the official EVT archive described in [`CH585EVT archive notes`](../09-references/CH585EVT/README.md). Hashes below are for the original ZIP entries. Repository copies of WCH headers only normalize line endings and trailing whitespace. The clock initialization file derives its function body from the listed WCH source and retains copyright/use notices.
+The original material remains in the official EVT archive described in [`CH585EVT archive notes`](../09-references/CH585EVT/README.md). Hashes below are for the original ZIP entries. Repository copies of WCH headers only normalize line endings and trailing whitespace; the startup assembly and linker script also normalize indentation whitespace and trailing blank lines. Comparison confirms these are whitespace-only changes. The clock initialization file derives its function body from the listed WCH source and retains copyright/use notices.
 
 | PoC file | Original WCH EVT entry | Original SHA-256 |
 |---|---|---|
