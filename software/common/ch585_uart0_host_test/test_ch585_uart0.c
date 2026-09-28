@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #include "dbgc_ch585_uart0.h"
+#include "dbgc_ch585_uart0_bridge_adapter.h"
 #include "dbgc_ch585_uart0_host_regs.h"
 
 volatile uint32_t dbgc_host_R32_PB_DIR;
@@ -197,7 +198,22 @@ int main(void)
     check(dbgc_ch585_uart0_try_read(&byte) == 1,
           "read succeeds with RX FIFO data");
     check(byte == 0x3CU, "read returns receiver buffer byte");
+    dbgc_host_R8_UART0_RFC = 0U;
+    check(dbgc_ch585_uart0_bridge_read(&line_control, &byte) == 0,
+          "bridge source callback reports empty UART RX FIFO");
+    dbgc_host_R8_UART0_RFC = 1U;
+    dbgc_host_R8_UART0_RBR = 0x69U;
+    check((dbgc_ch585_uart0_bridge_read(&line_control, &byte) == 1) &&
+              (byte == 0x69U),
+          "bridge source callback forwards one UART RX byte");
     check(dbgc_ch585_uart0_try_read(0) == -1, "null read pointer rejected");
+    dbgc_host_R8_UART0_TFC = 0U;
+    check((dbgc_ch585_uart0_bridge_write(&line_control, 0x96U) == 1) &&
+              (dbgc_host_R8_UART0_THR == 0x96U),
+          "bridge sink callback forwards one byte to UART TX");
+    dbgc_host_R8_UART0_TFC = 8U;
+    check(dbgc_ch585_uart0_bridge_write(&line_control, 0xA6U) == 0,
+          "bridge sink callback preserves UART TX backpressure");
 
     reset_regs();
     check(dbgc_ch585_uart0_init(0U, 115200U, 3U,
