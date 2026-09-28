@@ -46,6 +46,14 @@ esac
         -o "${build_dir}/host-tests/test_dbgc_byte_fifo"
     "${build_dir}/host-tests/test_dbgc_byte_fifo"
     "${host_cc}" -std=c99 -Wall -Wextra -Werror -pedantic \
+        -DDBGC_CH585_UART0_HOST_TEST \
+        -I"${repo_dir}/software/common/ch585_uart0_host_test" \
+        -I"${project_dir}/platform/ch585" \
+        "${project_dir}/platform/ch585/dbgc_ch585_uart0.c" \
+        "${repo_dir}/software/common/ch585_uart0_host_test/test_ch585_uart0.c" \
+        -o "${build_dir}/host-tests/test_ch585_uart0"
+    "${build_dir}/host-tests/test_ch585_uart0"
+    "${host_cc}" -std=c99 -Wall -Wextra -Werror -pedantic \
         -DDBGC_CH585_SWD_GPIO_HOST_TEST \
         -I"${repo_dir}/software/common/ch585_swd_gpio_host_test" \
         -I"${project_dir}/platform/ch585" \
@@ -126,8 +134,17 @@ esac
         -I"${project_dir}/platform/ch585/wch" \
         -c "${project_dir}/platform/ch585/dbgc_ch585_target_reset_gpio.c" \
         -o "${build_dir}/target-tests/dbgc_ch585_target_reset_gpio.o"
+    "${toolchain_bin}/riscv-wch-elf-gcc" -std=gnu99 -Wall -Wextra -Werror \
+        -march=rv32imac -mabi=ilp32 -mcmodel=medany \
+        -I"${project_dir}/platform/ch585" \
+        -I"${project_dir}/platform/ch585/wch" \
+        -c "${project_dir}/platform/ch585/dbgc_ch585_uart0.c" \
+        -o "${build_dir}/target-tests/dbgc_ch585_uart0.o"
     "${toolchain_bin}/riscv-wch-elf-readelf" -h \
         "${build_dir}/target-tests/dbgc_ch585_target_reset_gpio.o" | \
+        rg 'Class:|Machine:'
+    "${toolchain_bin}/riscv-wch-elf-readelf" -h \
+        "${build_dir}/target-tests/dbgc_ch585_uart0.o" | \
         rg 'Class:|Machine:'
     "${toolchain_bin}/riscv-wch-elf-readelf" -h \
         "${build_dir}/target-tests/dbgc_ch585_swd_gpio.o" | \

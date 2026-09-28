@@ -1,6 +1,6 @@
 # DBG-C Open Questions and Verification List
 
-**Document ID:** DBG-C-OPEN-001　**Version:** V0.33　**Status:** Open items
+**Document ID:** DBG-C-OPEN-001　**Version:** V0.34　**Status:** Open items
 
 | ID | Question | Evidence/decision required | Affected documents | Status |
 |---|---|---|---|---|
@@ -12,7 +12,7 @@
 | O06 | Is pairing persistent/automatic, and what happens after unpair? | UX/security review and persistence tests | PRD, RF, BLE | Decision needed |
 | O07 | What is the Device ID source, length, API, and authentication binding? | CH585M SDK/official interface and security review | MCU, RF, BLE | To verify |
 | O08 | What USB VID/PID, interface/endpoints, strings, and serial policy will be used? | Formal implementation and VID ownership decision | USB, TEST | Decision needed |
-| O09 | What CDC baud rates, flow control, target levels, and performance limits apply? | User requirements, electrical design, and measurements | PRD, IF, TEST | Decision needed |
+| O09 | What CDC baud rates, flow control, target levels, and performance limits apply? | User requirements, electrical design, and measurements | PRD, IF, TEST | Decision needed; EVT evidence now confirms UART0 PB4/PB7 setup and polling BSP host-model/target-object checks pass; product parameters, CDC, actual electrical/transfer behavior, and concurrency remain undefined/unverified |
 | O10 | Does OTA support signatures, dual image, rollback, and power-loss recovery? | WCH Boot/SDK docs, examples, and power-cut testing | MCU, FW, BLE, RF, RISK | To verify |
 | O11 | What are target UART/RESET/SWD voltage limits, protection needs, and SWD GPIO operating modes? | Freeze Target compatibility, electrical limits, SWDIO pulls/output drive/idle state/direction-switch requirements, and measurements | IF, HW, FW, TEST | Decision needed; PB5/PB6 mode-selection and PA4 raw-level GPIO BSP host-model/target-object checks pass; product electrical mode, reset active-level mapping, default state, protection, and pulse width remain undefined pending electrical review and verification-board measurement |
 | O12 | What are performance goals for DAP latency, throughput, range, and endurance? | Prototype data and product review | PRD, RF, TEST | Decision needed |
