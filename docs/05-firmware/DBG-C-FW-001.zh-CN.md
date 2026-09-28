@@ -1,6 +1,6 @@
 # DBG-C Firmware Architecture 与 PoC-1 记录
 
-**文档编号：** DBG-C-FW-001　**版本：** V0.28　**状态：** 实验草案；通用 FIFO、CMSIS-DAP 命令层和上游 SWD 引擎主机检查已通过；CMSIS 编译器宏映射、SWD GPIO 与 Target Reset GPIO 目标对象编译通过；PB5/PB6 与 PA4 模拟寄存器主机检查分别为 57 项和 33 项；产品 DAP 接入、GPIO 电气模式及时序未验证；CMSIS-DAP 请求长度安全边界待设计；验证板设计门已通过；实板运行及产品硬件冻结未通过
+**文档编号：** DBG-C-FW-001　**版本：** V0.29　**状态：** 实验草案；通用 FIFO、CMSIS-DAP 命令层和上游 SWD 引擎主机检查已通过；CMSIS 编译器宏映射、SWD GPIO 与 Target Reset GPIO 目标对象编译通过；PB5/PB6 与 PA4 模拟寄存器主机检查分别为 57 项和 33 项；产品 DAP 接入、GPIO 电气模式及时序未验证；CMSIS-DAP 请求长度安全边界待设计；验证板设计门已通过；实板运行及产品硬件冻结未通过
 
 ## 1. 范围与状态
 
@@ -174,7 +174,7 @@ CMSIS-DAP 测试位于 `software/common/cmsis_dap_host_test/`，由既有 `softw
 | `EVT/EXAM/SRC/StdPeriphDriver/CH58x_uart0.c`；SHA-256 `f0b6b252dcb69530428f32cf2bb50cb585fbecd6f5cfd0eb57f194e257d86338` | 文件头标记 V1.2、2021/11/17；默认初始化把波特率设为 115200、FIFO 触发级别字段设为 4-byte、使能 TXD 中断；收发字符串函数轮询 FIFO 状态/计数 | 这些是示例默认值，不是 DBG-C 冻结参数。轮询 API 不满足尚未定义的 UART/ThreadX 并发服务契约，不能直接作为产品桥接驱动 |
 | `EVT/EXAM/USB/Device/COM/src/Main.c` 中 `DebugInit()` | 调用 `GPIOPinRemap(ENABLE, RB_PIN_UART0)`，然后配置 PA15/PA14 并初始化 UART0 | 该 CDC 示例将 UART0 重映射到 PA15/PA14；DBG-C MCU-001 分配 PB4/PB7。不得复制此示例的引脚初始化到产品固件。PB4/PB7 的最终 SDK 初始化证据仍需取得 |
 
-通用字节 FIFO 是已实现且可复用的硬件无关产品模块。CH585 SWD GPIO BSP 按 MCU-001 和 WCH EVT GPIOB 实现封装 PB5/PB6；CH585 Target Reset GPIO BSP 按 MCU-001 和 WCH EVT GPIOA 实现封装 PA4。相应主机寄存器模型分别通过 57 项和 33 项检查，且两个 BSP 都通过 ELF32 RISC-V 目标对象编译；均未链接进 PoC 或 CMSIS-DAP。模拟寄存器检查不证明芯片寄存器、引脚电气或目标复位行为。两 BSP 均要求调用方显式选择模式；PA4 API 只传递原始高/低电平，不定义复位极性/脉宽/默认态。目标电压兼容、输出能力、保护与 SWD/RESET 时序仍按 IF-001/O11/O12 保持待决，并须在验证板测量。CMSIS-DAP 命令核心及上游 SWD 位级算法已有主机模型检查，但 host-test pin 回调仍是验证夹具。USBFS + CDC、UART0 驱动/桥接、BLE 和私有 RF 仍缺产品接口/调度/硬件证据。O02、O08、O09、O11、O18 与 O20 保持开放，所有 ThreadX/USB/UART ISR 行为仍需实板验证。
+通用字节 FIFO 是已实现且可复用的硬件无关产品模块。CH585 SWD GPIO BSP 按 MCU-001 和 WCH EVT GPIOB 实现封装 PB5/PB6；CH585 Target Reset GPIO BSP 按 MCU-001 和 WCH EVT GPIOA 实现封装 PA4。相应主机寄存器模型分别通过 57 项和 33 项检查，且两个 BSP 都通过 ELF32 RISC-V 目标对象编译；均未链接进 PoC 或 CMSIS-DAP。模拟寄存器检查不证明芯片寄存器、引脚电气或目标复位行为。两 BSP 均要求调用方显式选择模式；PA4 API 只传递原始高/低电平，不定义复位极性/脉宽/默认态。目标电压兼容、输出能力、保护与 SWD/RESET 时序仍按 IF-001/O11/O12 保持待决，并须在验证板测量。CMSIS-DAP 命令核心及上游 SWD 位级算法已有主机模型检查，但 host-test pin 回调仍是验证夹具。USBFS + CDC、UART0 驱动/桥接、BLE 和私有 RF 仍缺产品接口/调度/硬件证据。O02、O08、O09、O11、O18、O20 与 O21 保持开放，所有 ThreadX/USB/UART ISR 行为仍需实板验证。
 
 ### 8.3 上游 SWD 引擎主机线模型与 WCH GPIO 证据
 
@@ -190,6 +190,6 @@ Arm 官方 CMSIS-DAP 仓库已作为 Git 子模块固定到提交 `12636590eec66
 
 #### 请求长度边界
 
-固定上游 `DAP.h` 中 `DAP_ExecuteCommand()` 与 `DAP_ProcessCommand()` 只接收请求和响应指针；`DAP.c` 内 `DAP_Transfer`、`DAP_TransferBlock`、`DAP_SWD_Sequence` 和 `DAP_ExecuteCommands` 根据命令字段推进请求指针/循环次数，接口没有携带输入可用长度或响应缓冲容量。现有命令层主机测试提供完整、手工构造的请求数组，未覆盖截断输入或输出容量不足。
+固定上游 `DAP.h` 中 `DAP_ExecuteCommand()` 与 `DAP_ProcessCommand()` 只接收请求和响应指针；`DAP.c` 的 `DAP_Transfer`、`DAP_TransferBlock`、`DAP_SWD_Sequence` 根据请求字段遍历变长数据。`DAP_ExecuteCommands` 读取请求中的命令计数并据各子命令返回长度推进指针，没有可用输入长度或响应容量参数。命令 ID `0x80` 至 `0x9F` 会分派到源码标为可覆盖的 `DAP_ProcessVendorCommand()`；产品是否覆盖、接受哪些厂商命令尚未确定。`DAP_Info()` 调用字符串回调时只传入 `char *` 并接收 8 位长度，回调接口没有输出容量参数，产品字符串最大长度尚未定义。现有命令层主机测试使用完整、手工构造的请求，不覆盖截断输入或输出容量不足。
 
-当前未实现 USB 收包路径，也未冻结 USB 实际接收长度约定、产品 `DAP_PACKET_SIZE`、字符串信息回调的最大输出或响应缓冲配置。故不在未知缓冲契约上调用无长度上游 API。边界适配器须在 USB 与 DAP 之间建立，并覆盖固定提交中所有启用命令及 `DAP_ExecuteCommands` 的变长字段、截断、整数范围和最大响应预算；完成后再以畸形/截断包主机测试验证。该问题跟踪在 OPEN-001 O21。
+仓库尚无 USB 收包路径或 DBG-C 产品 `DAP_config.h`。主机夹具中的 `DAP_PACKET_SIZE=64`、`DAP_PACKET_COUNT=1` 和空字符串回调仅供测试，不能作为产品值。边界层实现前仍需确定产品启用的 CMSIS-DAP 命令/功能、厂商命令覆盖策略、各字符串回调的最大写入量、USB 实际接收长度以及请求/响应缓冲容量。随后才可为所有启用命令、`DAP_ExecuteCommands` 和厂商命令路径建立有界解析/响应预算并验证截断、整数范围及容量边界；不得先按测试夹具值实现。该问题跟踪在 OPEN-001 O21。

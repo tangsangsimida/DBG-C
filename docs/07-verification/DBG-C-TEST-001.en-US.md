@@ -1,6 +1,6 @@
 # DBG-C Verification Specification
 
-**Document ID:** DBG-C-TEST-001　**Version:** V0.26　**Status:** Test-plan draft; FIFO, CMSIS-DAP command-core, upstream SWD-engine host model, CMSIS compiler mapping, and CH585 SWD GPIO and Target Reset GPIO host register-model/target-object checks executed; upstream command-request bounds have not been verified; ThreadX board tests have not run
+**Document ID:** DBG-C-TEST-001　**Version:** V0.27　**Status:** Test-plan draft; FIFO, CMSIS-DAP command-core, upstream SWD-engine host model, CMSIS compiler mapping, and CH585 SWD GPIO and Target Reset GPIO host register-model/target-object checks executed; upstream command-request bounds have not been verified; ThreadX board tests have not run
 
 ## 1. Pass Criteria
 
@@ -104,7 +104,7 @@ Reproduction command from the repository root: `DBGC_BUILD_DIR=build/target-rese
 
 | Check | Required coverage | Status |
 |---|---|---|
-| DAP-GUARD-01 | Minimum/maximum input lengths for all enabled commands in the pinned source, variable-field truncation, count-multiplication overflow, and packet-capacity bounds | Not run; bounds adapter is not implemented, and DAP_PACKET_SIZE/USB receive contract are not frozen |
-| DAP-GUARD-02 | Worst-case response length and output-buffer bounds for read `DAP_Transfer`, `DAP_TransferBlock`, `DAP_SWD_Sequence`, and `DAP_ExecuteCommands` | Not run; product response capacity and maximum string-info callback output are undefined |
+| DAP-GUARD-01 | Minimum/maximum input lengths for all enabled commands and vendor path, `DAP_ExecuteCommands` count/subcommand truncation, variable-field truncation, integer overflow, and packet-capacity bounds | Not run; bounds adapter is not implemented, and DAP_PACKET_SIZE/USB receive contract are not frozen |
+| DAP-GUARD-02 | Worst-case response/write lengths and output-buffer bounds for read `DAP_Transfer`, `DAP_TransferBlock`, `DAP_SWD_Sequence`, `DAP_ExecuteCommands`, vendor commands, and each Info string callback | Not run; product response capacity and maximum string-info callback output are undefined |
 
-The pinned CMSIS-DAP command API does not receive request length or response capacity. The existing eight command host checks use complete request arrays and are not malformed/truncated-packet safety tests. After a bounds adapter is implemented, execute these cases and record the exact configuration and capacities. See OPEN-001 O21.
+The upstream command APIs receive no request length or response capacity; `DAP_ExecuteCommands` follows a request count, vendor handling can be overridden, and Info string callbacks receive no capacity. Host-fixture configuration does not define product configuration. The existing eight command checks use complete arrays and do not prove truncated-packet safety. Freeze the product command/callback/USB-buffer contract and implement the bounds adapter before executing these cases; record exact capacities. See OPEN-001 O21.

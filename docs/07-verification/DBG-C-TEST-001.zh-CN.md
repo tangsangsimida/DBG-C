@@ -1,6 +1,6 @@
 # DBG-C Verification Specification
 
-**文档编号：** DBG-C-TEST-001　**版本：** V0.26　**状态：** 测试计划草案；FIFO、CMSIS-DAP 命令层、SWD 引擎主机模型、CMSIS 编译器映射及 CH585 SWD GPIO 与 Target Reset GPIO 模型/目标对象检查已执行；上游命令请求边界尚无验证，ThreadX 实板测试未执行
+**文档编号：** DBG-C-TEST-001　**版本：** V0.27　**状态：** 测试计划草案；FIFO、CMSIS-DAP 命令层、SWD 引擎主机模型、CMSIS 编译器映射及 CH585 SWD GPIO 与 Target Reset GPIO 模型/目标对象检查已执行；上游命令请求边界尚无验证，ThreadX 实板测试未执行
 
 ## 1. 通过规则
 
@@ -104,7 +104,7 @@ SWD GPIO 与 Target Reset GPIO 主机检查分别以普通变量模拟 GPIOB/GPI
 
 | 检查项 | 所需覆盖 | 状态 |
 |---|---|---|
-| DAP-GUARD-01 | 固定上游所有启用命令的最小/最大输入长度、变长字段截断、计数乘法溢出及 packet 上限 | 未执行；边界适配器未实现，DAP_PACKET_SIZE/USB 收包约定未冻结 |
-| DAP-GUARD-02 | 读型 `DAP_Transfer`、`DAP_TransferBlock`、`DAP_SWD_Sequence` 及 `DAP_ExecuteCommands` 的最坏响应长度与输出缓冲边界 | 未执行；产品响应容量及字符串信息回调上限未定义 |
+| DAP-GUARD-01 | 固定上游所有启用命令与厂商命令路径的最小/最大输入长度、`DAP_ExecuteCommands` 计数/子命令截断、变长字段截断、整数溢出及 packet 上限 | 未执行；边界适配器未实现，DAP_PACKET_SIZE/USB 收包约定未冻结 |
+| DAP-GUARD-02 | 读型 `DAP_Transfer`、`DAP_TransferBlock`、`DAP_SWD_Sequence`、`DAP_ExecuteCommands`、厂商命令和各 Info 字符串回调的最坏响应/写入长度与输出缓冲边界 | 未执行；产品响应容量及字符串信息回调上限未定义 |
 
-固定 CMSIS-DAP 上游命令处理 API 不接收请求长度或响应容量；已有 8 项命令主机检查使用完整请求数组，不代表截断/恶意包安全验证。完成边界适配器后，须运行这些用例并记录确切配置和容量。见 OPEN-001 O21。
+上游命令 API 不接收请求长度或响应容量；`DAP_ExecuteCommands` 根据请求计数处理子命令，厂商命令处理可被覆盖，Info 字符串回调没有容量参数。主机夹具配置不能替代 DBG-C 产品配置。已有 8 项命令检查使用完整请求数组，不代表截断包安全验证。冻结产品命令/回调/USB 缓冲契约并实现边界适配器后，须执行本表用例并记录容量。见 OPEN-001 O21。
