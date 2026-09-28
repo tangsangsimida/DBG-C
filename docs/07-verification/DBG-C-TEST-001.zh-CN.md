@@ -1,6 +1,6 @@
 # DBG-C Verification Specification
 
-**文档编号：** DBG-C-TEST-001　**版本：** V0.23　**状态：** 测试计划草案；FIFO、CMSIS-DAP 命令层、SWD 引擎主机模型及 CMSIS 编译器映射目标编译检查已执行；上游命令请求边界尚无验证，ThreadX 实板测试未执行
+**文档编号：** DBG-C-TEST-001　**版本：** V0.24　**状态：** 测试计划草案；FIFO、CMSIS-DAP 命令层、SWD 引擎主机模型及 CMSIS 编译器映射/CH585 SWD GPIO 目标对象检查已执行；上游命令请求边界尚无验证，ThreadX 实板测试未执行
 
 ## 1. 通过规则
 
@@ -83,7 +83,7 @@ Discovery、设备信息、Pair/Unpair、配置、状态、OTA、中断恢复、
 
 ## 10. 当前执行状态
 
-当前仓库包含 CH585M 数据手册、CH585EVT 压缩包及 ThreadX PoC-1。PoC 已有主机交叉构建日志，详见 FW-001；用户确认目前没有可用硬件，故无 CH585M 下载/调试及运行证据。DBG-C 产品固件、线缆样品或抓包也未提供。本文列出的产品级验证用例均未执行；FIFO 七组主机用例、八项 CMSIS-DAP 命令核心检查、九项 CMSIS-DAP 命令到 SWD 引擎集成线模型检查及两项 CMSIS 编译器宏目标对象检查已通过，但不计为板级或产品功能测试，PoC 交叉构建也不计为实板运行证据。构建、ELF/链接检查和源码静态审查已完成，验证板设计门已通过，可设计限定用途的验证板；实板运行仍未执行，产品硬件冻结未放行。ThreadX 启动、中断、tick、线程切换/睡眠/唤醒、时钟测量、复位恢复和持续运行项目均保持未执行，须按具体测试方案记录时长、重复次数、负载和门限。软件门槛及实板放行见 OPEN-001 O18/O19。本文件定义覆盖面，不构成实板验证报告。
+当前仓库包含 CH585M 数据手册、CH585EVT 压缩包及 ThreadX PoC-1。PoC 已有主机交叉构建日志，详见 FW-001；用户确认目前没有可用硬件，故无 CH585M 下载/调试及运行证据。DBG-C 产品固件、线缆样品或抓包也未提供。本文列出的产品级验证用例均未执行；FIFO 七组主机用例、八项 CMSIS-DAP 命令核心检查、九项 CMSIS-DAP 命令到 SWD 引擎集成线模型检查、两项 CMSIS 编译器宏目标对象检查及一项 SWD GPIO BSP 目标对象编译检查已通过，但均不计为板级或产品功能测试，PoC 交叉构建也不计为实板运行证据。构建、ELF/链接检查和源码静态审查已完成，验证板设计门已通过，可设计限定用途的验证板；实板运行仍未执行，产品硬件冻结未放行。ThreadX 启动、中断、tick、线程切换/睡眠/唤醒、时钟测量、复位恢复和持续运行项目均保持未执行，须按具体测试方案记录时长、重复次数、负载和门限。软件门槛及实板放行见 OPEN-001 O18/O19。本文件定义覆盖面，不构成实板验证报告。
 
 ### 10.1 CMSIS 编译器宏目标对象检查
 
@@ -91,10 +91,11 @@ Discovery、设备信息、Pair/Unpair、配置、状态、OTA、中断恢复、
 |---|---|---|---|
 | CMSIS-COMP-01 | WCH RISC-V GCC 12.2.0 编译 `platform/ch585/cmsis_compiler.h` 检查对象，并查看 ELF 符号表和反汇编 | 对象为 ELF32 RISC-V；弱符号检查函数标记为 `WEAK`；反汇编包含 RISC-V `nop` | 通过 |
 | CMSIS-COMP-02 | 用 WCH RISC-V GCC 和该编译器头编译测试配置下的固定上游 `DAP.c`、`SW_DP.c` | 两个独立对象均成功生成为 ELF32 RISC-V；无 Arm ISA 汇编进入对象编译路径 | 通过 |
+| CH585-GPIO-OBJ-01 | 用 WCH RISC-V GCC 编译 `platform/ch585/dbgc_ch585_swd_gpio.c` 并检查对象 ELF 头 | `-Werror` 编译成功，目标对象为 ELF32 RISC-V | 通过（仅目标对象编译） |
 
-这些是编译/目标对象静态检查，不运行对象、不链接到 PoC，也不证明产品 DAP 配置、GPIO、PB5/PB6 电气与 SWD 时序、USB、ThreadX 或 CH585M 实板行为。为编译 CMSIS-DAP，构建脚本只在构建目录的 `DAP.h` 副本中选择上游 C 循环延时分支；该 C 循环的 SWD 时序尚未在实板校准。
+这些是编译/目标对象静态检查，不运行对象；CMSIS-DAP 与 SWD GPIO 对象均未链接到 PoC。它们不证明产品 DAP 配置、GPIO 寄存器运行效果、PB5/PB6 电气与 SWD 时序、USB、ThreadX 或 CH585M 实板行为。为编译 CMSIS-DAP，构建脚本只在构建目录的 `DAP.h` 副本中选择上游 C 循环延时分支；该 C 循环的 SWD 时序尚未在实板校准。
 
-复现命令（仓库根目录执行）：`DBGC_BUILD_DIR=build/cmsis-compiler-adapter-final software/poc1-ch585-threadx/build.sh`。
+复现命令（仓库根目录执行）：`DBGC_BUILD_DIR=build/goal-swd-gpio software/poc1-ch585-threadx/build.sh`。此构建目录中的 `target-tests/dbgc_ch585_swd_gpio.o` 是未链接目标对象。
 
 ### 10.2 CMSIS-DAP 请求长度安全检查
 

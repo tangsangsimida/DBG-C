@@ -1,6 +1,6 @@
 # DBG-C 未决问题与验证清单
 
-**文档编号：** DBG-C-OPEN-001　**版本：** V0.27　**状态：** 开放项
+**文档编号：** DBG-C-OPEN-001　**版本：** V0.28　**状态：** 开放项
 
 | ID | 问题 | 需要的证据/决策 | 影响文档 | 状态 |
 |---|---|---|---|---|
@@ -14,7 +14,7 @@
 | O08 | USB VID/PID、接口/端点布局、字符串、Serial 策略？ | 正式实现及组织 VID 决策 | USB, TEST | 待决策 |
 | O09 | CDC UART 波特率、流控、目标电平和性能门限？ | 用户需求、电气设计及测量 | PRD, IF, TEST | 待决策 |
 | O10 | OTA 是否支持签名、双镜像、回滚及断电恢复？ | WCH Boot/SDK 文档、示例和断电测试 | MCU, FW, BLE, RF, RISK | 待验证 |
-| O11 | 目标 UART/RESET/SWD 最大允许电压和保护？ | Target 兼容范围、电气规范与测试 | IF, HW, TEST | 待决策 |
+| O11 | 目标 UART/RESET/SWD 最大允许电压、保护和 SWD GPIO 工作模式是什么？ | 冻结 Target 兼容范围、电气规范、SWDIO 上下拉/输出驱动/空闲态/方向切换要求与实测方案 | IF, HW, FW, TEST | 待决策；BSP 已提供显式模式选择原语，但产品电气模式未定，禁止集成前猜选 |
 | O12 | 性能目标：DAP 延迟、吞吐、射程、稳定运行时长？ | 原型数据与产品评审 | PRD, RF, TEST | 待决策 |
 | O13 | V1 BLE OTA 仅升级 Probe 自身；是否需要 RF OTA？ | 需求确认及资源/安全评审 | PRD, BLE, RF | 待决策 |
 | O14 | PC OS、IDE/OpenOCD/pyOCD 支持矩阵？ | 产品支持策略与逐项互操作测试 | PRD, USB, TEST | 待决策 |

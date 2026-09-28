@@ -8,18 +8,18 @@
 | SYS-001 | [系统架构设计](../02-system/DBG-C-SYS-001.zh-CN.md) | V0.2，待评审 |
 | IF-001 | [DBG-C Interface Specification](../03-interfaces/DBG-C-IF-001.zh-CN.md) | V0.1 概念草案，Pin 未冻结 |
 | MCU-001 | [MCU 选型与资源评估](../04-hardware/DBG-C-MCU-001.zh-CN.md) | V0.6；验证板设计门通过，tick 目标待决策，实板验证未执行 |
-| FW-001 | [固件架构与 PoC-1 记录](../05-firmware/DBG-C-FW-001.zh-CN.md) | V0.25；CMSIS-DAP 编译器宏目标编译检查通过；请求长度安全边界和产品 HAL 待实现；ThreadX 实板运行未验证 |
+| FW-001 | [固件架构与 PoC-1 记录](../05-firmware/DBG-C-FW-001.zh-CN.md) | V0.26；新增 PB5/PB6 GPIO BSP 目标对象编译检查；DAP/电气时序未集成验证；ThreadX 实板运行未验证 |
 | RF-001 | [Private 2.4G Protocol Specification](../06-protocols/DBG-C-RF-001.zh-CN.md) | V0.1 协议框架，不可据此编码 |
-| TEST-001 | [Verification Specification](../07-verification/DBG-C-TEST-001.zh-CN.md) | V0.23；现有 FIFO、CMSIS-DAP 主机及目标编译检查通过；命令长度安全用例和 ThreadX 板测未执行 |
+| TEST-001 | [Verification Specification](../07-verification/DBG-C-TEST-001.zh-CN.md) | V0.24；新增 CH585 SWD GPIO 目标对象编译检查；命令长度安全用例和 ThreadX 板测未执行 |
 | RISK-001 | [Risk Register](../08-risk/DBG-C-RISK-001.zh-CN.md) | V0.5 风险清单；ThreadX 移植待实板验证，tick 目标待决策 |
-| OPEN-001 | [未决问题与验证清单](DBG-C-OPEN-001.zh-CN.md) | V0.27；新增 O21 跟踪 CMSIS-DAP 请求长度边界；产品 HAL/USB/链接、ThreadX 实板验证及 tick 决策仍未完成 |
+| OPEN-001 | [未决问题与验证清单](DBG-C-OPEN-001.zh-CN.md) | V0.28；O11 跟踪 SWD GPIO 电气模式，O21 跟踪 DAP 请求边界；USB/链接与 ThreadX 实板验证仍未完成 |
 
 后续阶段文档 DBG-C-HW-001、USB-001、BLE-001 尚未建立。
 
 ## 资料来源与证据边界
 
 - 项目指定的 CH585M IC 手册是仓库内 [CH585/CH584 数据手册 V1.6](../09-references/CH585-CH584_Datasheet_V1.6.pdf)，作为芯片参数、引脚复用与已记载外设能力的首要依据；SDK API、并发性能和板级行为仍需 SDK 核对与实测。
-- [CH585EVT 官方资料包](../09-references/CH585EVT/README.md)集中保存用户提供的原始压缩包。实现具体驱动时，再按需要提取对应官方头文件、源码或库，并保留随附的厂商及第三方声明；当前没有 DBG-C 驱动代码可据此选定具体组件。
+- [CH585EVT 官方资料包](../09-references/CH585EVT/README.md)集中保存用户提供的原始压缩包。当前 CH585 SWD GPIO BSP 已按归档中 GPIO 实现及 MCU-001 引脚分配建立；USB、UART、BLE、RF 驱动仍须按需核对对应官方源码并保留随附声明。
 - USB Type-C 设计应核对 USB-IF [Type-C Cable and Connector Specification](https://www.usb.org/usb-type-cr-cable-and-connector-specification) 的适用正式版本。规范全文尚未放入仓库。
 - CMSIS-DAP v2 Bulk 和可选 CDC 设计参考 Arm [CMSIS-DAP USB Peripheral Configuration](https://arm-software.github.io/CMSIS_5/DAP/html/group__DAP__ConfigUSB__gr.html)，CMSIS_5 文档系列（CMSIS-DAP V2.1.1）。它不能证明 DBG-C 已兼容任何 IDE/OS。
 - 外部网页核对日期：2026-09-28。规范冻结前应再次核对版本。

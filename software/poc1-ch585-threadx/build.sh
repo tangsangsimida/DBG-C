@@ -75,6 +75,15 @@ esac
         -I"${project_dir}/platform/ch585/wch" \
         -c "${project_dir}/platform/ch585/dbgc_cmsis_compiler_check.c" \
         -o "${build_dir}/target-tests/dbgc_cmsis_compiler_check.o"
+    "${toolchain_bin}/riscv-wch-elf-gcc" -std=gnu99 -Wall -Wextra -Werror \
+        -march=rv32imac -mabi=ilp32 -mcmodel=medany \
+        -I"${project_dir}/platform/ch585" \
+        -I"${project_dir}/platform/ch585/wch" \
+        -c "${project_dir}/platform/ch585/dbgc_ch585_swd_gpio.c" \
+        -o "${build_dir}/target-tests/dbgc_ch585_swd_gpio.o"
+    "${toolchain_bin}/riscv-wch-elf-readelf" -h \
+        "${build_dir}/target-tests/dbgc_ch585_swd_gpio.o" | \
+        rg 'Class:|Machine:'
     "${toolchain_bin}/riscv-wch-elf-readelf" -Ws \
         "${build_dir}/target-tests/dbgc_cmsis_compiler_check.o" | \
         rg -o 'WEAK.*dbgc_cmsis_compiler_weak_check'

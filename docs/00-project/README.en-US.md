@@ -8,18 +8,18 @@ This document set is a V0.x engineering baseline draft, not a frozen interface o
 | SYS-001 | [System Architecture](../02-system/DBG-C-SYS-001.en-US.md) | V0.2, for review |
 | IF-001 | [DBG-C Interface Specification](../03-interfaces/DBG-C-IF-001.en-US.md) | V0.1 concept draft; pins not frozen |
 | MCU-001 | [MCU Selection and Resource Assessment](../04-hardware/DBG-C-MCU-001.en-US.md) | V0.6; verification-board design gate passed, tick target pending decision, board verification not run |
-| FW-001 | [Firmware Architecture and PoC-1 Record](../05-firmware/DBG-C-FW-001.en-US.md) | V0.25; CMSIS-DAP compiler-macro target checks pass; request-length safety boundary and product HAL remain incomplete; ThreadX board runtime unverified |
+| FW-001 | [Firmware Architecture and PoC-1 Record](../05-firmware/DBG-C-FW-001.en-US.md) | V0.26; PB5/PB6 GPIO BSP target-object compilation added; DAP/electrical timing not integrated or verified; ThreadX board runtime unverified |
 | RF-001 | [Private 2.4G Protocol Specification](../06-protocols/DBG-C-RF-001.en-US.md) | V0.1 framework; not ready for implementation |
-| TEST-001 | [Verification Specification](../07-verification/DBG-C-TEST-001.en-US.md) | V0.23; existing FIFO, CMSIS-DAP host, and target compile checks pass; command-length safety cases and ThreadX board tests not run |
+| TEST-001 | [Verification Specification](../07-verification/DBG-C-TEST-001.en-US.md) | V0.24; CH585 SWD GPIO target-object compile check added; command-length safety cases and ThreadX board tests not run |
 | RISK-001 | [Risk Register](../08-risk/DBG-C-RISK-001.en-US.md) | V0.5; ThreadX port awaits board verification, tick target pending decision |
-| OPEN-001 | [Open Questions and Verification List](DBG-C-OPEN-001.en-US.md) | V0.27; new O21 tracks CMSIS-DAP request-length bounds; product HAL/USB/link, ThreadX board verification, and tick decision remain open |
+| OPEN-001 | [Open Questions and Verification List](DBG-C-OPEN-001.en-US.md) | V0.28; O11 tracks SWD GPIO electrical modes and O21 tracks DAP request bounds; USB/link integration and ThreadX board verification remain open |
 
 Future phase documents DBG-C-HW-001, USB-001, and BLE-001 have not yet been created.
 
 ## Source Material and Evidence Boundary
 
 - The project-designated CH585M IC manual is the repository [CH585/CH584 Datasheet V1.6](../09-references/CH585-CH584_Datasheet_V1.6.pdf), the primary basis for chip parameters, pin multiplexing, and documented peripheral capabilities. SDK APIs, concurrency performance, and board behavior still require SDK review and measurement.
-- The [CH585EVT reference package](../09-references/CH585EVT/README.md) keeps the user-supplied original archive in one place. Extract only the official headers, sources, or libraries needed when implementing a specific driver, and retain accompanying vendor and third-party notices. No DBG-C driver code is currently available to select specific components.
+- The [CH585EVT reference package](../09-references/CH585EVT/README.md) keeps the user-supplied original archive in one place. The CH585 SWD GPIO BSP is now based on the archive GPIO implementation and MCU-001 pin allocation; USB, UART, BLE, and RF drivers still require review of their specific official sources and accompanying notices.
 - USB Type-C design shall check the applicable formal revision on the USB-IF [Type-C Cable and Connector Specification page](https://www.usb.org/usb-type-cr-cable-and-connector-specification). The full specification is not stored in this repository.
 - CMSIS-DAP v2 Bulk and optional CDC design reference: Arm [CMSIS-DAP USB Peripheral Configuration](https://arm-software.github.io/CMSIS_5/DAP/html/group__DAP__ConfigUSB__gr.html), CMSIS_5 documentation series (CMSIS-DAP V2.1.1). This does not prove DBG-C compatibility with any IDE/OS.
 - External webpages checked on 2026-09-28. Recheck revisions before specification freeze.
