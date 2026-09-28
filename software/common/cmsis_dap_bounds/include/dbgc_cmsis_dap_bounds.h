@@ -10,8 +10,12 @@ typedef enum {
     DBGC_CMSIS_DAP_BOUNDS_NEED_MORE_INPUT,
     DBGC_CMSIS_DAP_BOUNDS_OUTPUT_TOO_SMALL,
     DBGC_CMSIS_DAP_BOUNDS_UNSUPPORTED_COMMAND,
-    DBGC_CMSIS_DAP_BOUNDS_LIMIT_EXCEEDED
+    DBGC_CMSIS_DAP_BOUNDS_LIMIT_EXCEEDED,
+    DBGC_CMSIS_DAP_BOUNDS_DISPATCH_CONTRACT
 } dbgc_cmsis_dap_bounds_status_t;
+
+typedef uint32_t (*dbgc_cmsis_dap_execute_fn)(const uint8_t *request,
+                                               uint8_t *response);
 
 typedef struct {
     uint8_t swd_enabled;
@@ -25,6 +29,11 @@ typedef struct {
     size_t request_bytes;
     size_t response_bytes_max;
 } dbgc_cmsis_dap_bounds_result_t;
+
+typedef struct {
+    size_t request_bytes;
+    size_t response_bytes;
+} dbgc_cmsis_dap_dispatch_result_t;
 
 /*
  * Preflight one CMSIS-DAP command before passing the request to the upstream
@@ -45,5 +54,21 @@ dbgc_cmsis_dap_bounds_status_t dbgc_cmsis_dap_bounds_measure(
     size_t response_capacity,
     const dbgc_cmsis_dap_bounds_profile_t *profile,
     dbgc_cmsis_dap_bounds_result_t *result);
+
+/*
+ * Preflight and dispatch one command through the upstream pointer-only API.
+ * The execute callback must have the CMSIS-DAP packed length contract: bytes
+ * consumed in the upper 16 bits and response bytes in the lower 16 bits.
+ * The post-call length check cannot undo an out-of-bounds write by a callback
+ * that violates the profile; callers must verify all callback write limits.
+ */
+dbgc_cmsis_dap_bounds_status_t dbgc_cmsis_dap_bounds_dispatch(
+    const uint8_t *request,
+    size_t request_length,
+    uint8_t *response,
+    size_t response_capacity,
+    const dbgc_cmsis_dap_bounds_profile_t *profile,
+    dbgc_cmsis_dap_execute_fn execute,
+    dbgc_cmsis_dap_dispatch_result_t *result);
 
 #endif

@@ -1,6 +1,6 @@
 # DBG-C Verification Specification
 
-**文档编号：** DBG-C-TEST-001　**版本：** V0.28　**状态：** 测试计划草案；FIFO、CMSIS-DAP 命令层、SWD 引擎主机模型、边界预检器、CMSIS 编译器映射及 CH585 SWD GPIO 与 Target Reset GPIO 模型/目标对象检查已执行；产品命令边界与 ThreadX 实板测试未执行
+**文档编号：** DBG-C-TEST-001　**版本：** V0.29　**状态：** 测试计划草案；FIFO、CMSIS-DAP 命令层、有界 dispatch、SWD 引擎主机模型、边界预检器、CMSIS 编译器映射及 CH585 SWD GPIO 与 Target Reset GPIO 模型/目标对象检查已执行；产品命令边界与 ThreadX 实板测试未执行
 
 ## 1. 通过规则
 
@@ -61,7 +61,7 @@ Discovery、设备信息、Pair/Unpair、配置、状态、OTA、中断恢复、
 | DAP-HOST-07 | 先配置 `retry_count=1`，再模拟连续两次 WAIT 的 DP 读 | Configure 响应为 OK；后续读只执行一次重试，返回 WAIT，事务桩调用两次 | 通过 |
 | DAP-HOST-08 | 执行含两个读操作的 AP `ID_DAP_TransferBlock` | 返回两个按请求顺序排列的小端数据；事务序列以 `DP_RDBUFF | DAP_TRANSFER_RnW` 收尾 | 通过 |
 
-这八项验证固定上游命令层，包括 TransferConfigure 的 retry_count 生效、TransferBlock 的 AP posted-read 处理、由桩模拟物理事务边界的 DP/AP 读写及 WAIT 重试；不验证 GPIO、SWD 电气时序、DAP 包边界、CMSIS-DAP v2 USB 传输或 CH585M 行为。构建脚本另使用 WCH RISC-V GCC 将启用 SWD 命令分支的测试配置编译为 ELF32 RISC-V 对象；引脚宏为空操作，事务函数为测试桩，该对象未链接到 PoC，也未在 CH585M 上运行。它们不能替代 TEST-001 第 2–7 节的产品级用例。
+这八项验证固定上游命令层，包括 TransferConfigure 的 retry_count 生效、TransferBlock 的 AP posted-read 处理、由桩模拟物理事务边界的 DP/AP 读写及 WAIT 重试；它们不验证 GPIO、SWD 电气时序、CMSIS-DAP v2 USB 传输或 CH585M 行为。有界 dispatch 主机用例另见第 10.2 节。构建脚本使用 WCH RISC-V GCC 将启用 SWD 命令分支的测试配置编译为 ELF32 RISC-V 对象；引脚宏为空操作，事务函数为测试桩，该对象未链接到 PoC，也未在 CH585M 上运行。它们不能替代 TEST-001 第 2–7 节的产品级用例。
 
 ## 9.1 CMSIS-DAP 上游 SWD 引擎主机线模型
 
@@ -83,7 +83,7 @@ Discovery、设备信息、Pair/Unpair、配置、状态、OTA、中断恢复、
 
 ## 10. 当前执行状态
 
-当前仓库包含 CH585M 数据手册、CH585EVT 压缩包及 ThreadX PoC-1。PoC 已有主机交叉构建日志，详见 FW-001；用户确认目前没有可用硬件，故无 CH585M 下载/调试及运行证据。DBG-C 产品固件、线缆样品或抓包也未提供。本文列出的产品级验证用例均未执行；FIFO 七组主机用例、八项 CMSIS-DAP 命令核心检查、九项 CMSIS-DAP 命令到 SWD 引擎集成线模型检查、两项 CMSIS 编译器宏目标对象检查、SWD GPIO BSP 模拟寄存器 57 项主机检查、Target Reset GPIO BSP 模拟寄存器 33 项主机检查及两项 BSP 目标对象编译检查已通过，但均不计为板级或产品功能测试，PoC 交叉构建也不计为实板运行证据。构建、ELF/链接检查和源码静态审查已完成，验证板设计门已通过，可设计限定用途的验证板。该门要求可复现的干净构建、ELF/链接/资源检查，以及对启动、上下文和中断路径的静态审查；仅允许设计验证板，不放行产品原理图或 PCB 冻结。实板运行仍未执行，产品硬件冻结未放行。ThreadX 启动、中断进入/退出、SysTick 频率与 tick 投递、线程切换/睡眠/唤醒、栈完整性、复位恢复和持续运行项目均保持未执行，须在具体测试方案中预先定义时长、重复次数、负载和通过门限。软件放行与实板门见 OPEN-001 O18/O19。本文件定义覆盖面，不构成实板验证报告。
+当前仓库包含 CH585M 数据手册、CH585EVT 压缩包及 ThreadX PoC-1。PoC 已有主机交叉构建日志，详见 FW-001；用户确认目前没有可用硬件，故无 CH585M 下载/调试及运行证据。DBG-C 产品固件、线缆样品或抓包也未提供。本文列出的产品级验证用例均未执行；FIFO 七组主机用例、八项 CMSIS-DAP 命令核心检查、三项 CMSIS-DAP 边界预检/dispatch 主机用例、九项 CMSIS-DAP 命令到 SWD 引擎集成线模型检查、两项 CMSIS 编译器宏目标对象检查、SWD GPIO BSP 模拟寄存器 57 项主机检查、Target Reset GPIO BSP 模拟寄存器 33 项主机检查及两项 BSP 目标对象编译检查已通过，但均不计为板级或产品功能测试，PoC 交叉构建也不计为实板运行证据。构建、ELF/链接检查和源码静态审查已完成，验证板设计门已通过，可设计限定用途的验证板。该门要求可复现的干净构建、ELF/链接/资源检查，以及对启动、上下文和中断路径的静态审查；仅允许设计验证板，不放行产品原理图或 PCB 冻结。实板运行仍未执行，产品硬件冻结未放行。ThreadX 启动、中断进入/退出、SysTick 频率与 tick 投递、线程切换/睡眠/唤醒、栈完整性、复位恢复和持续运行项目均保持未执行，须在具体测试方案中预先定义时长、重复次数、负载和通过门限。软件放行与实板门见 OPEN-001 O18/O19。本文件定义覆盖面，不构成实板验证报告。
 
 ### 10.1 CMSIS 与 CH585 GPIO 主机/目标检查
 
@@ -107,6 +107,7 @@ SWD GPIO 与 Target Reset GPIO 主机检查分别以普通变量模拟 GPIOB/GPI
 | DAP-GUARD-01 | 固定上游产品启用命令和厂商路径的输入边界、截断、整数范围及 USB packet 上限 | 产品级未执行；产品配置/USB 长度契约未冻结，vendor 命令失败关闭 |
 | DAP-GUARD-02 | 实际产品回调/命令配置下的最坏响应写入和响应缓冲边界 | 产品级未执行；产品 profile、回调上限和缓冲容量未定义 |
 | DAP-BOUNDS-HOST-01 | 硬件无关预检器：固定/变长命令、Transfer/TransferBlock、SWD/JTAG Sequence、ExecuteCommands、截断、容量不足、packed length 上限及失败关闭路径 | 通过；102 项检查，使用显式测试 profile，不代表产品配置 |
+| DAP-DISPATCH-HOST-01 | 使用 pinned 上游 `DAP_ExecuteCommand()` 验证有界 dispatch；截断 Transfer 和响应容量不足时确认未调用上游，完整 Connect 检查返回长度 | 通过；3 个主机用例，使用测试 profile，不代表 USB 产品接入 |
 | DAP-BOUNDS-TARGET-OBJ-01 | WCH RISC-V GCC 编译边界预检器并检查对象架构 | 通过；ELF32 RISC-V 对象，未链接至 PoC/DAP |
 
-预检器复现命令（仓库根目录）：`DBGC_BUILD_DIR=build/cmsis-dap-bounds software/poc1-ch585-threadx/build.sh`。该现有构建入口通过 102 项边界检查并将预检器编译为 ELF32 RISC-V 对象；主机 profile 由测试显式提供，未接入产品 USB 收包或 CMSIS-DAP dispatch。上游 vendor、SWO、CMSIS-DAP UART 命令被拒绝；Info 检查依赖调用方提供真实最大写入字节数。该结果不证明产品调用路径、真实 USB 包长、回调行为或 CH585M 运行。O21 仍开放，产品级用例保持未执行。
+复现命令（仓库根目录）：`DBGC_BUILD_DIR=build/cmsis-dap-bounds-dispatch software/poc1-ch585-threadx/build.sh`。该现有构建入口通过 102 项边界预检、3 个有界 dispatch 主机用例，并将边界模块编译为 ELF32 RISC-V 对象；主机 profile 由测试显式提供。dispatch 主机用例调用固定上游 `DAP_ExecuteCommand()`，但尚未接入产品 USB 收包路径。上游 vendor、SWO、CMSIS-DAP UART 命令被拒绝；Info 检查依赖调用方提供真实最大写入字节数。该结果不证明产品调用路径、真实 USB 包长、回调行为或 CH585M 运行。O21 仍开放，产品级用例保持未执行。

@@ -76,8 +76,10 @@ esac
     "${host_cc}" -std=c99 -Wall -Wextra -Werror \
         -Wno-unused-parameter -Wno-unused-variable -pedantic \
         -DDBGC_CMSIS_DAP_TEST_C_LOOP \
+        -I"${repo_dir}/software/common/cmsis_dap_bounds/include" \
         -I"${repo_dir}/software/common/cmsis_dap_host_test" \
         -I"${cmsis_dap_host_dir}/include" \
+        "${repo_dir}/software/common/cmsis_dap_bounds/src/dbgc_cmsis_dap_bounds.c" \
         "${cmsis_dap_host_dir}/src/DAP.c" \
         "${repo_dir}/software/common/cmsis_dap_host_test/test_dap_commands.c" \
         -o "${build_dir}/host-tests/test_cmsis_dap_commands"

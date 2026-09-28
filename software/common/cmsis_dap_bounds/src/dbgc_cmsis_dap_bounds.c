@@ -26,6 +26,51 @@ static dbgc_cmsis_dap_bounds_status_t dbgc_dap_read_byte(
     return DBGC_CMSIS_DAP_BOUNDS_OK;
 }
 
+dbgc_cmsis_dap_bounds_status_t dbgc_cmsis_dap_bounds_dispatch(
+    const uint8_t *request,
+    size_t request_length,
+    uint8_t *response,
+    size_t response_capacity,
+    const dbgc_cmsis_dap_bounds_profile_t *profile,
+    dbgc_cmsis_dap_execute_fn execute,
+    dbgc_cmsis_dap_dispatch_result_t *result)
+{
+    dbgc_cmsis_dap_bounds_result_t bounds;
+    dbgc_cmsis_dap_bounds_status_t status;
+    uint32_t packed_result;
+    size_t consumed;
+    size_t written;
+
+    if (result != NULL) {
+        result->request_bytes = 0U;
+        result->response_bytes = 0U;
+    }
+    if ((response == NULL) || (execute == NULL) || (result == NULL)) {
+        return DBGC_CMSIS_DAP_BOUNDS_INVALID_ARGUMENT;
+    }
+
+    status = dbgc_cmsis_dap_bounds_measure(request, request_length,
+                                           response_capacity, profile,
+                                           &bounds);
+    if (status != DBGC_CMSIS_DAP_BOUNDS_OK) {
+        return status;
+    }
+
+    packed_result = execute(request, response);
+    consumed = (size_t)((packed_result >> 16) & UINT32_C(0xFFFF));
+    written = (size_t)(packed_result & UINT32_C(0xFFFF));
+    if ((consumed != bounds.request_bytes) ||
+        (consumed > request_length) ||
+        (written > bounds.response_bytes_max) ||
+        (written > response_capacity)) {
+        return DBGC_CMSIS_DAP_BOUNDS_DISPATCH_CONTRACT;
+    }
+
+    result->request_bytes = consumed;
+    result->response_bytes = written;
+    return DBGC_CMSIS_DAP_BOUNDS_OK;
+}
+
 static dbgc_cmsis_dap_bounds_status_t dbgc_dap_skip(
     dbgc_dap_reader_t *reader,
     size_t count)

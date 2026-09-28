@@ -4,9 +4,11 @@
 
 #include "DAP_config.h"
 #include "DAP.h"
+#include "dbgc_cmsis_dap_bounds.h"
 
 static unsigned int failures;
 static unsigned int mock_swd_calls;
+static unsigned int dispatch_callback_calls;
 static unsigned int mock_wait_responses;
 static uint32_t mock_read_value;
 static uint32_t mock_read_sequence[4];
@@ -15,6 +17,19 @@ static unsigned int mock_read_sequence_index;
 static uint32_t mock_last_request;
 static uint32_t mock_last_write_value;
 static uint8_t mock_final_response;
+
+static const dbgc_cmsis_dap_bounds_profile_t dispatch_profile = {
+    1U, 0U, 0U, 0U, 64U
+};
+
+static uint32_t count_dispatch_callback(const uint8_t *request,
+                                        uint8_t *response)
+{
+    (void)request;
+    (void)response;
+    dispatch_callback_calls++;
+    return 0U;
+}
 
 void dbgc_test_swclk_set(void)
 {
@@ -297,6 +312,74 @@ static void test_swd_transfer_block_posted_ap_reads(void)
     CHECK(mock_last_request == (DP_RDBUFF | DAP_TRANSFER_RnW));
 }
 
+static void test_bounded_dispatch_rejects_before_upstream(void)
+{
+    static const uint8_t truncated_write[] = {
+        ID_DAP_Transfer, 0U, 1U, 0U
+    };
+    static const uint8_t connect_request[] = {
+        ID_DAP_Connect, DAP_PORT_SWD
+    };
+    uint8_t response[8];
+    dbgc_cmsis_dap_dispatch_result_t result = { 99U, 99U };
+    dbgc_cmsis_dap_bounds_status_t status;
+
+    memset(response, 0xA5, sizeof(response));
+    mock_swd_calls = 0U;
+    status = dbgc_cmsis_dap_bounds_dispatch(
+        truncated_write, sizeof(truncated_write), response, sizeof(response),
+        &dispatch_profile, DAP_ExecuteCommand, &result);
+
+    CHECK(status == DBGC_CMSIS_DAP_BOUNDS_NEED_MORE_INPUT);
+    CHECK(mock_swd_calls == 0U);
+    CHECK(response[0] == 0xA5U);
+    CHECK(result.request_bytes == 0U);
+    CHECK(result.response_bytes == 0U);
+
+    dispatch_callback_calls = 0U;
+    status = dbgc_cmsis_dap_bounds_dispatch(
+        connect_request, sizeof(connect_request), response, 1U,
+        &dispatch_profile, count_dispatch_callback, &result);
+    CHECK(status == DBGC_CMSIS_DAP_BOUNDS_OUTPUT_TOO_SMALL);
+    CHECK(dispatch_callback_calls == 0U);
+}
+
+static void test_bounded_dispatch_runs_upstream_after_preflight(void)
+{
+    static const uint8_t request[] = { ID_DAP_Connect, DAP_PORT_SWD };
+    uint8_t response[2] = { 0U, 0U };
+    dbgc_cmsis_dap_dispatch_result_t result = { 0U, 0U };
+    dbgc_cmsis_dap_bounds_status_t status;
+
+    DAP_Setup();
+    status = dbgc_cmsis_dap_bounds_dispatch(
+        request, sizeof(request), response, sizeof(response),
+        &dispatch_profile, DAP_ExecuteCommand, &result);
+
+    CHECK(status == DBGC_CMSIS_DAP_BOUNDS_OK);
+    CHECK(result.request_bytes == sizeof(request));
+    CHECK(result.response_bytes == sizeof(response));
+    CHECK(response[0] == ID_DAP_Connect);
+    CHECK(response[1] == DAP_PORT_SWD);
+}
+
+static void test_bounded_dispatch_detects_length_contract_mismatch(void)
+{
+    static const uint8_t request[] = { ID_DAP_Connect, DAP_PORT_SWD };
+    uint8_t response[2] = { 0U, 0U };
+    dbgc_cmsis_dap_dispatch_result_t result = { 99U, 99U };
+    dbgc_cmsis_dap_bounds_status_t status;
+
+    status = dbgc_cmsis_dap_bounds_dispatch(
+        request, sizeof(request), response, sizeof(response),
+        &dispatch_profile, count_dispatch_callback, &result);
+
+    CHECK(status == DBGC_CMSIS_DAP_BOUNDS_DISPATCH_CONTRACT);
+    CHECK(dispatch_callback_calls == 1U);
+    CHECK(result.request_bytes == 0U);
+    CHECK(result.response_bytes == 0U);
+}
+
 int main(void)
 {
     test_firmware_version_info();
@@ -307,12 +390,15 @@ int main(void)
     test_swd_posted_ap_reads();
     test_transfer_configure_retry_count();
     test_swd_transfer_block_posted_ap_reads();
+    test_bounded_dispatch_rejects_before_upstream();
+    test_bounded_dispatch_runs_upstream_after_preflight();
+    test_bounded_dispatch_detects_length_contract_mismatch();
 
     if (failures != 0U) {
         fprintf(stderr, "%u CMSIS-DAP host checks failed\n", failures);
         return 1;
     }
 
-    puts("CMSIS-DAP host command checks passed: 8 cases");
+    puts("CMSIS-DAP host checks passed: 8 command-core and 3 bounded-dispatch cases");
     return 0;
 }
