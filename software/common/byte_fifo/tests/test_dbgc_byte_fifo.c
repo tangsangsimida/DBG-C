@@ -120,6 +120,68 @@ static void test_clear_and_queries(void)
     CHECK(dbgc_byte_fifo_count(&fifo) == 0U);
 }
 
+static void test_deterministic_state_sequence(void)
+{
+    enum { FIFO_CAPACITY = 7U, STEP_COUNT = 512U };
+    dbgc_byte_fifo_t fifo;
+    uint8_t guarded_storage[FIFO_CAPACITY + 2U] = {0xA5U};
+    uint8_t reference[FIFO_CAPACITY];
+    uint8_t input[9];
+    uint8_t output[9];
+    size_t reference_count = 0U;
+    size_t step;
+
+    guarded_storage[FIFO_CAPACITY + 1U] = 0x5AU;
+    CHECK(dbgc_byte_fifo_initialize(&fifo, &guarded_storage[1],
+                                    FIFO_CAPACITY) == 0);
+
+    for (step = 0U; step < STEP_COUNT; ++step) {
+        size_t write_length = (step * 13U) % sizeof(input);
+        size_t expected_write;
+        size_t actual_write;
+        size_t read_length = (step * 7U + 3U) % sizeof(output);
+        size_t expected_read;
+        size_t actual_read;
+        size_t index;
+
+        if ((step % 29U) == 0U) {
+            dbgc_byte_fifo_clear(&fifo);
+            reference_count = 0U;
+            CHECK(dbgc_byte_fifo_count(&fifo) == 0U);
+            CHECK(dbgc_byte_fifo_space(&fifo) == FIFO_CAPACITY);
+        }
+
+        for (index = 0U; index < sizeof(input); ++index) {
+            input[index] = (uint8_t)(step + (index * 37U));
+        }
+
+        expected_write = FIFO_CAPACITY - reference_count;
+        if (write_length < expected_write) {
+            expected_write = write_length;
+        }
+        actual_write = dbgc_byte_fifo_write(&fifo, input, write_length);
+        CHECK(actual_write == expected_write);
+        for (index = 0U; index < expected_write; ++index) {
+            reference[reference_count + index] = input[index];
+        }
+        reference_count += expected_write;
+
+        expected_read = (read_length < reference_count)
+                            ? read_length
+                            : reference_count;
+        actual_read = dbgc_byte_fifo_read(&fifo, output, read_length);
+        CHECK(actual_read == expected_read);
+        CHECK(memcmp(output, reference, expected_read) == 0);
+        reference_count -= expected_read;
+        (void)memmove(reference, &reference[expected_read], reference_count);
+
+        CHECK(dbgc_byte_fifo_count(&fifo) == reference_count);
+        CHECK(dbgc_byte_fifo_space(&fifo) == FIFO_CAPACITY - reference_count);
+        CHECK(guarded_storage[0] == 0xA5U);
+        CHECK(guarded_storage[FIFO_CAPACITY + 1U] == 0x5AU);
+    }
+}
+
 int main(void)
 {
     test_initialize_boundaries();
@@ -127,6 +189,7 @@ int main(void)
     test_wraparound();
     test_invalid_buffers_and_zero_length();
     test_clear_and_queries();
+    test_deterministic_state_sequence();
 
     if (failures != 0U) {
         (void)fprintf(stderr, "%u of %u checks failed\n", failures, checks);
