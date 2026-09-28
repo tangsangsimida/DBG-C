@@ -1,3 +1,6 @@
 [submodule "software/third_party/threadx"]
 	path = software/third_party/threadx
 	url = https://github.com/eclipse-threadx/threadx.git
+[submodule "software/third_party/cmsis-dap"]
+	path = software/third_party/cmsis-dap
+	url = https://github.com/ARM-software/CMSIS-DAP.git

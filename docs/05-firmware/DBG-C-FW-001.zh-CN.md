@@ -1,6 +1,6 @@
 # DBG-C Firmware Architecture 与 PoC-1 记录
 
-**文档编号：** DBG-C-FW-001　**版本：** V0.9　**状态：** 实验草案；通用 FIFO 模块及 3683 项主机断言已通过；验证板设计门已通过；tick 目标冲突待决策；实板运行及产品硬件冻结未通过
+**文档编号：** DBG-C-FW-001　**版本：** V0.10　**状态：** 实验草案；通用 FIFO 模块及 3683 项主机断言已通过；验证板设计门已通过；tick 目标冲突待决策；实板运行及产品硬件冻结未通过
 
 ## 1. 范围与状态
 
@@ -133,6 +133,7 @@ WCH 示例的 `highcode_init()` 初始化 HSI PLL 到 62.4 MHz，并配置相关
 ## 7. 资料来源
 
 - Eclipse ThreadX 官方仓库与 MIT 许可：[`software/third_party/threadx/`](../../software/third_party/threadx/)，标签和提交见第 1 节。
+- Arm 官方 CMSIS-DAP 仓库：[`software/third_party/cmsis-dap/`](../../software/third_party/cmsis-dap/)，固定提交 `12636590eec66fae2d1bba4518749426ad5a4595`（2026-09-29 核对）；`DAP.h` 声明的 CMSIS-DAP 固件版本为 2.1.2；仓库许可为 Apache-2.0。此引用是 CMSIS-DAP 协议固件源码，不代表集成了完整 DAPLink。
 - WCH CH585 EVT：[`归档说明`](../09-references/CH585EVT/README.md)及本节列出的归档文件与散列。
 - MounRiver Linux x64 Toolchain V2.4.0：[官方下载页](https://www.mounriver.com/download)，工具链包 SHA-256 见第 3 节。
 
@@ -143,12 +144,34 @@ WCH 示例的 `highcode_init()` 初始化 HSI PLL 到 62.4 MHz，并配置相关
 | 模块 | 软件位置/资源依据 | 当前实现边界 | 状态/验证 |
 |---|---|---|---|
 | 通用字节 FIFO | `software/common/byte_fifo/`；对应 MCU-001 规划的 USB CDC、UART 与 RF 收发缓冲 | 调用方提供固定存储；支持任意非零容量、部分读写、不覆盖未读数据、清空与容量查询；无动态分配、无芯片寄存器/中断/ThreadX API；不保证并发安全，调用方必须串行化访问 | 已加入现有 CMake 构建并通过 CH585 交叉编译；既有构建脚本中的主机验证运行通过 3683 项断言；当前未接入 USB/UART/RF，未做实板测试；不是冻结的产品 ABI |
-| CMSIS-DAP / DAP command core | MCU-001 USBFS 分配；PRD 的 CMSIS-DAP v2 目标 | 仓库没有 CMSIS-DAP 源码或已选定版本，USB/DAP 接口和 VID/PID 也未冻结 | 暂不实现；需先锁定上游源码/版本并完成 USB-001 及 O02/O08 |
-| USBFS Device + CDC transport | MCU-001 USBFS、PB10/PB11；WCH EVT 含 USB 示例 | Endpoint、描述符、WCH USB Device API、WinUSB 与组织 VID 尚未确定 | 暂不实现；按 O02/O08 取证并定义 USB-001 后再做 |
-| UART0 driver/bridge | MCU-001 UART0、PB4/PB7 | WCH UART API/复用初始化、波特率/流控和 ISR 到 ThreadX 的同步规则待核实 | 暂不实现；需核对 EVT 的 CH585 UART 例程并确定 CDC/UART 行为（O09） |
+| CMSIS-DAP / DAP command core | MCU-001 USBFS 分配；PRD 的 CMSIS-DAP v2 目标；Arm 官方源码固定于 `software/third_party/cmsis-dap/` 提交 `12636590eec66fae2d1bba4518749426ad5a4595` | `DAP.h` 声明 `DAP_ProcessCommand()`/`DAP_ExecuteCommand()`，固件版本宏为 2.1.2；头文件依赖 `cmsis_compiler.h`，仓库和 CH585EVT 归档均未提供该头文件。上游 `DAP_config.h` 模板默认 `CPU_CLOCK=100000000U`、启用 JTAG、`DAP_PACKET_SIZE=512U`、`DAP_PACKET_COUNT=8U`，均不是 DBG-C 已确认配置 | 已固定上游源码，尚未集成/编译；须补齐并验证 RISC-V 编译器抽象，确定 CMSIS-DAP v2 配置及 SWD GPIO HAL；不得复制模板默认值 |
+| USBFS Device + CDC transport | MCU-001 USBFS、PB10/PB11；EVT `CH58x_usbdev.h/.c` 及 USB Device COM 示例 | 已查到归档底层 API、EP0–EP4 缓冲结构与 CDC 示例描述符；当前示例把 CDC/厂商模式分开，未证明 DAP + CDC 组合、当前工程兼容性或 ThreadX ISR 同步 | 暂不实现；需验证 O02/O08，冻结 USB-001 并完成主机枚举/传输验证 |
+| UART0 driver/bridge | MCU-001 UART0、PB4/PB7；EVT `CH58x_uart.h`、`CH58x_uart0.c` | 已查到归档 API 名称和轮询实现；COM 示例把 UART0 重映射至 PA15/PA14，与 MCU-001 的 PB4/PB7 分配不同；实际 PB4/PB7 初始化、CDC 行为、波特率/流控和 ThreadX 同步仍待确认 | 暂不实现；取得 PB4/PB7 的当前 SDK 初始化证据，并定义 O09 参数与 ISR/任务并发行为 |
 | SWD Engine / Target Manager | MCU-001 的 PB5/PB6 SWD GPIO、PA4 Reset GPIO | SWD 时序、方向切换、电气边界及 Target 电压/保护未形成完整可执行规范 | 暂不实现；需冻结 IF-001 并按 O11/O12 验证时序及电气要求 |
 | BLE GATT/配置/OTA | 集成 BLE Radio 与 WCH BLE 示例 | 产品 Service/Characteristic、认证、MTU、配对和 OTA 镜像行为未定 | 暂不实现；需先完成 BLE-001、O06/O07/O10/O13 |
 | 私有 2.4G transport | 集成 Radio，DBG-C RF Protocol 目标 | PHY/API、包格式、序列、重试、恢复和时延目标未确定 | 暂不实现；需先完成 RF-001、O01/O03/O12 |
 | CH585M ThreadX port | 当前 `software/poc1-ch585-threadx/platform/ch585/` | reset、SysTick、PFIC/VTF/HPE 与上下文切换依赖芯片硬件语义 | 仅实验 PoC；启动、中断、tick、上下文切换、调度、睡眠/唤醒均未做 CH585M 实板验证，保持 O18 开放 |
 
 字节 FIFO 只建立与硬件无关的存储边界。USB、UART、RF 调用方不得直接依赖其内部索引；在同步/并发模型和传输 API 确认前，不把该模块包装成 ISR-safe queue 或产品数据协议。FIFO 主机用例由 `software/common/byte_fifo/tests/test_dbgc_byte_fifo.c` 提供，并由既有 `software/poc1-ch585-threadx/build.sh` 使用本机 C99 编译器构建和运行；当前 3683 项断言通过。该结果不验证并发、ISR、CH585M SRAM 或板级行为。
+
+
+### 8.1 WCH USBFS 与 UART0 源码审查
+
+本节记录对归档原始条目的静态审查，不代表这些旧版示例已移植到 DBG-C、已由当前工程编译，或已在 CH585M 实板运行。
+
+| 官方归档条目 | 原始文件证据 | 对 DBG-C 的结论 |
+|---|---|---|
+| `EVT/EXAM/SRC/StdPeriphDriver/inc/CH58x_usbdev.h`；SHA-256 `1b5dbf1304127b980d2f38f974e3372c5e55a747fe22319a835156deac1fee0f` | 文件头标记 V1.2、2021/11/17；声明 `USB_DeviceInit()`、`USB_DevTransProcess()`、EP1–EP4 IN/OUT 处理函数；描述 EP0 与 EP1–EP4 的 64-byte 缓冲布局 | 可确认归档中存在 WCH USBFS Device 底层接口和端点缓冲示例；不能据此确认 ThreadX ISR/任务同步或 DAP + CDC 复合设备实现 |
+| `EVT/EXAM/SRC/StdPeriphDriver/CH58x_usbdev.c`；SHA-256 `dfef009a88c6c3c70670889bbab43898264967f979dc56b4c68180542b4ea540` | 文件头标记 V1.2、2021/11/17；`USB_DeviceInit()` 配置 4 个非零端点的双向通道，设置 DMA 地址、ACK/NAK 状态和 USB 中断使能 | 是直接寄存器级示例；不能当作已验证的 ThreadX-safe USB Service/HAL |
+| `EVT/EXAM/USB/Device/COM/src/Main.c`；SHA-256 `4345ca31938ab30bf4c772e1ceeaccbd717c6a82c8a26012ef8708280fbcfda4` | 文件头标记 V1.0、2020/08/06；含 CDC 描述符及 CDC/厂商两套配置；CDC 配置使用 EP4 中断 IN、EP1/EP2 Bulk；运行时由 `usb_work_mode` 在 CDC 与厂商模式间选择；USB ISR 直接读写寄存器并调用 PFIC 屏蔽/恢复中断 | 证明归档有 CDC Device 示例，不证明同一配置已集成 CMSIS-DAP v2 Bulk；两个模式不是该例程中的同时复合配置。端点映射、描述符、IRQ 与 ThreadX 集成须重新设计并实测 |
+| `EVT/EXAM/SRC/StdPeriphDriver/inc/CH58x_uart.h`；SHA-256 `99e419e0906b4fdaba12fd1aea3cdf58109cfd8906b1508d69e5dd884c741f70` | 文件头标记 V1.2、2021/11/17；声明 UART0 波特率、触发级别、中断配置、收发接口和状态宏 | 可确认归档 API 名称；不证明 PB4/PB7 的目标工程复用初始化或 ISR 到 ThreadX 的同步安全性 |
+| `EVT/EXAM/SRC/StdPeriphDriver/CH58x_uart0.c`；SHA-256 `f0b6b252dcb69530428f32cf2bb50cb585fbecd6f5cfd0eb57f194e257d86338` | 文件头标记 V1.2、2021/11/17；默认初始化把波特率设为 115200、FIFO 触发级别字段设为 4-byte、使能 TXD 中断；收发字符串函数轮询 FIFO 状态/计数 | 这些是示例默认值，不是 DBG-C 冻结参数。轮询 API 不满足尚未定义的 UART/ThreadX 并发服务契约，不能直接作为产品桥接驱动 |
+| `EVT/EXAM/USB/Device/COM/src/Main.c` 中 `DebugInit()` | 调用 `GPIOPinRemap(ENABLE, RB_PIN_UART0)`，然后配置 PA15/PA14 并初始化 UART0 | 该 CDC 示例将 UART0 重映射到 PA15/PA14；DBG-C MCU-001 分配 PB4/PB7。不得复制此示例的引脚初始化到产品固件。PB4/PB7 的最终 SDK 初始化证据仍需取得 |
+
+基于以上证据，当前可安全继续的主机侧实现仍限于不依赖协议定义、硬件中断或调度语义的通用缓冲逻辑。CMSIS-DAP 核心及 USBFS + CDC、UART0 驱动/桥接、SWD Engine、BLE 和私有 RF 尚无足够完整的接口/调度/电气证据进入产品实现；对应参数不得从示例默认值推定。O02、O08、O09 与 O18 保持开放，所有 ThreadX/USB/UART ISR 行为仍需相应实板验证。
+
+### 8.2 CMSIS-DAP 上游源码固定与适配缺口
+
+Arm 官方 CMSIS-DAP 仓库已作为 Git 子模块固定到提交 `12636590eec66fae2d1bba4518749426ad5a4595`。该提交 `Firmware/Include/DAP.h` 声明 `DAP_ProcessCommand()` 与 `DAP_ExecuteCommand()`，并通过 `DAP_FW_VER` 声明固件版本 2.1.2。此源码是 CMSIS-DAP 固件实现，不是 DAPLink 完整固件体系。上游 `Firmware/Config/DAP_config.h` 是面向示例工程的模板：其中 CPU 时钟、JTAG 能力、DAP 包尺寸及缓冲包数的默认值不得直接用于 DBG-C。
+
+当前子模块的 `DAP.h` 包含 `cmsis_compiler.h`；该文件既不在 CMSIS-DAP 子模块，也未出现在仓库提供的 CH585EVT ZIP 条目中。CH585M/RISC-V 所需的编译器宏适配来源及许可证需补齐后才能编译该上游命令层。SWD 实现还依赖 DAP 配置中的 GPIO 操作和时钟延迟接口；CH585M GPIO HAL、实际系统时钟及 PB5/PB6 波形能力尚未有当前产品工程证据。因此本次仅固定上游源，不将其接入 PoC，也不宣称 CMSIS-DAP 命令层已编译或运行。

@@ -8,11 +8,11 @@
 | SYS-001 | [系统架构设计](../02-system/DBG-C-SYS-001.zh-CN.md) | V0.2，待评审 |
 | IF-001 | [DBG-C Interface Specification](../03-interfaces/DBG-C-IF-001.zh-CN.md) | V0.1 概念草案，Pin 未冻结 |
 | MCU-001 | [MCU 选型与资源评估](../04-hardware/DBG-C-MCU-001.zh-CN.md) | V0.6；验证板设计门通过，tick 目标待决策，实板验证未执行 |
-| FW-001 | [固件架构与 PoC-1 记录](../05-firmware/DBG-C-FW-001.zh-CN.md) | V0.9；通用 FIFO 主机 3683 项断言通过；验证板设计门通过，实板运行未验证 |
+| FW-001 | [固件架构与 PoC-1 记录](../05-firmware/DBG-C-FW-001.zh-CN.md) | V0.10；CMSIS-DAP 上游已固定；通用 FIFO 主机 3683 项断言通过；已核对 WCH USBFS/UART0 示例；ThreadX 实板运行未验证 |
 | RF-001 | [Private 2.4G Protocol Specification](../06-protocols/DBG-C-RF-001.zh-CN.md) | V0.1 协议框架，不可据此编码 |
 | TEST-001 | [Verification Specification](../07-verification/DBG-C-TEST-001.zh-CN.md) | V0.9；FIFO 主机用例通过，ThreadX 板测未执行；验证板设计门通过 |
 | RISK-001 | [Risk Register](../08-risk/DBG-C-RISK-001.zh-CN.md) | V0.5 风险清单；ThreadX 移植待实板验证，tick 目标待决策 |
-| OPEN-001 | [未决问题与验证清单](DBG-C-OPEN-001.zh-CN.md) | V0.11；FIFO 主机用例通过；验证板设计门通过，tick 目标待决策，产品硬件冻结未放行 |
+| OPEN-001 | [未决问题与验证清单](DBG-C-OPEN-001.zh-CN.md) | V0.12；FIFO 主机用例通过；验证板设计门通过，ThreadX 实板验证未执行，tick 目标待决策，产品硬件冻结未放行 |
 
 后续阶段文档 DBG-C-HW-001、USB-001、BLE-001 尚未建立。
 
