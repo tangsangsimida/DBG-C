@@ -17,7 +17,14 @@ This directory is organized by engineering domain. Each controlled document has 
 | `06-protocols/` | RF、BLE、USB 协议（USB/BLE 文档后续阶段） | RF, BLE, and USB protocols (USB/BLE docs in later phase) |
 | `07-verification/` | 验证规范与结果 | Verification specifications and results |
 | `08-risk/` | 风险登记册 | Risk register |
-| `09-references/` | 数据手册、规范和来源资料 | Datasheets, standards, and source materials |
+| `09-references/` | 数据手册、规范和来源资料；`CH585EVT/` 集中存放 CH585 EVT 资料包 | Datasheets, standards, and source materials; `CH585EVT/` holds the CH585 EVT package |
+
+## 仓库根目录 | Repository Roots
+
+| Directory | 用途 | Purpose |
+|---|---|---|
+| `software/` | 所有软件代码和软件构建的根目录；软件构建配置与构建根目录均放在此处 | Root for all software code and software builds; keep software build configuration and build roots here |
+| `hardware/` | 硬件文件根目录，包括原理图、符号库等 | Root for hardware files, including schematics and symbol libraries |
 
 ## 文档入口 | Document Index
 
@@ -30,6 +37,7 @@ This directory is organized by engineering domain. Each controlled document has 
 - [RF 协议 RF-001 中文](06-protocols/DBG-C-RF-001.zh-CN.md) · [English](06-protocols/DBG-C-RF-001.en-US.md)
 - [验证规范 TEST-001 中文](07-verification/DBG-C-TEST-001.zh-CN.md) · [English](07-verification/DBG-C-TEST-001.en-US.md)
 - [风险登记册 RISK-001 中文](08-risk/DBG-C-RISK-001.zh-CN.md) · [English](08-risk/DBG-C-RISK-001.en-US.md)
+- [CH585EVT 官方资料包目录](09-references/CH585EVT/README.md) · [Package index](09-references/CH585EVT/README.md)
 
 每次修改任一语言版本时，必须同步检查另一版本、相关文档和版本历史。不得只改一侧造成要求或状态不一致。
 
