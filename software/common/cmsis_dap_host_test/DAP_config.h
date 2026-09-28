@@ -92,11 +92,6 @@ static inline uint8_t DAP_GetProductFirmwareVersionString(char *str)
 #define PIN_nRESET_IN() 0U
 #define TIMESTAMP_GET() 0U
 
-#define __STATIC_INLINE static inline
-#define __STATIC_FORCEINLINE static inline
-#define __NOP() ((void)0)
-#define __WEAK __attribute__((weak))
-
 #if defined(DBGC_CMSIS_DAP_SWD_ENGINE_TEST)
 void dbgc_test_swclk_set(void);
 void dbgc_test_swclk_clear(void);

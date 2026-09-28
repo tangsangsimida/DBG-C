@@ -69,19 +69,35 @@ esac
         -o "${build_dir}/host-tests/test_cmsis_dap_swd_engine"
     "${build_dir}/host-tests/test_cmsis_dap_swd_engine"
     mkdir -p "${build_dir}/target-tests"
-    "${toolchain_bin}/riscv-wch-elf-gcc" -std=c99 -Wall -Wextra -Werror \
+    "${toolchain_bin}/riscv-wch-elf-gcc" -std=gnu99 -Wall -Wextra -Werror \
+        -march=rv32imac -mabi=ilp32 -mcmodel=medany \
+        -I"${project_dir}/platform/ch585" \
+        -I"${project_dir}/platform/ch585/wch" \
+        -c "${project_dir}/platform/ch585/dbgc_cmsis_compiler_check.c" \
+        -o "${build_dir}/target-tests/dbgc_cmsis_compiler_check.o"
+    "${toolchain_bin}/riscv-wch-elf-readelf" -Ws \
+        "${build_dir}/target-tests/dbgc_cmsis_compiler_check.o" | \
+        rg -o 'WEAK.*dbgc_cmsis_compiler_weak_check'
+    "${toolchain_bin}/riscv-wch-elf-objdump" -d \
+        "${build_dir}/target-tests/dbgc_cmsis_compiler_check.o" | \
+        rg 'nop'
+    "${toolchain_bin}/riscv-wch-elf-gcc" -std=gnu99 -Wall -Wextra -Werror \
         -Wno-unused-parameter -Wno-unused-variable \
         -march=rv32imac -mabi=ilp32 -mcmodel=medany \
         -DDBGC_CMSIS_DAP_TEST_C_LOOP \
+        -I"${project_dir}/platform/ch585" \
+        -I"${project_dir}/platform/ch585/wch" \
         -I"${repo_dir}/software/common/cmsis_dap_host_test" \
         -I"${cmsis_dap_host_dir}/include" \
         -c "${cmsis_dap_host_dir}/src/DAP.c" \
         -o "${build_dir}/target-tests/cmsis_dap_command_core.o"
-    "${toolchain_bin}/riscv-wch-elf-gcc" -std=c99 -Wall -Wextra -Werror \
+    "${toolchain_bin}/riscv-wch-elf-gcc" -std=gnu99 -Wall -Wextra -Werror \
         -Wno-unused-parameter -Wno-unused-variable \
         -march=rv32imac -mabi=ilp32 -mcmodel=medany \
         -DDBGC_CMSIS_DAP_TEST_C_LOOP \
         -DDBGC_CMSIS_DAP_SWD_ENGINE_TEST \
+        -I"${project_dir}/platform/ch585" \
+        -I"${project_dir}/platform/ch585/wch" \
         -I"${repo_dir}/software/common/cmsis_dap_host_test" \
         -I"${cmsis_dap_host_dir}/include" \
         -c "${repo_dir}/software/third_party/cmsis-dap/Firmware/Source/SW_DP.c" \

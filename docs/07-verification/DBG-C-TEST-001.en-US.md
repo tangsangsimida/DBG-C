@@ -1,6 +1,6 @@
 # DBG-C Verification Specification
 
-**Document ID:** DBG-C-TEST-001　**Version:** V0.21　**Status:** Test-plan draft; FIFO, CMSIS-DAP command-core, and upstream SWD-engine host-model checks executed, ThreadX board tests have not run
+**Document ID:** DBG-C-TEST-001　**Version:** V0.22　**Status:** Test-plan draft; FIFO, CMSIS-DAP command-core, upstream SWD-engine host-model, and CMSIS compiler-mapping target-object checks executed; ThreadX board tests have not run
 
 ## 1. Pass Criteria
 
@@ -83,4 +83,15 @@ WCH RISC-V GCC also compiles upstream `SW_DP.c` with the test configuration to a
 
 ## 10. Current Execution Status
 
-The repository contains the CH585M datasheet, CH585EVT archive, and ThreadX PoC-1. A host cross-build log for the PoC is recorded in FW-001; the user confirms no hardware is currently available, so no CH585M programming/debug or runtime evidence exists. DBG-C product firmware, cable samples, and captures are also unavailable. All product-level verification cases remain **Not run**. The seven FIFO host case groups and eight CMSIS-DAP command-core host checks and nine CMSIS-DAP command-to-SWD-engine integration line-model checks passed, but none count as board or product-function tests; neither does the PoC cross-build count as board runtime evidence. Build, ELF/link checks, and source static review are complete; the verification-board design gate has passed for limited-purpose verification hardware. Board runtime remains Not run, and product-hardware freeze is not released. ThreadX startup, interrupt, tick, thread switch/sleep/wakeup, clock measurement, reset recovery, and sustained-runtime cases remain Not run. Define duration, repetitions, load, and thresholds in the specific test plan before execution. See OPEN-001 O18/O19 for software and board release gates. This document defines coverage and is not a board verification report.
+The repository contains the CH585M datasheet, CH585EVT archive, and ThreadX PoC-1. A host cross-build log for the PoC is recorded in FW-001; the user confirms no hardware is currently available, so no CH585M programming/debug or runtime evidence exists. DBG-C product firmware, cable samples, and captures are also unavailable. All product-level verification cases remain **Not run**. The seven FIFO host case groups, eight CMSIS-DAP command-core host checks, nine CMSIS-DAP command-to-SWD-engine integration line-model checks, and two CMSIS compiler-mapping target-object checks passed, but none count as board or product-function tests; neither does the PoC cross-build count as board runtime evidence. Build, ELF/link checks, and source static review are complete; the verification-board design gate has passed for limited-purpose verification hardware. Board runtime remains Not run, and product-hardware freeze is not released. ThreadX startup, interrupt, tick, thread switch/sleep/wakeup, clock measurement, reset recovery, and sustained-runtime cases remain Not run. Define duration, repetitions, load, and thresholds in the specific test plan before execution. See OPEN-001 O18/O19 for software and board release gates. This document defines coverage and is not a board verification report.
+
+### 10.1 CMSIS Compiler-Macro Target-Object Checks
+
+| Case | Check | Pass condition | Status |
+|---|---|---|---|
+| CMSIS-COMP-01 | Compile the `platform/ch585/cmsis_compiler.h` check object with WCH RISC-V GCC 12.2.0 and inspect its ELF symbol table and disassembly | Object is ELF32 RISC-V; the weak-symbol check function is marked `WEAK`; disassembly contains RISC-V `nop` | Pass |
+| CMSIS-COMP-02 | Compile test-configured pinned upstream `DAP.c` and `SW_DP.c` with WCH RISC-V GCC and this compiler header | Both separate objects are ELF32 RISC-V, with no Arm ISA assembly in the object-compilation path | Pass |
+
+These are compile and target-object checks. They do not run the objects or link them into PoC, and do not prove product DAP configuration, GPIO, PB5/PB6 electrical behavior or SWD timing, USB, ThreadX, or CH585M board behavior. To compile CMSIS-DAP, the build script selects the upstream C-loop delay branch in a build-directory copy of `DAP.h`; the SWD timing of that C loop has not been calibrated on hardware.
+
+Reproduction command from the repository root: `DBGC_BUILD_DIR=build/cmsis-compiler-adapter-final software/poc1-ch585-threadx/build.sh`.

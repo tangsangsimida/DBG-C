@@ -1,6 +1,6 @@
 # DBG-C Open Questions and Verification List
 
-**Document ID:** DBG-C-OPEN-001　**Version:** V0.25　**Status:** Open items
+**Document ID:** DBG-C-OPEN-001　**Version:** V0.26　**Status:** Open items
 
 | ID | Question | Evidence/decision required | Affected documents | Status |
 |---|---|---|---|---|
@@ -23,7 +23,7 @@
 | O17 | Can USBFS and USBHS operate concurrently? What implementation constraint would require V1 to switch from its USBFS allocation to USBHS? | SDK examples, official resource limits, comparative measurements | MCU, USB, SYS | To verify |
 | O18 | Can Eclipse ThreadX RISC-V32/GNU context routines and the local CH585M low-level adapter run correctly on QingKe V3C? | Verify HPE, PFIC/VTF, startup, exception frames, SysTick, sleep/wakeup, scheduling, and sustained runtime on CH585M | MCU, FW, TEST | Board verification pending; software gate releases verification-board design, but no board is currently available and chip runtime has not been tested |
 | O19 | What is the PoC-1 software-verification gate before hardware design? | Apply the O19 criteria: two reproducible builds, ELF/link resource checks, and static review of startup/ThreadX context/interrupt paths; release verification-board design only, with product freeze gated by board tests | MCU, FW, SYS, TEST | Software gate passed for verification-hardware design only; tick-target conflict remains open; board runtime and product-hardware freeze have not passed |
-| O20 | Can the Arm CMSIS-DAP firmware core compile with the CH585M WCH RISC-V GCC, and what compiler/ISA adaptation is evidence-based? | Review compiler headers, inline assembly, and port dependencies in the pinned upstream commit; verify target compilation and host command-layer behavior without Arm ISA assembly | FW, MCU, TEST | Still open; eight command-core host checks and nine CMSIS-DAP command-to-SWD-engine callback line-model checks pass; WCH RISC-V GCC compiles separate test-configured DAP.c and SW_DP.c objects; test pins and physical transactions are modeled without WCH GPIO; product CMSIS compiler adaptation, SWD HAL/configuration, and firmware link are incomplete |
+| O20 | Can the Arm CMSIS-DAP firmware core compile with the CH585M WCH RISC-V GCC, and what compiler/ISA adaptation is evidence-based? | Review compiler headers, inline assembly, and port dependencies in the pinned upstream commit; verify target compilation and host command-layer behavior without Arm ISA assembly | FW, MCU, TEST | Local CMSIS compiler-macro adaptation and compile checks pass; eight command-core host checks and nine SWD line-model cases pass; WCH GCC compiles test-configured `DAP.c` and `SW_DP.c` into ELF32 RISC-V objects. Product HAL, timing calibration, USB integration, and firmware linking are incomplete, so O20 remains open |
 
 ## O18 Evidence Update
 
@@ -38,12 +38,16 @@
 
 ## O20 Evidence Update
 
+- Added `software/poc1-ch585-threadx/platform/ch585/cmsis_compiler.h`, mapping CMSIS inline, NOP, and weak-symbol macros using the exact GNU definitions in WCH EVT `CH585SFR.h`/`core_riscv.h` and GCC/RISC-V compiler primitives. GCC 12.2.0 compiled the check object, and its ELF symbol table reports the check function as `WEAK`.
+- WCH GCC compiled the pinned upstream `DAP.c` and `SW_DP.c` under the test configuration with this header into ELF32 RISC-V objects. Pin macros remain no-ops, and the SWD transaction model remains host-test-only. Neither object is linked into PoC.
+- Upstream `DAP.h` still requires a build-directory copy to select the C-loop delay branch instead of its Arm `subs` assembly. No SWD GPIO HAL, PB5/PB6 electrical/timing calibration, DAP USB/ThreadX integration, or product firmware link exists. This is compiler-primitive and target-object compile evidence; it does not close O20 or establish CH585M board runtime.
+
 - Four upstream `SW_DP.c` host line-model cases now cover read success/parity failure, write data/parity, and WAIT/FAULT ACK paths. The model uses callback pins and a no-op fast delay; it provides no electrical/timing or hardware evidence.
 - WCH EVT GPIO API spellings are statically confirmed, but no product GPIO HAL has been integrated or built. PB5/PB6 voltage compatibility, protection, drive mode, and timing remain open.
 - Eight host checks pass for pinned CMSIS-DAP commit `12636590eec66fae2d1bba4518749426ad5a4595`: firmware-version Info, unknown Info identifier, unsupported command, DP read with WAIT retries, DP write completion, ordered AP read results and final `DP_RDBUFF` in Transfer and TransferBlock, and TransferConfigure retry-count behavior on a following DP read.
 - SWD command processing is enabled, but pin macros are no-ops and `SWD_Transfer()` is a deterministic mock. The test calls no GPIO, USB, ThreadX, or CH585M API. A build-directory header copy changes only the delay-branch selector; it does not define `__CC_ARM` or modify the third-party submodule.
 - WCH RISC-V GCC compiles the SWD-enabled test configuration to an ELF32 RISC-V object; the object is not linked into PoC.
-- These results do not prove product CMSIS compiler adaptation, physical SWD transfers, product configuration, or USB integration. O20 remains open.
+- These results do not prove CMSIS-DAP product integration, physical SWD transfers, product configuration, or USB integration. O20 remains open.
 
 - Nine host cases with 168 assertions cover upstream `SW_DP.c` read/write behavior, WAIT/FAULT ACKs, 10-bit SWD input/output sequences, the DAP_Connect plus DP IDCODE path, AP posted-read data returned through DP_RDBUFF in DAP_Transfer, the two-item AP DAP_TransferBlock read sequence, and mixed output/input DAP_SWD_Sequence handling. Fast delay is a no-op, so counts are not frequency/timing evidence. WCH RISC-V GCC compiles `SW_DP.c` to an ELF32 RISC-V object that is not linked into product firmware.
 - WCH EVT GPIO header/implementation statically confirm `GPIOB_ModeCfg`, `GPIOB_SetBits`, `GPIOB_ResetBits`, and `GPIOB_ReadPortPin`. These APIs are not integrated into an SWD HAL; PB5/PB6 electrical, timing, and protection requirements remain for IF-001 and verification-board measurements.

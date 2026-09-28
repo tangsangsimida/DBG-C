@@ -1,6 +1,6 @@
 # DBG-C 未决问题与验证清单
 
-**文档编号：** DBG-C-OPEN-001　**版本：** V0.25　**状态：** 开放项
+**文档编号：** DBG-C-OPEN-001　**版本：** V0.26　**状态：** 开放项
 
 | ID | 问题 | 需要的证据/决策 | 影响文档 | 状态 |
 |---|---|---|---|---|
@@ -23,7 +23,7 @@
 | O17 | USBFS/USBHS 是否可同时运行？V1 已分配 USBFS，什么实现限制会要求改用 USBHS？ | SDK 实例、官方资源限制与对照实测 | MCU, USB, SYS | 待验证 |
 | O18 | Eclipse ThreadX RISC-V32/GNU 线程上下文例程及本地 CH585M 低层适配能否正确运行于 QingKe V3C？ | 在 CH585M 板上验证 HPE、PFIC/VTF、启动入口、异常栈帧、SysTick、睡眠唤醒、调度和持续运行 | MCU, FW, TEST | 待实板验证；软件门已放行验证板设计，但当前无可用板卡，芯片运行未执行 |
 | O19 | 进入硬件设计前，PoC-1 的“软件验证通过”门槛是什么？ | 采用 O19 放行标准：两次可复现构建、ELF/链接资源检查、startup/ThreadX 上下文与中断路径静态审查；仅放行验证硬件设计，产品冻结须实板验证 | MCU, FW, SYS, TEST | 软件放行门已通过，仅允许设计验证用硬件；tick 目标冲突仍待确认；实板运行与产品硬件冻结未通过 |
-| O20 | Arm CMSIS-DAP 固件核心能否由 CH585M 的 WCH RISC-V GCC 编译，需做哪些有依据的编译器/指令集适配？ | 对固定上游提交审查编译器头、内联汇编及端口依赖；完成有依据的适配后验证目标编译和主机命令层，禁止引入 Arm ISA 汇编 | FW, MCU, TEST | 仍待验证；启用 SWD 命令分支的 `DAP.c` 测试配置对象编译及 8 项主机检查通过，覆盖 TransferConfigure 重试数生效、DAP_Transfer/TransferBlock 的 AP posted-read 与 `DP_RDBUFF` 响应顺序；命令核心 8 项检查与CMSIS-DAP 命令到 SWD 引擎 9 项回调线模型检查通过；WCH RISC-V GCC 分别编译 DAP.c 和 SW_DP.c 测试对象；测试 pin/物理事务为模型，不调用 WCH GPIO；产品 CMSIS 编译器适配、SWD HAL/配置和固件链接尚未完成 |
+| O20 | Arm CMSIS-DAP 固件核心能否由 CH585M 的 WCH RISC-V GCC 编译，需做哪些有依据的编译器/指令集适配？ | 对固定上游提交审查编译器头、内联汇编及端口依赖；完成有依据的适配后验证目标编译和主机命令层，禁止引入 Arm ISA 汇编 | FW, MCU, TEST | 本地 CMSIS 编译器宏适配及编译检查通过；8 项命令层主机检查、9 项 SWD 线模型用例通过；WCH GCC 将测试配置的 `DAP.c`、`SW_DP.c` 编译为 ELF32 RISC-V 对象。产品 HAL、时序校准、USB 接入和固件链接未完成，O20 仍开放 |
 
 ## O18 更新证据
 
@@ -38,10 +38,14 @@
 
 ## O20 更新证据
 
+- 新增 `software/poc1-ch585-threadx/platform/ch585/cmsis_compiler.h`，用 WCH EVT `CH585SFR.h`、`core_riscv.h` 的精确 GNU 宏定义及 GCC/RISC-V 指令基元映射 CMSIS inline、NOP 与 weak-symbol 宏。GCC 12.2.0 成功编译检查对象，ELF 符号表显示检查函数为 `WEAK`。
+- WCH GCC 使用该头文件将测试配置下的固定上游 `DAP.c` 与 `SW_DP.c` 编译为 ELF32 RISC-V 对象；测试 pin 仍为空操作宏，SWD 事务模型仍仅用于主机检查。两个对象没有链接进 PoC。
+- 上游 `DAP.h` 的 Arm `subs` 延时分支依然需要构建目录副本选择 C 循环；目前没有 SWD GPIO HAL、PB5/PB6 电气/时序校准、DAP USB/ThreadX 集成或产品固件链接。因此这是编译器基元和目标对象编译证据，不关闭 O20，也不代表 CH585M 实板通过。
+
 - 固定 CMSIS-DAP 提交 `12636590eec66fae2d1bba4518749426ad5a4595` 的 8 项主机用例通过，覆盖固件版本 Info、未知 Info 标识符、未实现命令、DP 读的 WAIT 重试、DP 写完成检查、DAP_Transfer 与 DAP_TransferBlock 的 AP 读结果/`DP_RDBUFF` 顺序，以及 TransferConfigure 重试数对后续 DP 读的影响。
 - 测试启用 SWD 命令处理分支，但 SWD pin 宏为空操作，`SWD_Transfer()` 由确定性测试桩实现；不调用 GPIO、USB、ThreadX 或 CH585M API。构建目录中的头文件副本只调整延时分支选择条件，没有定义 `__CC_ARM` 或改动第三方子模块。
 - WCH RISC-V GCC 将同一 SWD-enabled 测试配置的 `DAP.c` 编译为 ELF32 RISC-V 对象；该对象未链接至 PoC。
-- 这些结果不证明产品 CMSIS 编译器适配、实际 SWD 物理传输、产品配置或 USB 接口。O20 保持开放。
+- 这些结果不证明 CMSIS-DAP 产品集成、实际 SWD 物理传输、产品配置或 USB 接口。O20 保持开放。
 
 - 本轮新增上游 `SW_DP.c` 位级引擎 host line-model 九项检查共 168 项断言，覆盖读/写、WAIT/FAULT、10 位 SWD 输入/输出序列、DAP_Connect + DP IDCODE 读取，以及 AP DAP_Transfer / 两项 AP DAP_TransferBlock posted-read 经 DP_RDBUFF 返回数据的集成路径和 DAP_SWD_Sequence 混合输入输出序列命令；fast 延时为空操作，计数不代表频率/时序。WCH RISC-V GCC 将 `SW_DP.c` 编译为 ELF32 RISC-V 对象，未链接产品固件。
 - WCH EVT GPIO 头文件/实现中静态核对到 `GPIOB_ModeCfg`、`GPIOB_SetBits`、`GPIOB_ResetBits`、`GPIOB_ReadPortPin`。这些 API 尚未集成编译或连接到 SWD HAL；PB5/PB6 电气、时序和保护仍待 IF-001 与验证板测量。

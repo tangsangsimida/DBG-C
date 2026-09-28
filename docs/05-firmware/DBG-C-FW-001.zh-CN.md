@@ -1,6 +1,6 @@
 # DBG-C Firmware Architecture 与 PoC-1 记录
 
-**文档编号：** DBG-C-FW-001　**版本：** V0.23　**状态：** 实验草案；通用 FIFO、CMSIS-DAP 命令层和上游 SWD 引擎主机检查已通过；产品 HAL 适配未完成；验证板设计门已通过；实板运行及产品硬件冻结未通过
+**文档编号：** DBG-C-FW-001　**版本：** V0.24　**状态：** 实验草案；通用 FIFO、CMSIS-DAP 命令层和上游 SWD 引擎主机检查已通过；CMSIS 编译器宏映射通过目标对象编译检查；产品 HAL 适配未完成；验证板设计门已通过；实板运行及产品硬件冻结未通过
 
 ## 1. 范围与状态
 
@@ -134,6 +134,7 @@ WCH 示例的 `highcode_init()` 初始化 HSI PLL 到 62.4 MHz，并配置相关
 
 - Eclipse ThreadX 官方仓库与 MIT 许可：[`software/third_party/threadx/`](../../software/third_party/threadx/)，标签和提交见第 1 节。
 - Arm 官方 CMSIS-DAP 仓库：[`software/third_party/cmsis-dap/`](../../software/third_party/cmsis-dap/)，固定提交 `12636590eec66fae2d1bba4518749426ad5a4595`（2026-09-29 核对）；`DAP.h` 声明的 CMSIS-DAP 固件版本为 2.1.2；仓库许可为 Apache-2.0。此引用是 CMSIS-DAP 协议固件源码，不代表集成了完整 DAPLink。
+- 编译器宏映射依据：WCH EVT `core_riscv.h` 提供 GNU 编译器下的 `__ASM`/`__INLINE` 定义，需先包含含 `IRQn_Type` 的 `CH585SFR.h`；GCC 官方 [内联汇编](https://gcc.gnu.org/onlinedocs/gcc/Extended-Asm.html)及[函数属性](https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html)文档说明 GNU 内联汇编、`always_inline` 与 weak 属性；RISC-V 官方[非特权指令规范](https://docs.riscv.org/reference/isa/unpriv/rv32.html)定义 `nop`。外部资料核对日期：2026-09-29。该依据只支持编译器基元映射，不支持 GPIO/SWD 时序或芯片运行结论。
 - WCH CH585 EVT：[`归档说明`](../09-references/CH585EVT/README.md)及本节列出的归档文件与散列。
 - MounRiver Linux x64 Toolchain V2.4.0：[官方下载页](https://www.mounriver.com/download)，工具链包 SHA-256 见第 3 节。
 
@@ -171,7 +172,7 @@ CMSIS-DAP 测试位于 `software/common/cmsis_dap_host_test/`，由既有 `softw
 | `EVT/EXAM/SRC/StdPeriphDriver/CH58x_uart0.c`；SHA-256 `f0b6b252dcb69530428f32cf2bb50cb585fbecd6f5cfd0eb57f194e257d86338` | 文件头标记 V1.2、2021/11/17；默认初始化把波特率设为 115200、FIFO 触发级别字段设为 4-byte、使能 TXD 中断；收发字符串函数轮询 FIFO 状态/计数 | 这些是示例默认值，不是 DBG-C 冻结参数。轮询 API 不满足尚未定义的 UART/ThreadX 并发服务契约，不能直接作为产品桥接驱动 |
 | `EVT/EXAM/USB/Device/COM/src/Main.c` 中 `DebugInit()` | 调用 `GPIOPinRemap(ENABLE, RB_PIN_UART0)`，然后配置 PA15/PA14 并初始化 UART0 | 该 CDC 示例将 UART0 重映射到 PA15/PA14；DBG-C MCU-001 分配 PB4/PB7。不得复制此示例的引脚初始化到产品固件。PB4/PB7 的最终 SDK 初始化证据仍需取得 |
 
-通用字节 FIFO 是当前已实现且可复用的硬件无关产品模块。CMSIS-DAP 命令核心及上游 SWD 位级算法已增加主机检查；SWD host-test 的 pin 回调/线模型是验证夹具，不是产品 HAL 或实际 GPIO 实现。EVT GPIO API 已静态核对，但未集成编译到固件：PB5/PB6 输入输出模式、输出能力、目标电压兼容、外部保护及所需 SWD 时序仍须按 IF-001/O11/O12 确认，并在验证板上测量。USBFS + CDC、UART0 驱动/桥接、BLE 和私有 RF 仍缺产品接口/调度/硬件证据。O02、O08、O09 与 O18 保持开放，所有 ThreadX/USB/UART ISR 行为仍需实板验证。
+通用字节 FIFO 是当前已实现且可复用的硬件无关产品模块。CMSIS-DAP 命令核心及上游 SWD 位级算法已增加主机检查，并新增编译器宏映射目标对象检查；SWD host-test 的 pin 回调/线模型是验证夹具，不是产品 HAL 或实际 GPIO 实现。EVT GPIO API 已静态核对，但未集成编译到固件：PB5/PB6 输入输出模式、输出能力、目标电压兼容、外部保护及所需 SWD 时序仍须按 IF-001/O11/O12 确认，并在验证板上测量。USBFS + CDC、UART0 驱动/桥接、BLE 和私有 RF 仍缺产品接口/调度/硬件证据。O02、O08、O09、O18 与 O20 保持开放，所有 ThreadX/USB/UART ISR 行为仍需实板验证。
 
 ### 8.3 上游 SWD 引擎主机线模型与 WCH GPIO 证据
 
@@ -183,4 +184,4 @@ WCH EVT 官方归档 GPIO 文件：`EVT/EXAM/SRC/StdPeriphDriver/inc/CH58x_gpio.
 
 Arm 官方 CMSIS-DAP 仓库已作为 Git 子模块固定到提交 `12636590eec66fae2d1bba4518749426ad5a4595`。该提交 `Firmware/Include/DAP.h` 声明 `DAP_ProcessCommand()` 与 `DAP_ExecuteCommand()`，并通过 `DAP_FW_VER` 声明固件版本 2.1.2。此源码是 CMSIS-DAP 固件实现，不是 DAPLink 完整固件体系。上游 `Firmware/Config/DAP_config.h` 是面向示例工程的模板：其中 CPU 时钟、JTAG 能力、DAP 包尺寸及缓冲包数的默认值不得直接用于 DBG-C。
 
-当前子模块的 `DAP.h` 包含 `cmsis_compiler.h`；该文件既不在 CMSIS-DAP 子模块，也未出现在仓库提供的 CH585EVT ZIP 条目中。该头文件的 `PIN_DELAY_SLOW()` 在非 `__CC_ARM` 分支使用 Arm `subs %0,%0,#1` 内联汇编，WCH RISC-V GCC 不能直接汇编该指令。不得伪定义 `__CC_ARM`；测试脚本只在构建目录的头文件副本中选择上游 C 循环分支，并以 WCH GCC 验证 DAP.c 的 RISC-V 对象编译。CMSIS-DAP 产品配置仍需正式的编译器支持头和 GPIO/时钟 HAL。当前测试使用空操作 pin 宏和模拟 `SWD_Transfer()`，不证明 PB5/PB6 波形、电气时序或目标 ACK 行为。产品接口及实板验证未完成，不把该测试对象接入 PoC 产品固件。
+当前子模块的 `DAP.h` 包含 `cmsis_compiler.h`；该文件既不在 CMSIS-DAP 子模块，也未出现在仓库提供的 CH585EVT ZIP 条目中。该头文件的 `PIN_DELAY_SLOW()` 在非 `__CC_ARM` 分支使用 Arm `subs %0,%0,#1` 内联汇编，WCH RISC-V GCC 不能直接汇编该指令。不得伪定义 `__CC_ARM`；测试脚本只在构建目录的头文件副本中选择上游 C 循环分支。本地 `platform/ch585/cmsis_compiler.h` 基于 WCH Core 头及 GCC/RISC-V 编译器基元提供 CMSIS inline、NOP 和 weak-symbol 宏映射；构建脚本用 WCH GCC 编译该映射检查，并在测试配置下将 `DAP.c`、`SW_DP.c` 编译为 ELF32 RISC-V 对象。测试仍使用 no-op pin 宏，且这些对象未链接 PoC。此结果只验证编译器基元，不是完整 CMSIS-DAP 产品移植，不证明 GPIO、时序、目标 ACK 或 CH585M 实板运行。
