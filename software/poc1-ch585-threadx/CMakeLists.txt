@@ -10,16 +10,37 @@ add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../common/byte_fifo" byte_fifo)
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../common/byte_stream_bridge" byte_stream_bridge)
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../common/byte_duplex_bridge" byte_duplex_bridge)
 
+add_library(dbgc_ch585_platform STATIC
+    platform/ch585/dbgc_ch585_swd_gpio.c
+    platform/ch585/dbgc_ch585_target_reset_gpio.c
+    platform/ch585/dbgc_ch585_uart0.c
+    platform/ch585/dbgc_ch585_uart0_bridge_adapter.c
+    platform/ch585/dbgc_ch585_uid.c
+)
+target_include_directories(dbgc_ch585_platform PUBLIC
+    "${CMAKE_CURRENT_SOURCE_DIR}/platform/ch585"
+)
+target_include_directories(dbgc_ch585_platform PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/platform/ch585/wch"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../third_party/wch/ch585"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../common/byte_fifo/include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../common/byte_stream_bridge/include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../common/byte_duplex_bridge/include"
+)
+target_link_libraries(dbgc_ch585_platform PUBLIC
+    dbgc_byte_duplex_bridge
+    "${CMAKE_CURRENT_SOURCE_DIR}/../third_party/wch/ch585/libISP585.a"
+)
+
 add_executable(dbgc_poc1
     platform/ch585/startup/startup_CH585.S
     platform/ch585/highcode_init.c
-    platform/ch585/dbgc_ch585_uid.c
     src/main.c
 )
 target_link_libraries(dbgc_poc1 PRIVATE
     threadx
+    dbgc_ch585_platform
     dbgc_byte_duplex_bridge
-    "${CMAKE_CURRENT_SOURCE_DIR}/../third_party/wch/ch585/libISP585.a"
 )
 target_include_directories(dbgc_poc1 PRIVATE
     platform/ch585
