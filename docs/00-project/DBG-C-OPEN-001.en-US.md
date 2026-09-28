@@ -1,6 +1,6 @@
 # DBG-C Open Questions and Verification List
 
-**Document ID:** DBG-C-OPEN-001　**Version:** V0.34　**Status:** Open items
+**Document ID:** DBG-C-OPEN-001　**Version:** V0.35　**Status:** Open items
 
 | ID | Question | Evidence/decision required | Affected documents | Status |
 |---|---|---|---|---|
@@ -10,7 +10,7 @@
 | O04 | What Type-C pins/cable approach is valid and reliable for Basic/Full? | Applicable USB-IF specification, cable construction evidence, electrical review | IF, HW, TEST | To research |
 | O05 | How do USB insertion, user choice, and wireless connection determine Standalone/Host/Target? | Product state-machine review, including conflicts/transitions | PRD, SYS, RF, BLE | Decision needed |
 | O06 | Is pairing persistent/automatic, and what happens after unpair? | UX/security review and persistence tests | PRD, RF, BLE | Decision needed |
-| O07 | What is the Device ID source, length, API, and authentication binding? | CH585M SDK/official interface and security review | MCU, RF, BLE | To verify |
+| O07 | What are the Device ID source, length, API, and authentication binding? | CH585M SDK/official interface and security review | MCU, RF, BLE | Partly confirmed: EVT source confirms API spelling and 64-bit output; Device ID encoding, uniqueness/stability guarantees, and authentication binding remain open; silicon read awaits board verification |
 | O08 | What USB VID/PID, interface/endpoints, strings, and serial policy will be used? | Formal implementation and VID ownership decision | USB, TEST | Decision needed |
 | O09 | What CDC baud rates, flow control, target levels, and performance limits apply? | User requirements, electrical design, and measurements | PRD, IF, TEST | Decision needed; EVT evidence now confirms UART0 PB4/PB7 setup and polling BSP host-model/target-object checks pass; product parameters, CDC, actual electrical/transfer behavior, and concurrency remain undefined/unverified |
 | O10 | Does OTA support signatures, dual image, rollback, and power-loss recovery? | WCH Boot/SDK docs, examples, and power-cut testing | MCU, FW, BLE, RF, RISK | To verify |
@@ -25,6 +25,13 @@
 | O19 | What is the PoC-1 software-verification gate before hardware design? | Apply the O19 criteria: two reproducible builds, ELF/link resource checks, and static review of startup/ThreadX context/interrupt paths; release verification-board design only, with product freeze gated by board tests | MCU, FW, SYS, TEST | Software gate passed for verification-hardware design only; tick-target conflict remains open; board runtime and product-hardware freeze have not passed |
 | O20 | Can the Arm CMSIS-DAP firmware core compile with the CH585M WCH RISC-V GCC, and what compiler/ISA adaptation is evidence-based? | Review compiler headers, inline assembly, and port dependencies in the pinned upstream commit; verify target compilation and host command-layer behavior without Arm ISA assembly | FW, MCU, TEST | Local CMSIS compiler-macro adaptation and compile checks pass; eight command-core host checks and nine SWD line-model cases pass; WCH GCC compiles test-configured `DAP.c` and `SW_DP.c` into ELF32 RISC-V objects. Product HAL, timing calibration, USB integration, and firmware linking are incomplete, so O20 remains open |
 | O21 | How are actual input length and response capacity validated before calling the upstream CMSIS-DAP command processor? | Define enabled product commands/features, vendor-command override policy, maximum string-callback writes, actual USB receive length, and request/response capacities; integrate bounded dispatch into the real product USB receive path and cover the product command profile | USB, FW, TEST | Generic preflight and bounded dispatch implemented: 102 preflight checks, five upstream-dispatch host cases, and WCH GCC ELF32 RISC-V object compilation pass. Truncated input and insufficient capacity are rejected before upstream dispatch; vendor/SWO/CMSIS-DAP UART fail closed. Product command/feature profile, Info maximum writes, USB receive/response capacities, and USB call-path integration remain undone; O21 stays open. Test fixtures are not product configuration |
+
+## O07 UID Interface Evidence Update
+
+- The WCH EVT archive `EVT/EXAM/SRC/StdPeriphDriver/inc/CH58x_flash.h` declares `void GET_UNIQUE_ID(uint8_t *Buffer)`. Its implementation in `EVT/EXAM/SRC/StdPeriphDriver/CH58x_flash.c` documents a 64-bit unique ID and requires a 4-byte-aligned Buffer. The function calls `FLASH_EEPROM_CMD(CMD_GET_ROM_INFO, ROM_CFG_MAC_ADDR, Buffer, 0)` and then writes Buffer[6] and Buffer[7]; source therefore supports an 8-byte output capacity and alignment requirement.
+- The same function comment lists an `@return 0-SUCCESS (!0)-FAILURE`, while both the header declaration and C definition return `void`. Follow the actual compiled declaration and record this documentation/source conflict.
+- Added the thin `dbgc_ch585_uid_read()` adapter for the raw 8-byte value. It does not encode product Device ID, write DataFlash, or define authentication. Fourteen host mock checks and WCH GCC target-object compilation do not execute the chip UID ROM/Flash read.
+- Device ID encoding, uniqueness/stability claims, authentication binding, pairing persistence, and an actual chip read remain unconfirmed. O07 stays open pending security decisions and board verification.
 
 ## O18 Evidence Update
 

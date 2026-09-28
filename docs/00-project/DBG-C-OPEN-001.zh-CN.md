@@ -1,6 +1,6 @@
 # DBG-C 未决问题与验证清单
 
-**文档编号：** DBG-C-OPEN-001　**版本：** V0.34　**状态：** 开放项
+**文档编号：** DBG-C-OPEN-001　**版本：** V0.35　**状态：** 开放项
 
 | ID | 问题 | 需要的证据/决策 | 影响文档 | 状态 |
 |---|---|---|---|---|
@@ -10,7 +10,7 @@
 | O04 | DBG-C Basic/Full 在 Type-C 上的合法/可靠引脚及线缆方案？ | USB-IF 最新 Type-C 规范、线缆结构证据、电气评审 | IF, HW, TEST | 待研究 |
 | O05 | USB 插入、用户选择、无线连接如何决定 Standalone/Host/Target？ | 产品状态机评审，含冲突/切换规则 | PRD, SYS, RF, BLE | 待决策 |
 | O06 | Pairing 是否持久化、是否自动配对、解绑后行为？ | 安全/使用流程评审与持久化测试 | PRD, RF, BLE | 待决策 |
-| O07 | Device ID 的实际来源、长度、读取 API 和认证绑定？ | CH585M SDK/官方接口及安全评审 | MCU, RF, BLE | 待验证 |
+| O07 | Device ID 的实际来源、长度、读取 API 和认证绑定？ | CH585M SDK/官方接口及安全评审 | MCU, RF, BLE | 部分确认：EVT API 名称与 64 位输出已由源码确认；Device ID 编码、唯一性/稳定性保证、认证绑定未决；硅片读取待实板验证 |
 | O08 | USB VID/PID、接口/端点布局、字符串、Serial 策略？ | 正式实现及组织 VID 决策 | USB, TEST | 待决策 |
 | O09 | CDC UART 波特率、流控、目标电平和性能门限？ | 用户需求、电气设计及测量 | PRD, IF, TEST | 待决策；PB4/PB7 UART0 初始化已有 EVT 依据，轮询 BSP 主机模型/目标对象编译通过；产品参数、CDC、实际电气/收发和并发仍待定义验证 |
 | O10 | OTA 是否支持签名、双镜像、回滚及断电恢复？ | WCH Boot/SDK 文档、示例和断电测试 | MCU, FW, BLE, RF, RISK | 待验证 |
@@ -25,6 +25,13 @@
 | O19 | 进入硬件设计前，PoC-1 的“软件验证通过”门槛是什么？ | 采用 O19 放行标准：两次可复现构建、ELF/链接资源检查、startup/ThreadX 上下文与中断路径静态审查；仅放行验证硬件设计，产品冻结须实板验证 | MCU, FW, SYS, TEST | 软件放行门已通过，仅允许设计验证用硬件；tick 目标冲突仍待确认；实板运行与产品硬件冻结未通过 |
 | O20 | Arm CMSIS-DAP 固件核心能否由 CH585M 的 WCH RISC-V GCC 编译，需做哪些有依据的编译器/指令集适配？ | 对固定上游提交审查编译器头、内联汇编及端口依赖；完成有依据的适配后验证目标编译和主机命令层，禁止引入 Arm ISA 汇编 | FW, MCU, TEST | 本地 CMSIS 编译器宏适配及编译检查通过；8 项命令层主机检查、9 项 SWD 线模型用例通过；WCH GCC 将测试配置的 `DAP.c`、`SW_DP.c` 编译为 ELF32 RISC-V 对象。产品 HAL、时序校准、USB 接入和固件链接未完成，O20 仍开放 |
 | O21 | 如何在调用 CMSIS-DAP 上游命令处理前，验证实际输入长度及响应容量？ | 明确产品启用命令/功能、厂商命令覆盖策略、字符串回调最大写入量、USB 实际收包长度及请求/响应缓冲容量；把有界 dispatch 接入真实产品 USB 收包路径并覆盖产品命令配置 | USB, FW, TEST | 通用预检与有界 dispatch 已实现：102 项预检检查、5 个上游 dispatch 主机用例及 WCH GCC ELF32 RISC-V 对象编译通过；截断输入和容量不足会在上游调用前被拒绝，vendor/SWO/CMSIS-DAP UART 失败关闭。产品命令与 feature profile、Info 最大写入、USB 收包长度/响应容量及 USB 调用接入尚未实现，O21 保持开放；测试夹具不是产品配置 |
+
+## O07 UID 接口证据更新
+
+- WCH EVT 归档 `EVT/EXAM/SRC/StdPeriphDriver/inc/CH58x_flash.h` 声明 `void GET_UNIQUE_ID(uint8_t *Buffer)`；对应 `EVT/EXAM/SRC/StdPeriphDriver/CH58x_flash.c` 函数注释称输出 64 bit unique ID，并要求 Buffer 4 字节对齐。函数体调用 `FLASH_EEPROM_CMD(CMD_GET_ROM_INFO, ROM_CFG_MAC_ADDR, Buffer, 0)`，随后写入 Buffer[6]、Buffer[7]。因此源码支持 8 字节输出容量和对齐要求。
+- 同一函数注释列出 `@return 0-SUCCESS (!0)-FAILURE`，但头文件声明与 C 定义的返回类型均为 `void`；按实际编译声明处理，记录该注释与代码冲突。
+- 新增 `dbgc_ch585_uid_read()` 薄适配层，接收原始 8 字节，不编码产品 Device ID、不写 DataFlash、不定义认证。主机 mock 的 14 项检查及 WCH GCC 目标对象编译不执行芯片 UID ROM/Flash 读取。
+- Device ID 编码、唯一性/稳定性承诺、认证绑定、配对持久化和芯片实读仍未确认；O07 保持开放，直到安全决策与实板验证完成。
 
 ## O18 更新证据
 

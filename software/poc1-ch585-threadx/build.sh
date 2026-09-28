@@ -94,6 +94,12 @@ esac
         "${repo_dir}/software/common/ch585_target_reset_gpio_host_test/test_ch585_target_reset_gpio.c" \
         -o "${build_dir}/host-tests/test_ch585_target_reset_gpio"
     "${build_dir}/host-tests/test_ch585_target_reset_gpio"
+    "${host_cc}" -std=c99 -Wall -Wextra -Werror -pedantic \
+        -I"${project_dir}/platform/ch585" \
+        "${project_dir}/platform/ch585/dbgc_ch585_uid.c" \
+        "${repo_dir}/software/common/ch585_uid_host_test/test_ch585_uid.c" \
+        -o "${build_dir}/host-tests/test_ch585_uid"
+    "${build_dir}/host-tests/test_ch585_uid"
     cmsis_dap_host_dir="${build_dir}/host-tests/cmsis-dap"
     python3 "${repo_dir}/software/common/cmsis_dap_host_test/prepare_upstream.py" \
         "${repo_dir}/software/third_party/cmsis-dap" "${cmsis_dap_host_dir}"
@@ -171,6 +177,11 @@ esac
     "${toolchain_bin}/riscv-wch-elf-gcc" -std=gnu99 -Wall -Wextra -Werror \
         -march=rv32imac -mabi=ilp32 -mcmodel=medany \
         -I"${project_dir}/platform/ch585" \
+        -c "${project_dir}/platform/ch585/dbgc_ch585_uid.c" \
+        -o "${build_dir}/target-tests/dbgc_ch585_uid.o"
+    "${toolchain_bin}/riscv-wch-elf-gcc" -std=gnu99 -Wall -Wextra -Werror \
+        -march=rv32imac -mabi=ilp32 -mcmodel=medany \
+        -I"${project_dir}/platform/ch585" \
         -I"${project_dir}/platform/ch585/wch" \
         -c "${project_dir}/platform/ch585/dbgc_ch585_uart0.c" \
         -o "${build_dir}/target-tests/dbgc_ch585_uart0.o"
@@ -182,6 +193,9 @@ esac
         rg 'Class:|Machine:'
     "${toolchain_bin}/riscv-wch-elf-readelf" -h \
         "${build_dir}/target-tests/dbgc_ch585_uart0_bridge_adapter.o" | \
+        rg 'Class:|Machine:'
+    "${toolchain_bin}/riscv-wch-elf-readelf" -h \
+        "${build_dir}/target-tests/dbgc_ch585_uid.o" | \
         rg 'Class:|Machine:'
     "${toolchain_bin}/riscv-wch-elf-readelf" -h \
         "${build_dir}/target-tests/dbgc_ch585_swd_gpio.o" | \
