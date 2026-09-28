@@ -1,6 +1,6 @@
 # DBG-C Firmware Architecture 与 PoC-1 记录
 
-**文档编号：** DBG-C-FW-001　**版本：** V0.4　**状态：** 实验草案；构建和 ELF 静态检查完成；tick 目标冲突待确认，验证硬件设计未放行
+**文档编号：** DBG-C-FW-001　**版本：** V0.5　**状态：** 实验草案；通用 FIFO 模块已加入构建；tick 目标冲突待确认，验证硬件设计未放行
 
 ## 1. 范围与状态
 
@@ -135,3 +135,20 @@ WCH 示例的 `highcode_init()` 初始化 HSI PLL 到 62.4 MHz，并配置相关
 - Eclipse ThreadX 官方仓库与 MIT 许可：[`software/third_party/threadx/`](../../software/third_party/threadx/)，标签和提交见第 1 节。
 - WCH CH585 EVT：[`归档说明`](../09-references/CH585EVT/README.md)及本节列出的归档文件与散列。
 - MounRiver Linux x64 Toolchain V2.4.0：[官方下载页](https://www.mounriver.com/download)，工具链包 SHA-256 见第 3 节。
+
+## 8. 软件模块实现状态
+
+资源依据见 [MCU-001 第 5 节](../04-hardware/DBG-C-MCU-001.zh-CN.md)：USB CDC/UART、RF 收发均需要 SRAM 数据缓冲。官方 EVT 归档的 `EVT/EXAM/BLE/BLE_UART/APP/app_drv_fifo/app_drv_fifo.c` 与 `.h`（原始 SHA-256 分别为 `312e039857300b5142f6ae6898a592b6257170d146f13a92e02bd8808bc5ec67`、`5ce231b33f9a5897a6be2abddc1901cd181f63c93c3fa00867216ac14cc8b6cc`）及 `EVT/EXAM/BLE/BLE_UART/APP/peripheral.c` 证明 WCH 示例采用字节 FIFO 缓冲 UART 数据。该示例不证明其并发临界区适配 ThreadX；本项目未直接复制或调用该 FIFO。
+
+| 模块 | 软件位置/资源依据 | 当前实现边界 | 状态/验证 |
+|---|---|---|---|
+| 通用字节 FIFO | `software/common/byte_fifo/`；对应 MCU-001 规划的 USB CDC、UART 与 RF 收发缓冲 | 调用方提供固定存储；支持任意非零容量、部分读写、不覆盖未读数据、清空与容量查询；无动态分配、无芯片寄存器/中断/ThreadX API；不保证并发安全，调用方必须串行化访问 | 已加入现有 CMake 构建并通过 CH585 交叉编译；当前未接入 USB/UART/RF，未执行独立主机行为测试或实板测试；不是冻结的产品 ABI |
+| CMSIS-DAP / DAP command core | MCU-001 USBFS 分配；PRD 的 CMSIS-DAP v2 目标 | 仓库没有 CMSIS-DAP 源码或已选定版本，USB/DAP 接口和 VID/PID 也未冻结 | 暂不实现；需先锁定上游源码/版本并完成 USB-001 及 O02/O08 |
+| USBFS Device + CDC transport | MCU-001 USBFS、PB10/PB11；WCH EVT 含 USB 示例 | Endpoint、描述符、WCH USB Device API、WinUSB 与组织 VID 尚未确定 | 暂不实现；按 O02/O08 取证并定义 USB-001 后再做 |
+| UART0 driver/bridge | MCU-001 UART0、PB4/PB7 | WCH UART API/复用初始化、波特率/流控和 ISR 到 ThreadX 的同步规则待核实 | 暂不实现；需核对 EVT 的 CH585 UART 例程并确定 CDC/UART 行为（O09） |
+| SWD Engine / Target Manager | MCU-001 的 PB5/PB6 SWD GPIO、PA4 Reset GPIO | SWD 时序、方向切换、电气边界及 Target 电压/保护未形成完整可执行规范 | 暂不实现；需冻结 IF-001 并按 O11/O12 验证时序及电气要求 |
+| BLE GATT/配置/OTA | 集成 BLE Radio 与 WCH BLE 示例 | 产品 Service/Characteristic、认证、MTU、配对和 OTA 镜像行为未定 | 暂不实现；需先完成 BLE-001、O06/O07/O10/O13 |
+| 私有 2.4G transport | 集成 Radio，DBG-C RF Protocol 目标 | PHY/API、包格式、序列、重试、恢复和时延目标未确定 | 暂不实现；需先完成 RF-001、O01/O03/O12 |
+| CH585M ThreadX port | 当前 `software/poc1-ch585-threadx/platform/ch585/` | reset、SysTick、PFIC/VTF/HPE 与上下文切换依赖芯片硬件语义 | 仅实验 PoC；启动、中断、tick、上下文切换、调度、睡眠/唤醒均未做 CH585M 实板验证，保持 O18 开放 |
+
+字节 FIFO 只建立与硬件无关的存储边界。USB、UART、RF 调用方不得直接依赖其内部索引；在同步/并发模型和传输 API 确认前，不把该模块包装成 ISR-safe queue 或产品数据协议。当前仓库没有通用主机单元测试框架；本轮只运行现有 `software/poc1-ch585-threadx/build.sh`，其证明交叉编译成功，不证明 FIFO 的主机运行行为。

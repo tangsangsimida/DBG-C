@@ -8,7 +8,7 @@
 | SYS-001 | [系统架构设计](../02-system/DBG-C-SYS-001.zh-CN.md) | V0.2，待评审 |
 | IF-001 | [DBG-C Interface Specification](../03-interfaces/DBG-C-IF-001.zh-CN.md) | V0.1 概念草案，Pin 未冻结 |
 | MCU-001 | [MCU 选型与资源评估](../04-hardware/DBG-C-MCU-001.zh-CN.md) | V0.5；软件门槛待 tick 目标确认，验证硬件设计未放行 |
-| FW-001 | [固件架构与 PoC-1 记录](../05-firmware/DBG-C-FW-001.zh-CN.md) | V0.4 构建/静态检查完成；tick 目标待确认，硬件设计未放行 |
+| FW-001 | [固件架构与 PoC-1 记录](../05-firmware/DBG-C-FW-001.zh-CN.md) | V0.5 增加通用 FIFO；tick 冲突待确认，验证板设计未放行 |
 | RF-001 | [Private 2.4G Protocol Specification](../06-protocols/DBG-C-RF-001.zh-CN.md) | V0.1 协议框架，不可据此编码 |
 | TEST-001 | [Verification Specification](../07-verification/DBG-C-TEST-001.zh-CN.md) | V0.4 测试计划；tick 目标待确认，ThreadX 板测未执行 |
 | RISK-001 | [Risk Register](../08-risk/DBG-C-RISK-001.zh-CN.md) | V0.4 风险清单，含 ThreadX 移植与 tick 目标冲突 |

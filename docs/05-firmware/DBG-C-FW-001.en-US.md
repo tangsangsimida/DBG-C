@@ -1,6 +1,6 @@
 # DBG-C Firmware Architecture and PoC-1 Record
 
-**Document ID:** DBG-C-FW-001　**Version:** V0.4　**Status:** Experimental draft; build and ELF static checks complete; tick-target conflict pending confirmation, verification-hardware design not released
+**Document ID:** DBG-C-FW-001　**Version:** V0.5　**Status:** Experimental draft; generic FIFO module added to the build; tick-target conflict pending confirmation, verification-hardware design not released
 
 ## 1. Scope and status
 
@@ -135,3 +135,20 @@ Keep the verification board minimal and provide safe programming/recovery debug 
 - Eclipse ThreadX official repository and MIT license: [`software/third_party/threadx/`](../../software/third_party/threadx/); exact tag and commit are in Section 1.
 - WCH CH585 EVT: [`archive notes`](../09-references/CH585EVT/README.md) and the archive entries and hashes listed above.
 - MounRiver Linux x64 Toolchain V2.4.0: [official download page](https://www.mounriver.com/download); toolchain archive SHA-256 is in Section 3.
+
+## 8. Software Module Implementation Status
+
+Resource evidence is in [MCU-001 Section 5](../04-hardware/DBG-C-MCU-001.en-US.md): USB CDC/UART and RF paths require SRAM data buffering. The official EVT archive contains `EVT/EXAM/BLE/BLE_UART/APP/app_drv_fifo/app_drv_fifo.c` and `.h` (original SHA-256 values `312e039857300b5142f6ae6898a592b6257170d146f13a92e02bd8808bc5ec67` and `5ce231b33f9a5897a6be2abddc1901cd181f63c93c3fa00867216ac14cc8b6cc`) and `EVT/EXAM/BLE/BLE_UART/APP/peripheral.c`, showing a WCH example that buffers UART data with a byte FIFO. This example does not prove that its concurrency protection fits ThreadX; this project neither copies nor calls that FIFO directly.
+
+| Module | Software location/resource evidence | Current implementation boundary | Status/verification |
+|---|---|---|---|
+| Generic byte FIFO | `software/common/byte_fifo/`; corresponds to USB CDC, UART, and RF buffering in MCU-001 | Caller-owned fixed storage; arbitrary nonzero capacity; partial reads/writes; no overwrite of unread data; clear and capacity queries; no dynamic allocation, chip registers, interrupts, or ThreadX API; not concurrency-safe, callers must serialize access | Added to the existing CMake build and cross-compiled for CH585; not connected to USB/UART/RF; no standalone host behavior test or board test; not a frozen product ABI |
+| CMSIS-DAP / DAP command core | MCU-001 USBFS allocation; PRD CMSIS-DAP v2 target | No CMSIS-DAP source or selected version in the repository; USB/DAP interfaces and VID/PID are not frozen | Not implemented; first pin upstream source/version and complete USB-001 and O02/O08 |
+| USBFS Device + CDC transport | MCU-001 USBFS, PB10/PB11; WCH EVT contains USB examples | Endpoints, descriptors, WCH USB Device API, WinUSB, and organization VID are unresolved | Not implemented; gather evidence for O02/O08 and define USB-001 first |
+| UART0 driver/bridge | MCU-001 UART0, PB4/PB7 | WCH UART API/multiplex initialization, baud/flow control, and ISR-to-ThreadX synchronization rules require confirmation | Not implemented; review CH585 UART EVT example and settle CDC/UART behavior (O09) |
+| SWD Engine / Target Manager | MCU-001 PB5/PB6 SWD GPIO and PA4 Reset GPIO | SWD timing, direction switching, electrical boundaries, target voltage/protection are not executable specifications yet | Not implemented; freeze IF-001 and verify timing/electrical requirements under O11/O12 |
+| BLE GATT/configuration/OTA | Integrated BLE Radio and WCH BLE examples | Product services/characteristics, authentication, MTU, pairing, and OTA image behavior are undefined | Not implemented; complete BLE-001 and O06/O07/O10/O13 first |
+| Private 2.4 GHz transport | Integrated Radio and DBG-C RF Protocol target | PHY/API, frame format, sequence, retries, recovery, and latency target remain undefined | Not implemented; complete RF-001 and O01/O03/O12 first |
+| CH585M ThreadX port | Current `software/poc1-ch585-threadx/platform/ch585/` | Reset, SysTick, PFIC/VTF/HPE, and context switching depend on chip hardware semantics | Experimental PoC only; startup, interrupts, tick, context switch, scheduling, sleep/wakeup have not been verified on a CH585M board; O18 remains open |
+
+The byte FIFO only establishes a hardware-independent storage boundary. USB/UART/RF callers must not depend on its internal indices. Do not present it as an ISR-safe queue or product data protocol until synchronization and transport APIs are confirmed. The repository has no general host unit-test framework; this turn ran only the existing `software/poc1-ch585-threadx/build.sh`, which proves cross-compilation, not FIFO host runtime behavior.

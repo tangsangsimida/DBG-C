@@ -6,6 +6,7 @@ set(THREADX_TOOLCHAIN "gnu")
 set(THREADX_CUSTOM_PORT "${CMAKE_CURRENT_SOURCE_DIR}/platform/ch585/threadx_port")
 set(TX_USER_FILE "${CMAKE_CURRENT_SOURCE_DIR}/platform/ch585/tx_user.h")
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../third_party/threadx" threadx)
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../common/byte_fifo" byte_fifo)
 
 add_executable(dbgc_poc1
     platform/ch585/startup/startup_CH585.S
