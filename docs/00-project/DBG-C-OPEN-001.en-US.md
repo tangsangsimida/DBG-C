@@ -1,6 +1,6 @@
 # DBG-C Open Questions and Verification List
 
-**Document ID:** DBG-C-OPEN-001　**Version:** V0.35　**Status:** Open items
+**Document ID:** DBG-C-OPEN-001　**Version:** V0.36　**Status:** Open items
 
 | ID | Question | Evidence/decision required | Affected documents | Status |
 |---|---|---|---|---|
@@ -10,7 +10,7 @@
 | O04 | What Type-C pins/cable approach is valid and reliable for Basic/Full? | Applicable USB-IF specification, cable construction evidence, electrical review | IF, HW, TEST | To research |
 | O05 | How do USB insertion, user choice, and wireless connection determine Standalone/Host/Target? | Product state-machine review, including conflicts/transitions | PRD, SYS, RF, BLE | Decision needed |
 | O06 | Is pairing persistent/automatic, and what happens after unpair? | UX/security review and persistence tests | PRD, RF, BLE | Decision needed |
-| O07 | What are the Device ID source, length, API, and authentication binding? | CH585M SDK/official interface and security review | MCU, RF, BLE | Partly confirmed: EVT source confirms API spelling and 64-bit output; Device ID encoding, uniqueness/stability guarantees, and authentication binding remain open; silicon read awaits board verification |
+| O07 | What are the Device ID source, length, API, and authentication binding? | CH585M SDK/official interface and security review | MCU, RF, BLE | Partly confirmed: EVT source confirms ROM-command arguments/status and WCH 8-byte UID construction; product Device ID encoding, uniqueness/stability claims, and authentication binding remain open; silicon read awaits board verification |
 | O08 | What USB VID/PID, interface/endpoints, strings, and serial policy will be used? | Formal implementation and VID ownership decision | USB, TEST | Decision needed |
 | O09 | What CDC baud rates, flow control, target levels, and performance limits apply? | User requirements, electrical design, and measurements | PRD, IF, TEST | Decision needed; EVT evidence now confirms UART0 PB4/PB7 setup and polling BSP host-model/target-object checks pass; product parameters, CDC, actual electrical/transfer behavior, and concurrency remain undefined/unverified |
 | O10 | Does OTA support signatures, dual image, rollback, and power-loss recovery? | WCH Boot/SDK docs, examples, and power-cut testing | MCU, FW, BLE, RF, RISK | To verify |
@@ -29,8 +29,8 @@
 ## O07 UID Interface Evidence Update
 
 - The WCH EVT archive `EVT/EXAM/SRC/StdPeriphDriver/inc/CH58x_flash.h` declares `void GET_UNIQUE_ID(uint8_t *Buffer)`. Its implementation in `EVT/EXAM/SRC/StdPeriphDriver/CH58x_flash.c` documents a 64-bit unique ID and requires a 4-byte-aligned Buffer. The function calls `FLASH_EEPROM_CMD(CMD_GET_ROM_INFO, ROM_CFG_MAC_ADDR, Buffer, 0)` and then writes Buffer[6] and Buffer[7]; source therefore supports an 8-byte output capacity and alignment requirement.
-- The same function comment lists an `@return 0-SUCCESS (!0)-FAILURE`, while both the header declaration and C definition return `void`. Follow the actual compiled declaration and record this documentation/source conflict.
-- Added the thin `dbgc_ch585_uid_read()` adapter for the raw 8-byte value. It does not encode product Device ID, write DataFlash, or define authentication. Fourteen host mock checks and WCH GCC target-object compilation do not execute the chip UID ROM/Flash read.
+- WCH `GET_UNIQUE_ID()` comments list an `@return`, but the declaration and definition return `void`; the function also ignores `FLASH_EEPROM_CMD()` status. DBG-C calls the status-returning low-level command directly so a ROM read failure is not reported as success.
+- Added `dbgc_ch585_uid_read()` using the status-returning `FLASH_EEPROM_CMD(CMD_GET_ROM_INFO, ROM_CFG_MAC_ADDR, ..., 0)` from `ISP585.h` and the 8-byte construction algorithm from WCH `GET_UNIQUE_ID()`. The official `void GET_UNIQUE_ID()` wrapper discards low-level status; DBG-C calls the low-level API to report ROM-command failure. Thirty-one host mock checks, WCH RISC-V target compilation, and relocatable linking against EVT `libISP585.a` do not execute a silicon UID read.
 - Device ID encoding, uniqueness/stability claims, authentication binding, pairing persistence, and an actual chip read remain unconfirmed. O07 stays open pending security decisions and board verification.
 
 ## O18 Evidence Update

@@ -1,6 +1,6 @@
 # DBG-C Firmware Architecture 与 PoC-1 记录
 
-**文档编号：** DBG-C-FW-001　**版本：** V0.41　**状态：** 实验草案；通用 FIFO、单向/双向无调度字节流桥接、CMSIS-DAP 命令层、上游 SWD 引擎、请求/响应边界预检及有界 dispatch 主机检查已通过；CMSIS 编译器宏映射、SWD GPIO、Target Reset GPIO、UART0、UID 读取适配器与桥接适配器及相关目标对象编译通过；PB5/PB6、PA4、UART0、UID 读取适配器、单向/双向桥接主机检查分别为 57 项、33 项、94 项、14 项、15 项和 15 项；产品 DAP/USB 接入、GPIO/UART 电气行为及时序未验证；芯片 UID 实际读取、产品命令配置与边界契约仍待验证/定义；验证板设计门已通过；PoC-1 实板运行验证未执行；产品硬件冻结未放行
+**文档编号：** DBG-C-FW-001　**版本：** V0.42　**状态：** 实验草案；通用 FIFO、单向/双向无调度字节流桥接、CMSIS-DAP 命令层、上游 SWD 引擎、请求/响应边界预检及有界 dispatch 主机检查已通过；CMSIS 编译器宏映射、SWD GPIO、Target Reset GPIO、UART0、UID 读取适配器、桥接适配器与 WCH ROM 命令库目标编译/链接检查通过；PB5/PB6、PA4、UART0、UID 读取适配器、单向/双向桥接主机检查分别为 57 项、33 项、94 项、31 项、15 项和 15 项；产品 DAP/USB 接入、GPIO/UART 电气行为及时序未验证；芯片 UID 实际读取、产品命令配置与边界契约仍待验证/定义；验证板设计门已通过；PoC-1 实板运行验证未执行；产品硬件冻结未放行
 
 ## 1. 范围与状态
 
@@ -156,13 +156,13 @@ WCH 示例的 `highcode_init()` 初始化 HSI PLL 到 62.4 MHz，并配置相关
 | CH585 UART0 polled BSP primitive | `software/poc1-ch585-threadx/platform/ch585/dbgc_ch585_uart0.c`；MCU-001 UART0 PB4/PB7；EVT ADC `DebugInit()` 和本地 WCH-derived `CH585SFR.h` | 配置 PB4 上拉输入、PB7 先置高再设 5 mA 推挽输出、选择 UART0 默认 PB4/PB7 复用；调用者显式提供系统时钟、波特率和 FIFO trigger；可用 `dbgc_ch585_uart0_build_lcr()` 按 WCH SFR 编码组合字长、停止位和奇偶校验；`dbgc_ch585_uart0_calculate_divisor()` 按 EVT `UART0_BaudRateCfg()` 公式计算分频值且不访问寄存器；初始化不设产品默认格式；禁用 UART 中断源，保留 TXD 输出使能；非阻塞轮询读写；不含 CDC、队列、ThreadX 或并发保护 | 94 项模拟寄存器与回调主机检查及 WCH GCC ELF32 RISC-V UART0 与回调适配器目标对象编译通过；不证明真实寄存器/引脚、电气、波特率误差或数据收发。产品波特率、帧格式、流控、CDC 桥接与 ThreadX 并发仍由 O09/O02/O08 决定 |
 | CH585 UART0 bridge callback adapter | software/poc1-ch585-threadx/platform/ch585/dbgc_ch585_uart0_bridge_adapter.c；MCU-001 已分配 UART0 PB4/PB7；generic byte-stream bridge callback contract 与本地 dbgc_ch585_uart0_try_read()/try_write() | 仅将现有轮询读写原语映射为单字节回调，透传空/满状态；不初始化 UART、不增加寄存器操作、不设置 baud/framing，也不含 CDC API 或同步 | 四项单字节回调映射及五项双向通道组合检查纳入 UART0 主机检查总计 94 项；WCH GCC 目标对象编译通过；未接入 CDC/产品固件，实板 UART 行为未验证 |
 | CH585 UART0 duplex bridge composition | 同一适配器的 `dbgc_ch585_uart0_duplex_bridge_initialize()`；UART0 PB4/PB7 与通用双向字节流 bridge API | 将调用方 transport read/write callback 分别接到 UART0 TX/RX callback；FIFO 与 UART 配置由调用方提供/完成；无 USB API、默认 baud、任务、ISR 或同步策略 | 主机寄存器模型与 transport callback 检查传输输入到 UART0 TX、UART0 RX 到 transport writer；只验证 mock endpoint 组合，不验证 CDC 或芯片运行 |
-| CH585 UID 读取适配器 | `software/poc1-ch585-threadx/platform/ch585/dbgc_ch585_uid.c`；WCH EVT `EVT/EXAM/SRC/StdPeriphDriver/inc/CH58x_flash.h` 声明 `GET_UNIQUE_ID(uint8_t *Buffer)`，`CH58x_flash.c` 注释说明输出 64 位且缓冲区需 4 字节对齐 | 检查调用方容量；用两个 `uint32_t` 对齐本地字承接官方 API 的 8 字节原始输出，再按原始字节序列复制给调用方；不转换 Device ID、不写 DataFlash、不做认证；官方 API 无返回状态 | 14 项主机 mock 检查覆盖对齐、字节序列透传、空指针/短缓冲拒绝；WCH GCC 目标对象编译通过但未链接。Mock 和目标对象均不执行芯片 ROM/Flash 读取，UID 实值仍待 CH585M 实板验证；EVT 源码注释的 `@return` 与头文件/定义的 `void` 签名不一致，按实际声明处理并记录该资料矛盾 |
+| CH585 UID 读取适配器 | `software/poc1-ch585-threadx/platform/ch585/dbgc_ch585_uid.c`；WCH EVT `ISP585.h` 中的 `CMD_GET_ROM_INFO`、`ROM_CFG_MAC_ADDR` 与 `FLASH_EEPROM_CMD()`；`CH58x_flash.c` 的 `GET_UNIQUE_ID()` 字节构造算法 | 检查调用方容量；以两个 `uint32_t` 对齐本地缓冲区，直接调用底层 ROM 命令并检查返回状态；成功后复制 6 字节 MAC 并按 WCH 源码生成末尾 16 位和；失败时不改调用方输出；不编码产品 Device ID、不写 DataFlash、不认证 | 31 项主机 mock 检查、WCH GCC 目标编译、`ld -r` 与 EVT `libISP585.a` 链接检查通过；PoC 已包含适配器和库但应用未调用。主机和交叉构建不执行芯片 ROM 读取，UID 实值仍待 CH585M 实板验证 |
 | SWD Engine / Target Manager | MCU-001 的 PB5/PB6 SWD GPIO、PA4 Reset GPIO | SWD 时序、方向切换、电气边界及 Target 电压/保护未形成完整可执行规范 | 暂不实现；需冻结 IF-001 并按 O11/O12 验证时序及电气要求 |
 | BLE GATT/配置/OTA | 集成 BLE Radio 与 WCH BLE 示例 | 产品 Service/Characteristic、认证、MTU、配对和 OTA 镜像行为未定 | 暂不实现；需先完成 BLE-001、O06/O07/O10/O13 |
 | 私有 2.4G transport | 集成 Radio，DBG-C RF Protocol 目标 | PHY/API、包格式、序列、重试、恢复和时延目标未确定 | 暂不实现；需先完成 RF-001、O01/O03/O12 |
 | CH585M ThreadX port | 当前 `software/poc1-ch585-threadx/platform/ch585/` | reset、SysTick、PFIC/VTF/HPE 与上下文切换依赖芯片硬件语义 | 仅实验 PoC；启动、中断、tick、上下文切换、调度、睡眠/唤醒均未做 CH585M 实板验证，保持 O18 开放 |
 
-字节 FIFO 只建立与硬件无关的存储边界。USB、UART、RF 调用方不得直接依赖其内部索引；在同步/并发模型和传输 API 确认前，不把该模块包装成 ISR-safe queue 或产品数据协议。FIFO 主机用例由 `software/common/byte_fifo/tests/test_dbgc_byte_fifo.c` 提供，并由既有 `software/poc1-ch585-threadx/build.sh` 使用本机 C99 编译器构建和运行；当前 3683 项断言通过；单向桥接 15 项、双向桥接 15 项和 UID 适配器 14 项检查通过。该结果不验证并发、ISR、CH585M SRAM 或板级行为。
+字节 FIFO 只建立与硬件无关的存储边界。USB、UART、RF 调用方不得直接依赖其内部索引；在同步/并发模型和传输 API 确认前，不把该模块包装成 ISR-safe queue 或产品数据协议。FIFO 主机用例由 `software/common/byte_fifo/tests/test_dbgc_byte_fifo.c` 提供，并由既有 `software/poc1-ch585-threadx/build.sh` 使用本机 C99 编译器构建和运行；当前 3683 项断言通过；单向桥接 15 项、双向桥接 15 项和 UID 适配器 31 项检查通过。该结果不验证并发、ISR、CH585M SRAM 或板级行为。
 
 CMSIS-DAP 测试位于 `software/common/cmsis_dap_host_test/`，由既有 `software/poc1-ch585-threadx/build.sh` 编译固定上游源码副本并运行。准备脚本核对 CMSIS-DAP 提交及原始源码未修改，只在构建目录副本中把 `DAP.h` 的 `__CC_ARM` 延时分支切换到专用测试宏；未定义 `__CC_ARM`，未改动第三方子模块。命令核心的 8 项检查使用空操作引脚及 `SWD_Transfer()` 模拟桩。另将原始上游 `SW_DP.c` 与同一 `DAP.c` 编译到独立测试程序，pin 宏通过回调连接到纯主机位流模型；九项测试检查读成功/奇偶校验错误、写数据及奇偶校验、WAIT/FAULT ACK、10 位 SWD 输入/输出序列及 DAP_SWD_Sequence 命令解析、DAP_Connect 到 DP IDCODE、AP DAP_Transfer 与两项 AP DAP_TransferBlock 端到端响应、方向切换和模型周期数。模型 fast 延时为空操作，周期数不是实测时钟。WCH RISC-V GCC 分别将测试配置下的 `DAP.c` 和 `SW_DP.c` 编译为 ELF32 RISC-V 对象，均未链接 PoC。以上均不验证产品 GPIO HAL、PB5/PB6 电气及时序、USBFS、ThreadX 或 CH585M 板级行为。
 
@@ -201,3 +201,10 @@ Arm 官方 CMSIS-DAP 仓库已作为 Git 子模块固定到提交 `12636590eec66
 新增 `software/common/cmsis_dap_bounds/` 纯软件边界预检及 dispatch：使用固定上游命令 ID/标志解析受支持的固定及变长标准命令，计算请求消费长度与响应最大值；dispatch 仅在预检成功后调用传入的 CMSIS-DAP 执行函数，并核对其返回的消费/响应长度。调用后的长度核对不能阻止超出 profile 的回调写入，故必须在产品配置冻结前核实每个 Info 回调的最大写入量。vendor handler、SWO、CMSIS-DAP UART 命令及 Info 上限为零时失败关闭。102 项预检主机检查及 5 个 dispatch 主机用例通过；其中截断 Transfer 请求和响应容量不足均在上游调用前被拒绝。WCH GCC ELF32 RISC-V 对象编译通过；复现命令：`DBGC_BUILD_DIR=build/cmsis-dap-bounds-dispatch software/poc1-ch585-threadx/build.sh`。dispatch 尚未接入产品 USB 收包路径，也未链接 PoC；显式 profile 是测试夹具，不代表产品设置。
 
 仓库尚无 USB 收包路径或 DBG-C 产品 `DAP_config.h`。主机夹具中的 `DAP_PACKET_SIZE=64`、`DAP_PACKET_COUNT=1` 和空字符串回调仅供测试，不能作为产品值。产品启用命令/功能、vendor 命令策略、各 Info 回调的最大写入量、USB 实际接收长度、请求/响应容量，以及最终编译配置到 profile 的映射仍待确定。主机检查证明通用 wrapper 会先预检再调用固定上游解析器；但不证明产品 USB 调用方会使用该 wrapper，也不证明回调遵守配置上限；O21 保持开放。
+
+
+### CH585 UID ROM 命令适配
+
+WCH EVT `EVT/EXAM/SRC/StdPeriphDriver/inc/ISP585.h` 的 SHA-256 为 `244b966e79381b7ebf47c0a4942f001ee066c2cc9d32538cf7d4296984c81db8`；其中定义 `CMD_GET_ROM_INFO`、`ROM_CFG_MAC_ADDR` 并声明 `FLASH_EEPROM_CMD()`，文档规定 0 表示成功、非 0 表示失败，Buffer 位于 RAM 且 4 字节对齐。EVT `CH58x_flash.c` 的 `GET_UNIQUE_ID()` 对这条命令的长度参数传 0，接收 MAC 字节后将前三个 16 位小端字求和并写入 UID 的末两字节。WCH `libISP585.a` 的 SHA-256 为 `8ede32a24e09344e86ecd74731069e19d6befa287bd6de2dd7c757c6f1d06a9e`；归档 ADC 工程 `.cproject` 链接该库，符号表确认它定义 `FLASH_EEPROM_CMD`。
+
+DBG-C 适配器直接调用底层命令以保留错误状态，且仅在命令成功后构造 UID 并复制给调用方。主机替身检查参数、对齐、输出构造及失败不改写调用方缓冲区；WCH RISC-V `ld -r` 检查消除 `FLASH_EEPROM_CMD` 未解析引用，PoC 全量构建通过。PoC `main` 尚未调用该适配器；这不证明 ROM 命令在 CH585M 实际执行成功或读值符合唯一性/稳定性预期。

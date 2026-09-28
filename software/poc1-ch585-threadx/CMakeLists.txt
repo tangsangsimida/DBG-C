@@ -13,10 +13,19 @@ add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../common/byte_duplex_bridge" byte
 add_executable(dbgc_poc1
     platform/ch585/startup/startup_CH585.S
     platform/ch585/highcode_init.c
+    platform/ch585/dbgc_ch585_uid.c
     src/main.c
 )
-target_link_libraries(dbgc_poc1 PRIVATE threadx dbgc_byte_duplex_bridge)
-target_include_directories(dbgc_poc1 PRIVATE platform/ch585)
+target_link_libraries(dbgc_poc1 PRIVATE
+    threadx
+    dbgc_byte_duplex_bridge
+    "${CMAKE_CURRENT_SOURCE_DIR}/../third_party/wch/ch585/libISP585.a"
+)
+target_include_directories(dbgc_poc1 PRIVATE
+    platform/ch585
+    platform/ch585/wch
+    ../third_party/wch/ch585
+)
 target_compile_options(dbgc_poc1 PRIVATE -march=rv32imac -mabi=ilp32 -mcmodel=medany -ffunction-sections -fdata-sections)
 target_link_options(dbgc_poc1 PRIVATE
     -march=rv32imac -mabi=ilp32 -mcmodel=medany

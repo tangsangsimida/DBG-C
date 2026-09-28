@@ -1,6 +1,6 @@
 # DBG-C MCU Selection and Resource Assessment
 
-**Document ID:** DBG-C-MCU-001　**Version:** V0.7　**Status:** CH585M V1 schematic resource allocation draft; verification-board design gate passed; tick target pending decision; board verification not run
+**Document ID:** DBG-C-MCU-001　**Version:** V0.8　**Status:** CH585M V1 schematic resource allocation draft; verification-board design gate passed; tick target pending decision; board verification not run
 
 ## 1. Evidence Source
 
@@ -23,7 +23,7 @@ The repository also keeps the official EVT archive at `docs/09-references/CH585E
 | GPIO | The overview states 40 GPIOs, two with 5 V input tolerance and 32 with interrupt/wake capability | Table 1-1 CH585M column lists PA0–PA15 and PB0–PB23, 40 GPIO identifiers with package pad numbers, matching the overview count. This does not mean all 40 are freely allocatable or interrupt/wake capable. 5VT does not imply 5 V output |
 | BLE/RF | BLE 5.4; integrated 2.4 GHz RF; 1/2 Mbps; mentions 2.4G mode up to 8 kHz report rate | Meaning of 2.4G mode, private PHY/API, RF DMA capability/API, BLE coexistence, and performance require SDK/reference-manual confirmation. Local datasheet extract does not confirm RF DMA |
 | Timers/PWM | Four 26-bit timers; four capture channels; PWM resources in datasheet | Applicability to SWD timing requires SDK and waveform validation |
-| UID/security | AES-128 and unique chip ID | EVT `CH58x_flash.h` declares `GET_UNIQUE_ID(uint8_t *Buffer)`; `CH58x_flash.c` documents a 64-bit UID and 4-byte Buffer alignment; the API has no status return. Uniqueness guarantee, stability, and key-storage boundary require security review; board read is unverified |
+| UID/security | AES-128 and unique chip ID | EVT `ISP585.h` declares the low-level ROM command and its zero-success/nonzero-failure result; WCH `GET_UNIQUE_ID()` documents a 64-bit output and 4-byte buffer alignment, but its `void` wrapper discards command status. The DBG-C adapter checks the low-level status and follows the official UID-byte construction; uniqueness/stability claims and key boundaries still require security review, and silicon reads remain unverified |
 | Boot/OTA | Datasheet states ICP/ISP/IAP and OTA wireless update support | Boot protocol, OTA APIs, rollback/signature/power-fail recovery require official evidence |
 | Package | CH585M: QFN48 | Verify land pattern, dimensions, and pin table against package documentation |
 | Clocks | Pin table identifies 32 MHz HSE crystal pins X32MO/X32MI and 32 kHz crystal functions on PA10/PA11 | Allocate the 32 MHz crystal network to QFN48 pads 31/32; confirm whether a 32 kHz crystal is required from WCH BLE/low-power SDK configuration |
@@ -117,7 +117,7 @@ This is a **V1 schematic-input baseline**. It is not proof of MCU performance an
 | HSE clock | External 32 MHz crystal network | X32MO QFN48-31; X32MI QFN48-32 | Datasheet marks external 32 MHz HSE crystal; verify component parameters against WCH reference design |
 | LSE clock | Optional 32 kHz crystal network | Reserve PA10 QFN48-48 and PA11 QFN48-47 | Need for external crystal TBD from WCH BLE/low-power SDK configuration |
 | USB/connection detection | GPIO only if selected circuit requires it | Reserve a VBUS/connection-detect net location; pin TBD | Do not assume USBFS automatically provides VBUS sensing; decide from SDK and power/connector design |
-| Unique identity/pair settings | Chip UID + DataFlash | Firmware adapter can read the raw 8-byte value through EVT `GET_UNIQUE_ID()`; DataFlash remains unassigned until pairing-persistence requirements are frozen | Host mock and target-object compilation do not prove a silicon UID read; Device ID encoding, authentication binding, storage layout, and pairing persistence remain open |
+| Unique identity/pair settings | Chip UID + DataFlash | The adapter calls `FLASH_EEPROM_CMD(CMD_GET_ROM_INFO, ROM_CFG_MAC_ADDR, ..., 0)` for the six-byte MAC and applies the byte-construction algorithm from WCH `GET_UNIQUE_ID()` to produce eight UID bytes; DataFlash remains unassigned | Thirty-one host mock checks, WCH RISC-V target compilation, and relocatable linking with `libISP585.a` pass; none proves a silicon read. Product Device ID encoding, authentication binding, and pair storage remain open |
 | OTA and firmware | CodeFlash + BootLoader | Include programming/recovery circuitry per official programming/update design | Do not assume dual-image fits in 448 KB CodeFlash; signature, rollback, and power-fail safety are unverified |
 | SWD timing/system time base | Timer if needed + GPIO | No Timer instance selected yet | First implement/measure GPIO SWD. If precision or CPU use misses targets, assign a Timer based on SDK support |
 | DMA | USBFS DMA; Radio DMA TBD | No fixed DMA channel wiring | Datasheet lists USBFS DMA. DMA channel count and USB/RF arbitration require SDK/reference-manual confirmation |

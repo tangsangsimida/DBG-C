@@ -1,6 +1,6 @@
 # DBG-C 未决问题与验证清单
 
-**文档编号：** DBG-C-OPEN-001　**版本：** V0.35　**状态：** 开放项
+**文档编号：** DBG-C-OPEN-001　**版本：** V0.36　**状态：** 开放项
 
 | ID | 问题 | 需要的证据/决策 | 影响文档 | 状态 |
 |---|---|---|---|---|
@@ -10,7 +10,7 @@
 | O04 | DBG-C Basic/Full 在 Type-C 上的合法/可靠引脚及线缆方案？ | USB-IF 最新 Type-C 规范、线缆结构证据、电气评审 | IF, HW, TEST | 待研究 |
 | O05 | USB 插入、用户选择、无线连接如何决定 Standalone/Host/Target？ | 产品状态机评审，含冲突/切换规则 | PRD, SYS, RF, BLE | 待决策 |
 | O06 | Pairing 是否持久化、是否自动配对、解绑后行为？ | 安全/使用流程评审与持久化测试 | PRD, RF, BLE | 待决策 |
-| O07 | Device ID 的实际来源、长度、读取 API 和认证绑定？ | CH585M SDK/官方接口及安全评审 | MCU, RF, BLE | 部分确认：EVT API 名称与 64 位输出已由源码确认；Device ID 编码、唯一性/稳定性保证、认证绑定未决；硅片读取待实板验证 |
+| O07 | Device ID 的实际来源、长度、读取 API 和认证绑定？ | CH585M SDK/官方接口及安全评审 | MCU, RF, BLE | 部分确认：EVT ROM 命令参数、状态语义及 WCH 8 字节 UID 构造源码已确认；Device ID 产品编码、唯一性/稳定性承诺、认证绑定未决；硅片读取待实板验证 |
 | O08 | USB VID/PID、接口/端点布局、字符串、Serial 策略？ | 正式实现及组织 VID 决策 | USB, TEST | 待决策 |
 | O09 | CDC UART 波特率、流控、目标电平和性能门限？ | 用户需求、电气设计及测量 | PRD, IF, TEST | 待决策；PB4/PB7 UART0 初始化已有 EVT 依据，轮询 BSP 主机模型/目标对象编译通过；产品参数、CDC、实际电气/收发和并发仍待定义验证 |
 | O10 | OTA 是否支持签名、双镜像、回滚及断电恢复？ | WCH Boot/SDK 文档、示例和断电测试 | MCU, FW, BLE, RF, RISK | 待验证 |
@@ -29,8 +29,8 @@
 ## O07 UID 接口证据更新
 
 - WCH EVT 归档 `EVT/EXAM/SRC/StdPeriphDriver/inc/CH58x_flash.h` 声明 `void GET_UNIQUE_ID(uint8_t *Buffer)`；对应 `EVT/EXAM/SRC/StdPeriphDriver/CH58x_flash.c` 函数注释称输出 64 bit unique ID，并要求 Buffer 4 字节对齐。函数体调用 `FLASH_EEPROM_CMD(CMD_GET_ROM_INFO, ROM_CFG_MAC_ADDR, Buffer, 0)`，随后写入 Buffer[6]、Buffer[7]。因此源码支持 8 字节输出容量和对齐要求。
-- 同一函数注释列出 `@return 0-SUCCESS (!0)-FAILURE`，但头文件声明与 C 定义的返回类型均为 `void`；按实际编译声明处理，记录该注释与代码冲突。
-- 新增 `dbgc_ch585_uid_read()` 薄适配层，接收原始 8 字节，不编码产品 Device ID、不写 DataFlash、不定义认证。主机 mock 的 14 项检查及 WCH GCC 目标对象编译不执行芯片 UID ROM/Flash 读取。
+- WCH `GET_UNIQUE_ID()` 的注释列有 `@return`，但声明和定义均为 `void`；函数体忽略 `FLASH_EEPROM_CMD()` 返回值。DBG-C 适配器因此直接调用有状态返回的底层命令，避免把 ROM 读取失败报告为成功。
+- 新增 `dbgc_ch585_uid_read()`，使用 `ISP585.h` 中有状态返回的 `FLASH_EEPROM_CMD(CMD_GET_ROM_INFO, ROM_CFG_MAC_ADDR, ..., 0)` 并复用 WCH `GET_UNIQUE_ID()` 的 8 字节构造算法。官方 `void GET_UNIQUE_ID()` 包装会忽略底层状态；DBG-C 适配层直接调用底层 API 以报告 ROM 命令失败。31 项主机 mock、WCH RISC-V 目标编译与 EVT `libISP585.a` 可重定位链接检查均不执行硅片 UID 读取。
 - Device ID 编码、唯一性/稳定性承诺、认证绑定、配对持久化和芯片实读仍未确认；O07 保持开放，直到安全决策与实板验证完成。
 
 ## O18 更新证据

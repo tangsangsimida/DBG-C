@@ -1,6 +1,6 @@
 # DBG-C MCU 选型与资源评估
 
-**文档编号：** DBG-C-MCU-001　**版本：** V0.7　**状态：** CH585M V1 原理图资源分配草案；验证板设计门已通过；tick 目标待决策；实板验证未执行
+**文档编号：** DBG-C-MCU-001　**版本：** V0.8　**状态：** CH585M V1 原理图资源分配草案；验证板设计门已通过；tick 目标待决策；实板验证未执行
 
 ## 1. 证据来源
 
@@ -23,7 +23,7 @@
 | GPIO | 手册概述列出 40 个 GPIO，其中 2 个支持 5V 输入、32 个支持中断/唤醒输入 | 表 1-1 的 CH585M 列列出 PA0–PA15 与 PB0–PB23，共 40 个带封装脚号的 GPIO 标识，与概述计数一致；这不代表 40 个脚均可自由分配或均具备中断/唤醒能力。5VT 不代表可输出 5V |
 | BLE/RF | BLE 5.4；集成 2.4 GHz RF；1/2 Mbps；描述有 2.4G 模式及最高 8 kHz 上报率 | 手册概述中的 2.4G 模式语义、私有协议模式/PHY/API、RF DMA 能力与 API、BLE 共存限制及性能均待 SDK/参考手册核验。当前本地手册摘录未证实 RF DMA；不得写成已确认事实 |
 | 定时器/PWM | 4 组 26 位定时器；4 路 capture；PWM 资源见手册 | SWD 时序实现适用性需 SDK/波形验证 |
-| UID/安全 | AES-128 与芯片唯一 ID | EVT `CH58x_flash.h` 声明 `GET_UNIQUE_ID(uint8_t *Buffer)`；`CH58x_flash.c` 说明返回 64 位 UID，Buffer 需 4 字节对齐；API 无状态返回。唯一性保证、稳定性与密钥存储边界仍需安全审查；实板读取未验证 |
+| UID/安全 | AES-128 与芯片唯一 ID | EVT `ISP585.h` 声明底层 ROM 命令与 0 成功/非 0 失败；WCH `GET_UNIQUE_ID()` 说明输出 64 位、缓冲区需 4 字节对齐，但其 void 包装会忽略命令状态。DBG-C 适配层直接检查底层状态并复用官方 UID 字节构造；唯一性/稳定性承诺与密钥边界仍需安全审查，硅片读取未验证 |
 | Boot/OTA | 手册称支持 ICP/ISP/IAP、OTA 无线升级 | BootLoader 协议、OTA API、回滚/签名/断电恢复均待官方资料验证 |
 | 封装 | CH585M：QFN48 | 焊盘、尺寸与 Pin 表需按正式封装资料复核 |
 | 时钟 | 手册引脚表给出 32 MHz HSE 晶体端 X32MO/X32MI，并列出 PA10/PA11 的 32 kHz 晶体功能 | 32 MHz 晶体网络分配到 QFN48 脚 31/32；32 kHz 是否需外接晶体由 WCH BLE/低功耗 SDK 配置确认 |
@@ -117,7 +117,7 @@
 | HSE 时钟 | 外部 32 MHz 晶体网络 | X32MO QFN48-31，X32MI QFN48-32 | 手册标注 HSE 外接 32 MHz 晶体；具体器件参数按 WCH 参考设计核验 |
 | LSE 时钟 | 可选 32 kHz 晶体网络 | PA10 QFN48-48、PA11 QFN48-47 保留 | 是否需要外部晶体由 WCH BLE/低功耗 SDK 配置确认 |
 | USB/连接状态检测 | GPIO（仅当选定的电路需要） | 预留 VBUS/连接检测网络位置，暂不定 Pin | 不推断 USBFS 自动提供 VBUS 检测；按 SDK 和供电/连接器方案决定 |
-| 唯一身份/配对设置 | 芯片 UID + DataFlash | 固件适配层可经 EVT `GET_UNIQUE_ID()` 读取原始 8 字节；DataFlash 尚未分配，等待配对持久化需求冻结后决定用途 | 适配层主机 mock 与目标对象编译已检查，不代表硅片 UID 读取通过；Device ID 编码、认证绑定、存储布局/配对持久化规则待定 |
+| 唯一身份/配对设置 | 芯片 UID + DataFlash | 适配层经 `FLASH_EEPROM_CMD(CMD_GET_ROM_INFO, ROM_CFG_MAC_ADDR, ..., 0)` 读取 6 字节 MAC 并按 WCH `GET_UNIQUE_ID()` 源码算法生成 8 字节 UID；DataFlash 暂不分配 | 适配层 31 项主机 mock、WCH RISC-V 目标编译及与 `libISP585.a` 的可重定位链接检查通过；不代表硅片读取通过。产品 Device ID 编码、认证绑定和配对存储规则待定 |
 | OTA 与固件 | CodeFlash + BootLoader | 按官方烧录/升级参考设计接入调试/恢复所需电路 | 448 KB CodeFlash 不预设双镜像；升级签名、回滚、断电安全尚待证实 |
 | SWD 时序/系统时基 | Timer（按需）+ GPIO | 暂不选定 Timer 实例 | 先实现/测量 GPIO SWD；若精度或 CPU 占用不达目标，再根据 SDK 分配 Timer |
 | DMA | USBFS DMA；Radio DMA 待确认 | 不做固定 DMA 通道连接 | 数据手册列明 USBFS DMA；DMA 通道数及 USB/RF 仲裁需 SDK/参考手册确认 |
