@@ -104,9 +104,9 @@ ThreadX 不增加外部连接器信号，不改变已分配的 USBFS、UART0、S
 
 ### ThreadX 上游依赖来源
 
-V1 固件将引用 Eclipse ThreadX 官方 GitHub 项目：[eclipse-threadx/threadx](https://github.com/eclipse-threadx/threadx)。项目 README 将 `master` 描述为包含最新代码的开发分支，并明确说明它不等同于最新 GA 发布版；因此固件集成时必须记录所用正式发布标签或提交哈希，不能仅记录 `master`。具体版本尚未确定，见 OPEN-001 的 O18。
+V1 固件将通过 **Git Submodule** 引用 Eclipse ThreadX 官方 GitHub 项目：[eclipse-threadx/threadx](https://github.com/eclipse-threadx/threadx)。主仓库应记录子模块 URL 和精确 commit；子模块目录路径在固件仓库布局冻结时登记。项目 README 将 `master` 描述为包含最新代码的开发分支，并明确说明它不等同于最新 GA 发布版；因此集成基线须选定并验证后记录正式发布标签及对应 commit，不能仅记录 `master`。具体版本尚未确定，见 OPEN-001 的 O18。
 
-上游仓库列出 `risc-v32` 架构，并提供 [GNU RISC-V32 端口目录](https://github.com/eclipse-threadx/threadx/tree/master/ports/risc-v32/gnu)，但这不证明该端口可直接用于 CH585M 的青稞 RISC-V3C、WCH 工具链或中断框架。DBG-C 将以该仓库为 ThreadX 内核及端口来源；是否直接采用该端口、修改范围和 CH585M 移植方式须在实际构建与板上验证后记录。
+上游仓库列出 `risc-v32` 架构，并提供 [GNU RISC-V32 端口目录](https://github.com/eclipse-threadx/threadx/tree/master/ports/risc-v32/gnu)，但这不证明该端口可直接用于 CH585M 的青稞 RISC-V3C、WCH 工具链或中断框架。DBG-C 将以该仓库为 ThreadX 内核及端口来源；是否直接采用该端口、修改范围和 CH585M 移植方式须在实际构建与板上验证后记录。克隆 DBG-C 固件仓库时须初始化并递归更新子模块，确保工作区检出主仓库记录的 ThreadX commit。
 
 上游仓库根目录 [LICENSE.txt](https://github.com/eclipse-threadx/threadx/blob/master/LICENSE.txt) 标示 MIT License，其中要求在软件副本或实质部分中保留版权声明和许可声明。纳入源码或二进制发布前，应按实际采用版本检查其许可证文件及源码头部声明，并在 DBG-C 第三方组件清单与发布材料中保留所需声明。该记录不是法律意见。以上上游资料查阅日期：2026-09-28。
 
