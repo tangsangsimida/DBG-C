@@ -68,9 +68,13 @@ esac
         -I"${repo_dir}/software/common/ch585_uart0_host_test" \
         -I"${repo_dir}/software/common/byte_fifo/include" \
         -I"${repo_dir}/software/common/byte_stream_bridge/include" \
+        -I"${repo_dir}/software/common/byte_duplex_bridge/include" \
         -I"${project_dir}/platform/ch585" \
         "${project_dir}/platform/ch585/dbgc_ch585_uart0.c" \
         "${project_dir}/platform/ch585/dbgc_ch585_uart0_bridge_adapter.c" \
+        "${repo_dir}/software/common/byte_fifo/src/dbgc_byte_fifo.c" \
+        "${repo_dir}/software/common/byte_stream_bridge/src/dbgc_byte_stream_bridge.c" \
+        "${repo_dir}/software/common/byte_duplex_bridge/src/dbgc_byte_duplex_bridge.c" \
         "${repo_dir}/software/common/ch585_uart0_host_test/test_ch585_uart0.c" \
         -o "${build_dir}/host-tests/test_ch585_uart0"
     "${build_dir}/host-tests/test_ch585_uart0"
@@ -159,6 +163,7 @@ esac
         -march=rv32imac -mabi=ilp32 -mcmodel=medany \
         -I"${repo_dir}/software/common/byte_fifo/include" \
         -I"${repo_dir}/software/common/byte_stream_bridge/include" \
+        -I"${repo_dir}/software/common/byte_duplex_bridge/include" \
         -I"${project_dir}/platform/ch585" \
         -I"${project_dir}/platform/ch585/wch" \
         -c "${project_dir}/platform/ch585/dbgc_ch585_uart0_bridge_adapter.c" \

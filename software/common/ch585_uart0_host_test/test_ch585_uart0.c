@@ -6,6 +6,14 @@
 #include "dbgc_ch585_uart0_bridge_adapter.h"
 #include "dbgc_ch585_uart0_host_regs.h"
 
+typedef struct {
+    const uint8_t *input;
+    size_t input_length;
+    size_t input_offset;
+    uint8_t output[4];
+    size_t output_length;
+} endpoint_t;
+
 volatile uint32_t dbgc_host_R32_PB_DIR;
 volatile uint32_t dbgc_host_R32_PB_PIN;
 volatile uint32_t dbgc_host_R32_PB_SET;
@@ -52,6 +60,32 @@ static void reset_regs(void)
     dbgc_host_R8_UART0_TFC = 0U;
 }
 
+static int endpoint_read(void *context, uint8_t *byte)
+{
+    endpoint_t *endpoint = (endpoint_t *)context;
+
+    if (endpoint->input_offset >= endpoint->input_length) {
+        return 0;
+    }
+
+    *byte = endpoint->input[endpoint->input_offset];
+    ++endpoint->input_offset;
+    return 1;
+}
+
+static int endpoint_write(void *context, uint8_t byte)
+{
+    endpoint_t *endpoint = (endpoint_t *)context;
+
+    if (endpoint->output_length >= sizeof(endpoint->output)) {
+        return -1;
+    }
+
+    endpoint->output[endpoint->output_length] = byte;
+    ++endpoint->output_length;
+    return 1;
+}
+
 int main(void)
 {
     const uint32_t pb4 = 1UL << 4;
@@ -86,6 +120,18 @@ int main(void)
     uint8_t byte = 0U;
     uint8_t line_control = 0U;
     uint16_t divisor = 0U;
+    const uint8_t transport_input[] = { 0x51U, 0x52U };
+    uint8_t transport_to_uart_storage[4];
+    uint8_t uart_to_transport_storage[4];
+    dbgc_byte_fifo_t transport_to_uart_fifo;
+    dbgc_byte_fifo_t uart_to_transport_fifo;
+    dbgc_byte_duplex_bridge_t duplex_bridge;
+    endpoint_t transport_source = {
+        transport_input, sizeof(transport_input), 0U, { 0U }, 0U
+    };
+    endpoint_t transport_sink = { 0, 0U, 0U, { 0U }, 0U };
+    size_t transport_to_uart_transferred;
+    size_t uart_to_transport_transferred;
 
     reset_regs();
     for (word_index = 0U;
@@ -214,6 +260,42 @@ int main(void)
     dbgc_host_R8_UART0_TFC = 8U;
     check(dbgc_ch585_uart0_bridge_write(&line_control, 0xA6U) == 0,
           "bridge sink callback preserves UART TX backpressure");
+
+    reset_regs();
+    check(dbgc_ch585_uart0_init(62400000U, 115200U, 3U,
+              DBGC_CH585_UART0_FIFO_TRIGGER_1_BYTE) == 0,
+          "UART0 initializes before duplex bridge composition");
+    check((dbgc_byte_fifo_initialize(&transport_to_uart_fifo,
+                                      transport_to_uart_storage,
+                                      sizeof(transport_to_uart_storage)) == 0) &&
+              (dbgc_byte_fifo_initialize(&uart_to_transport_fifo,
+                                          uart_to_transport_storage,
+                                          sizeof(uart_to_transport_storage)) ==
+               0),
+          "duplex bridge FIFOs initialize with caller-owned storage");
+    check(dbgc_ch585_uart0_duplex_bridge_initialize(
+              &duplex_bridge, &transport_to_uart_fifo, endpoint_read,
+              &transport_source, &uart_to_transport_fifo, endpoint_write,
+              &transport_sink) == DBGC_BYTE_STREAM_BRIDGE_OK,
+          "UART0 adapter composes transport callbacks with both directions");
+    check((dbgc_byte_duplex_bridge_service(
+               &duplex_bridge, 1U, 1U, &transport_to_uart_transferred,
+               &uart_to_transport_transferred) == DBGC_BYTE_STREAM_BRIDGE_OK) &&
+              (transport_to_uart_transferred == 1U) &&
+              (uart_to_transport_transferred == 0U) &&
+              (dbgc_host_R8_UART0_THR == 0x51U),
+          "transport input reaches the allocated UART0 TX path");
+    dbgc_host_R8_UART0_RFC = 1U;
+    dbgc_host_R8_UART0_RBR = 0xA7U;
+    check((dbgc_byte_duplex_bridge_service(
+               &duplex_bridge, 1U, 1U, &transport_to_uart_transferred,
+               &uart_to_transport_transferred) == DBGC_BYTE_STREAM_BRIDGE_OK) &&
+              (transport_to_uart_transferred == 1U) &&
+              (uart_to_transport_transferred == 1U) &&
+              (dbgc_host_R8_UART0_THR == 0x52U) &&
+              (transport_sink.output_length == 1U) &&
+              (transport_sink.output[0] == 0xA7U),
+          "UART0 RX byte reaches the caller transport write callback");
 
     reset_regs();
     check(dbgc_ch585_uart0_init(0U, 115200U, 3U,
