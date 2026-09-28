@@ -11,6 +11,38 @@ typedef enum {
     DBGC_CH585_UART0_FIFO_TRIGGER_7_BYTES = 0xC0
 } dbgc_ch585_uart0_fifo_trigger_t;
 
+/* Encodings follow the documented RB_LCR_WORD_SZ/RB_LCR_STOP_BIT/
+ * RB_LCR_PAR_EN/RB_LCR_PAR_MOD fields in CH585SFR.h. These are choices, not
+ * DBG-C product defaults.
+ */
+typedef enum {
+    DBGC_CH585_UART0_WORD_LENGTH_5 = 0x00,
+    DBGC_CH585_UART0_WORD_LENGTH_6 = 0x01,
+    DBGC_CH585_UART0_WORD_LENGTH_7 = 0x02,
+    DBGC_CH585_UART0_WORD_LENGTH_8 = 0x03
+} dbgc_ch585_uart0_word_length_t;
+
+typedef enum {
+    DBGC_CH585_UART0_STOP_BITS_1 = 0x00,
+    DBGC_CH585_UART0_STOP_BITS_2 = 0x04
+} dbgc_ch585_uart0_stop_bits_t;
+
+typedef enum {
+    DBGC_CH585_UART0_PARITY_NONE = 0x00,
+    DBGC_CH585_UART0_PARITY_ODD = 0x08,
+    DBGC_CH585_UART0_PARITY_EVEN = 0x18,
+    DBGC_CH585_UART0_PARITY_MARK = 0x28,
+    DBGC_CH585_UART0_PARITY_SPACE = 0x38
+} dbgc_ch585_uart0_parity_t;
+
+/* Compose an LCR byte from explicit format choices. Returns zero on success,
+ * or -1 for an invalid choice or null output pointer. No default is selected.
+ */
+int dbgc_ch585_uart0_build_lcr(dbgc_ch585_uart0_word_length_t word_length,
+                               dbgc_ch585_uart0_stop_bits_t stop_bits,
+                               dbgc_ch585_uart0_parity_t parity,
+                               uint8_t *line_control);
+
 /* Initialize UART0 on the MCU-001 PB4/PB7 allocation.
  * line_control is the caller-selected documented UART0 LCR value, with bit 7
  * clear. sys_clock_hz, baudrate, framing, and FIFO trigger are explicit inputs;

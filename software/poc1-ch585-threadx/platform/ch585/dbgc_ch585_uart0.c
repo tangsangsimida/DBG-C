@@ -10,6 +10,55 @@
 #define DBGC_CH585_PB7_MASK (1UL << 7)
 #define DBGC_CH585_UART0_LCR_DEFINED_MASK 0x7FU
 
+int dbgc_ch585_uart0_build_lcr(dbgc_ch585_uart0_word_length_t word_length,
+                               dbgc_ch585_uart0_stop_bits_t stop_bits,
+                               dbgc_ch585_uart0_parity_t parity,
+                               uint8_t *line_control)
+{
+    uint8_t word_bits;
+    uint8_t stop_bits_field;
+    uint8_t parity_field;
+
+    if (line_control == 0) {
+        return -1;
+    }
+
+    switch (word_length) {
+    case DBGC_CH585_UART0_WORD_LENGTH_5:
+    case DBGC_CH585_UART0_WORD_LENGTH_6:
+    case DBGC_CH585_UART0_WORD_LENGTH_7:
+    case DBGC_CH585_UART0_WORD_LENGTH_8:
+        word_bits = (uint8_t)word_length;
+        break;
+    default:
+        return -1;
+    }
+
+    switch (stop_bits) {
+    case DBGC_CH585_UART0_STOP_BITS_1:
+    case DBGC_CH585_UART0_STOP_BITS_2:
+        stop_bits_field = (uint8_t)stop_bits;
+        break;
+    default:
+        return -1;
+    }
+
+    switch (parity) {
+    case DBGC_CH585_UART0_PARITY_NONE:
+    case DBGC_CH585_UART0_PARITY_ODD:
+    case DBGC_CH585_UART0_PARITY_EVEN:
+    case DBGC_CH585_UART0_PARITY_MARK:
+    case DBGC_CH585_UART0_PARITY_SPACE:
+        parity_field = (uint8_t)parity;
+        break;
+    default:
+        return -1;
+    }
+
+    *line_control = (uint8_t)(word_bits | stop_bits_field | parity_field);
+    return 0;
+}
+
 int dbgc_ch585_uart0_init(uint32_t sys_clock_hz, uint32_t baudrate,
                           uint8_t line_control,
                           dbgc_ch585_uart0_fifo_trigger_t fifo_trigger)

@@ -61,10 +61,72 @@ int main(void)
         DBGC_CH585_UART0_FIFO_TRIGGER_4_BYTES,
         DBGC_CH585_UART0_FIFO_TRIGGER_7_BYTES
     };
+    const dbgc_ch585_uart0_word_length_t word_lengths[] = {
+        DBGC_CH585_UART0_WORD_LENGTH_5,
+        DBGC_CH585_UART0_WORD_LENGTH_6,
+        DBGC_CH585_UART0_WORD_LENGTH_7,
+        DBGC_CH585_UART0_WORD_LENGTH_8
+    };
+    const dbgc_ch585_uart0_stop_bits_t stop_options[] = {
+        DBGC_CH585_UART0_STOP_BITS_1,
+        DBGC_CH585_UART0_STOP_BITS_2
+    };
+    const dbgc_ch585_uart0_parity_t parity_options[] = {
+        DBGC_CH585_UART0_PARITY_NONE,
+        DBGC_CH585_UART0_PARITY_ODD,
+        DBGC_CH585_UART0_PARITY_EVEN,
+        DBGC_CH585_UART0_PARITY_MARK,
+        DBGC_CH585_UART0_PARITY_SPACE
+    };
     size_t trigger_index;
+    size_t word_index;
+    size_t stop_index;
+    size_t parity_index;
     uint8_t byte = 0U;
+    uint8_t line_control = 0U;
 
     reset_regs();
+    for (word_index = 0U;
+         word_index < sizeof(word_lengths) / sizeof(word_lengths[0]);
+         ++word_index) {
+        for (stop_index = 0U;
+             stop_index < sizeof(stop_options) / sizeof(stop_options[0]);
+             ++stop_index) {
+            for (parity_index = 0U;
+                 parity_index < sizeof(parity_options) / sizeof(parity_options[0]);
+                 ++parity_index) {
+                const uint8_t expected = (uint8_t)word_lengths[word_index] |
+                                         (uint8_t)stop_options[stop_index] |
+                                         (uint8_t)parity_options[parity_index];
+                check((dbgc_ch585_uart0_build_lcr(
+                           word_lengths[word_index], stop_options[stop_index],
+                           parity_options[parity_index], &line_control) == 0) &&
+                          (line_control == expected),
+                      "all documented LCR field combinations compose exactly");
+            }
+        }
+    }
+    check(dbgc_ch585_uart0_build_lcr(
+              (dbgc_ch585_uart0_word_length_t)4,
+              DBGC_CH585_UART0_STOP_BITS_1,
+              DBGC_CH585_UART0_PARITY_NONE, &line_control) == -1,
+          "invalid word length rejected");
+    check(dbgc_ch585_uart0_build_lcr(
+              DBGC_CH585_UART0_WORD_LENGTH_8,
+              (dbgc_ch585_uart0_stop_bits_t)8,
+              DBGC_CH585_UART0_PARITY_NONE, &line_control) == -1,
+          "invalid stop-bit choice rejected");
+    check(dbgc_ch585_uart0_build_lcr(
+              DBGC_CH585_UART0_WORD_LENGTH_8,
+              DBGC_CH585_UART0_STOP_BITS_1,
+              (dbgc_ch585_uart0_parity_t)0x40, &line_control) == -1,
+          "invalid parity choice rejected");
+    check(dbgc_ch585_uart0_build_lcr(
+              DBGC_CH585_UART0_WORD_LENGTH_8,
+              DBGC_CH585_UART0_STOP_BITS_1,
+              DBGC_CH585_UART0_PARITY_NONE, 0) == -1,
+          "null LCR output pointer rejected");
+
     check(dbgc_ch585_uart0_init(62400000U, 115200U, 3U,
               DBGC_CH585_UART0_FIFO_TRIGGER_1_BYTE) == 0,
           "init accepts explicit clock, baud, frame, and trigger");
