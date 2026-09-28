@@ -1,6 +1,6 @@
 # DBG-C Verification Specification
 
-**Document ID:** DBG-C-TEST-001　**Version:** V0.5　**Status:** Test-plan draft; FIFO host behavior tests and board tests have not run
+**Document ID:** DBG-C-TEST-001　**Version:** V0.6　**Status:** Test-plan draft; FIFO host behavior tests and ThreadX board tests have not run
 
 ## 1. Pass Criteria
 
@@ -47,4 +47,4 @@ This FIFO has no concurrency-safety guarantee, so no multi-thread/ISR concurrenc
 
 ## 9. Current Execution Status
 
-The repository contains the CH585M datasheet, CH585EVT archive, and ThreadX PoC-1. A host cross-build log for the PoC is recorded in FW-001; the user confirms no hardware is currently available, so no CH585M programming/debug or runtime evidence exists. DBG-C product firmware, cable samples, and captures are also unavailable. All product-verification cases in this document are **Not run**; the PoC host build does not count as board or product-function testing. Build and ELF static checks are complete, but the tick-target conflict is unresolved and verification-hardware design is not released; board runtime remains Not run and product hardware freeze is not released. ThreadX startup, interrupt, tick, thread switch/sleep/wakeup, clock measurement, reset recovery, and sustained-runtime cases remain Not run. Define duration, repetitions, load, and thresholds in the specific test plan before execution. See OPEN-001 O18/O19 for software and board release gates. This document defines coverage and is not a board verification report.
+The repository contains the CH585M datasheet, CH585EVT archive, and ThreadX PoC-1. A host cross-build log for the PoC is recorded in FW-001; the user confirms no hardware is currently available, so no CH585M programming/debug or runtime evidence exists. DBG-C product firmware, cable samples, and captures are also unavailable. All product-verification cases in this document are **Not run**; the PoC host build does not count as board or product-function testing. Build, ELF/link checks, and source static review are complete; the verification-board design gate has passed for limited-purpose verification hardware. Board runtime remains Not run, and product-hardware freeze is not released. ThreadX startup, interrupt, tick, thread switch/sleep/wakeup, clock measurement, reset recovery, and sustained-runtime cases remain Not run. Define duration, repetitions, load, and thresholds in the specific test plan before execution. See OPEN-001 O18/O19 for software and board release gates. This document defines coverage and is not a board verification report.

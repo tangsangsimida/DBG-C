@@ -1,6 +1,6 @@
 # DBG-C Risk Register
 
-**Document ID:** DBG-C-RISK-001　**Version:** V0.4　**Status:** Risk register
+**Document ID:** DBG-C-RISK-001　**Version:** V0.5　**Status:** Risk register
 
 Ratings use qualitative High/Medium/Low and await an agreed project scoring method.
 
@@ -22,4 +22,4 @@ Ratings use qualitative High/Medium/Low and await an agreed project scoring meth
 | R14 | RF antenna/matching/layout deviates from reference design | Link performance failure | High | Obtain official RF/layout guidance and review | Matching, sensitivity, radiated tests | Open |
 | R15 | Insufficient ESD/EMC/power integrity | Reset, damage, or regulatory failure | High | Protection and layout review during design | ESD/EMC/power-transient tests | Open |
 | R16 | SWD timing/target voltage tolerance is unverified | Instability or damage on some targets | High | Define target compatibility and SWD frequency range | Oscilloscope measurements and multi-target regression | Open |
-| R17 | Upstream RISC-V32 ThreadX assumptions conflict with QingKe V3C hardware stack push, WCH VTF/HPE, or exception return | Startup failure, stack corruption, tick/scheduling faults, or runtime reset | High | Keep CH585M adaptation separate from upstream context routines; do not treat a host build as board evidence | After the software gate, permit verification-board design only; verify startup, SysTick, sleep/wakeup, context restore, and sustained runtime on board | Build/ELF checks pass but tick-target conflict awaits confirmation; verification-board design and product freeze are not released |
+| R17 | Upstream RISC-V32 ThreadX assumptions conflict with QingKe V3C hardware stack push, WCH VTF/HPE, or exception return | Startup failure, stack corruption, tick/scheduling faults, or runtime reset | High | Keep CH585M adaptation separate from upstream context routines; do not treat a host build as board evidence | After the software gate, permit verification-board design only; verify startup, SysTick, sleep/wakeup, context restore, and sustained runtime on board | Build, ELF/link, and source static checks pass; verification-board design gate passed. ThreadX board runtime verification and product-hardware freeze have not passed; tick-target conflict remains open |

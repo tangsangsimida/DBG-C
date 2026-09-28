@@ -1,6 +1,6 @@
 # DBG-C Firmware Architecture and PoC-1 Record
 
-**Document ID:** DBG-C-FW-001　**Version:** V0.5　**Status:** Experimental draft; generic FIFO module added to the build; tick-target conflict pending confirmation, verification-hardware design not released
+**Document ID:** DBG-C-FW-001　**Version:** V0.6　**Status:** Experimental draft; generic FIFO module added to the build; verification-board design gate passed; tick-target decision open; board runtime and product-hardware freeze not passed
 
 ## 1. Scope and status
 
@@ -110,14 +110,14 @@ The current SysTick ISR assembly entry is placed in the highcode region used by 
 
 Two clean rebuilds produced identical ELF and map hashes. ELF header, sections, program headers, symbols, and map were statically checked against the PoC startup and `ch585.ld`: `_start` is the ELF entry, application `.highcode` is linked to RAM, and linked segments fit the Flash/RAM ranges declared by the current script. The evidence log at `software/poc1-ch585-threadx/build-evidence.log` records ThreadX commit `b91b03b9e75fa523b17127f9e0eca09dca916459`, MounRiver GCC 12.2.0, GNU assembler/linker 2.38, ELF32 RISC-V, entry `0x0`, and text 8876, data 8, bss 5564 bytes. No flashing, board interrupt/scheduling test, clock measurement, or endurance run was performed.
 
-### 6.1 Software verification before hardware design
+### 6.1 Software verification and hardware-design sequence
 
-The user confirms that no hardware is currently available and requires software verification first, followed by hardware design and then verification on actual hardware. Release has two gates:
+No hardware is currently available. Apply the sequence “software static verification → limited-purpose verification-board design → board runtime verification → product-hardware freeze” with two release gates:
 
-1. **Verification hardware design gate: not released.** Two clean builds produced identical ELF/map files; ELF architecture, entry, load/run sections, symbols, and linker ranges were statically checked against the startup and linker script. Source review covered reset initialization, ThreadX context entry, exception stack switching, SysTick/VTF/PFIC/HPE setup, and ISR flow. However, source is configured for 100 ticks/s while the stated requirement says 1000 ticks/s. The user must confirm the target and requirement/source must be aligned before reassessing release for verification-board design.
-2. **Product hardware freeze gate: not passed.** No CH585M board runtime evidence exists. ThreadX startup, thread switching/sleep/wakeup, measured SysTick/tick delivery, stack integrity, reset/wakeup, and sustained runtime require board tests. Test duration, repetitions, and load limits must be defined in the test plan before execution.
+1. **Verification-board design gate: passed.** Two clean builds produced identical ELF/map files; ELF architecture, entry, load/run sections, symbols, and linker ranges were statically checked against the startup and linker script. Source review covered reset initialization, ThreadX context entry, exception stack switching, SysTick/VTF/PFIC/HPE setup, and ISR flow. A minimal board for verification may now be designed, with programming/recovery access and observation/measurement points for reset, system clock, SysTick, and interrupt activity. This gate does not establish CH585M runtime success and does not release product schematic or PCB freeze.
+2. **Product-hardware freeze gate: not passed.** No CH585M board runtime evidence exists. ThreadX startup, thread switching/sleep/wakeup, measured SysTick/tick delivery, stack integrity, reset/sleep-wakeup, and sustained runtime require board tests. Test duration, repetitions, load, and pass thresholds must be defined in the test plan before execution. Source is set to 100 ticks/s while requirement text mentions 1000 ticks/s; resolve this conflict before freezing the board-test frequency threshold.
 
-Static review cannot prove QingKe V3C exception stacking, VTF/HPE, interrupt return, or scheduling semantics; runtime cases remain Not run in TEST-001. The upstream ThreadX `qemu_virt` example has its own QEMU virt entry and linker layout and cannot replace CH585M/WCH-path validation. QEMU, Spike, and Renode are not installed in the current environment. See OPEN-001 O19 for the software gate and verdict.
+Static review cannot prove QingKe V3C exception stacking, VTF/HPE, interrupt return, or scheduling semantics; runtime cases remain Not run in TEST-001 and must be measured on CH585M. The upstream ThreadX `qemu_virt` example has its own QEMU virt entry and linker layout and cannot replace CH585M/WCH-path validation. QEMU, Spike, and Renode are not installed in the current environment. See OPEN-001 O19 for the software gate and verdict.
 
 ### 6.2 Verification-board design constraints
 
