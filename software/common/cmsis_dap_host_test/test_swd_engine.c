@@ -9,7 +9,7 @@ static unsigned int failures;
 static uint8_t input_bits[40];
 static unsigned int input_bit_count;
 static unsigned int input_bit_index;
-static uint8_t output_bits[16];
+static uint8_t output_bits[64];
 static unsigned int output_bit_count;
 static unsigned int clock_rising_count;
 static unsigned int output_enable_count;
@@ -115,6 +115,15 @@ static void append_read_response(uint32_t ack,
     append_input_bit(parity);
 }
 
+static void append_ack(uint32_t ack)
+{
+    unsigned int bit;
+
+    for (bit = 0U; bit < 3U; ++bit) {
+        append_input_bit(ack >> bit);
+    }
+}
+
 static void test_swd_read_request_and_data(void)
 {
     static const uint8_t expected_request_bits[] = {
@@ -170,10 +179,73 @@ static void test_swd_read_parity_error(void)
     CHECK(output_enable_count == 1U);
 }
 
+static void test_swd_write_data_and_parity(void)
+{
+    static const uint8_t expected_request_bits[] = {
+        1U, 0U, 0U, 0U, 0U, 0U, 0U, 1U
+    };
+    const uint32_t expected_value = 0x89ABCDEFU;
+    uint32_t value = expected_value;
+    uint8_t status;
+    unsigned int bit;
+
+    DAP_Setup();
+    DAP_Data.fast_clock = 1U;
+    reset_line_model();
+    append_ack(DAP_TRANSFER_OK);
+
+    status = SWD_Transfer(DP_ABORT, &value);
+
+    CHECK(status == DAP_TRANSFER_OK);
+    CHECK(input_bit_index == input_bit_count);
+    CHECK(output_bit_count == 42U);
+    for (bit = 0U; bit < sizeof(expected_request_bits); ++bit) {
+        CHECK(output_bits[bit] == expected_request_bits[bit]);
+    }
+    for (bit = 0U; bit < 32U; ++bit) {
+        CHECK(output_bits[8U + bit] == ((expected_value >> bit) & 1U));
+    }
+    CHECK(output_bits[40] == word_parity(expected_value));
+    CHECK(clock_rising_count == 46U);
+    CHECK(output_disable_count == 1U);
+    CHECK(output_enable_count == 1U);
+}
+
+static void test_swd_wait_and_fault_acknowledgements(void)
+{
+    const uint32_t acknowledgements[] = {
+        DAP_TRANSFER_WAIT,
+        DAP_TRANSFER_FAULT
+    };
+    unsigned int index;
+
+    for (index = 0U; index < sizeof(acknowledgements) / sizeof(acknowledgements[0]); ++index) {
+        uint32_t value = 0U;
+        uint8_t status;
+
+        DAP_Setup();
+        DAP_Data.fast_clock = 1U;
+        reset_line_model();
+        append_ack(acknowledgements[index]);
+
+        status = SWD_Transfer(DAP_TRANSFER_RnW | DP_IDCODE, &value);
+
+        CHECK(status == acknowledgements[index]);
+        CHECK(input_bit_index == input_bit_count);
+        CHECK(output_bit_count == 9U);
+        CHECK(output_bits[8] == 1U);
+        CHECK(clock_rising_count == 13U);
+        CHECK(output_disable_count == 1U);
+        CHECK(output_enable_count == 1U);
+    }
+}
+
 int main(void)
 {
     test_swd_read_request_and_data();
     test_swd_read_parity_error();
+    test_swd_write_data_and_parity();
+    test_swd_wait_and_fault_acknowledgements();
 
     if (failures != 0U) {
         fprintf(stderr, "%u of %u CMSIS-DAP SWD engine checks failed\n",
@@ -181,7 +253,7 @@ int main(void)
         return 1;
     }
 
-    printf("CMSIS-DAP SWD engine checks passed: %u assertions, 2 cases\n",
+    printf("CMSIS-DAP SWD engine checks passed: %u assertions, 4 cases\n",
            checks);
     return 0;
 }
