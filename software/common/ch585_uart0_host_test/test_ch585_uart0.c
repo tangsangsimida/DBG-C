@@ -55,6 +55,13 @@ int main(void)
 {
     const uint32_t pb4 = 1UL << 4;
     const uint32_t pb7 = 1UL << 7;
+    const dbgc_ch585_uart0_fifo_trigger_t triggers[] = {
+        DBGC_CH585_UART0_FIFO_TRIGGER_1_BYTE,
+        DBGC_CH585_UART0_FIFO_TRIGGER_2_BYTES,
+        DBGC_CH585_UART0_FIFO_TRIGGER_4_BYTES,
+        DBGC_CH585_UART0_FIFO_TRIGGER_7_BYTES
+    };
+    size_t trigger_index;
     uint8_t byte = 0U;
 
     reset_regs();
@@ -76,6 +83,17 @@ int main(void)
     check(dbgc_host_R8_UART0_IER == RB_IER_TXD_EN,
           "TXD output enabled with UART interrupt sources disabled");
     check(dbgc_host_R8_UART0_DIV == 1U, "pre-divisor set per WCH default init");
+
+    for (trigger_index = 0U;
+         trigger_index < sizeof(triggers) / sizeof(triggers[0]);
+         ++trigger_index) {
+        reset_regs();
+        check((dbgc_ch585_uart0_init(62400000U, 115200U, 3U,
+                   triggers[trigger_index]) == 0) &&
+                  ((dbgc_host_R8_UART0_FCR & RB_FCR_FIFO_TRIG) ==
+                   (uint8_t)triggers[trigger_index]),
+              "each documented FIFO trigger value is applied");
+    }
 
     check(dbgc_ch585_uart0_try_write(0xA5U) == 1,
           "write succeeds when TX FIFO is not full");
