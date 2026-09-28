@@ -24,7 +24,7 @@
 | O18 | Eclipse ThreadX RISC-V32/GNU 线程上下文例程及本地 CH585M 低层适配能否正确运行于 QingKe V3C？ | 在 CH585M 板上验证 HPE、PFIC/VTF、启动入口、异常栈帧、SysTick、睡眠唤醒、调度和持续运行 | MCU, FW, TEST | 待实板验证；软件门已放行验证板设计，但当前无可用板卡，芯片运行未执行 |
 | O19 | 进入硬件设计前，PoC-1 的“软件验证通过”门槛是什么？ | 采用 O19 放行标准：两次可复现构建、ELF/链接资源检查、startup/ThreadX 上下文与中断路径静态审查；仅放行验证硬件设计，产品冻结须实板验证 | MCU, FW, SYS, TEST | 软件放行门已通过，仅允许设计验证用硬件；tick 目标冲突仍待确认；实板运行与产品硬件冻结未通过 |
 | O20 | Arm CMSIS-DAP 固件核心能否由 CH585M 的 WCH RISC-V GCC 编译，需做哪些有依据的编译器/指令集适配？ | 对固定上游提交审查编译器头、内联汇编及端口依赖；完成有依据的适配后验证目标编译和主机命令层，禁止引入 Arm ISA 汇编 | FW, MCU, TEST | 本地 CMSIS 编译器宏适配及编译检查通过；8 项命令层主机检查、9 项 SWD 线模型用例通过；WCH GCC 将测试配置的 `DAP.c`、`SW_DP.c` 编译为 ELF32 RISC-V 对象。产品 HAL、时序校准、USB 接入和固件链接未完成，O20 仍开放 |
-| O21 | 如何在调用 CMSIS-DAP 上游命令处理前，验证实际输入长度及响应容量？ | 明确产品启用命令/功能、厂商命令覆盖策略、字符串回调最大写入量、USB 实际收包长度及请求/响应缓冲容量；把有界 dispatch 接入真实产品 USB 收包路径并覆盖产品命令配置 | USB, FW, TEST | 通用预检与有界 dispatch 已实现：102 项预检检查、3 个上游 dispatch 主机用例及 WCH GCC ELF32 RISC-V 对象编译通过；截断输入和容量不足会在上游调用前被拒绝，vendor/SWO/CMSIS-DAP UART 失败关闭。产品命令与 feature profile、Info 最大写入、USB 收包长度/响应容量及 USB 调用接入尚未实现，O21 保持开放；测试夹具不是产品配置 |
+| O21 | 如何在调用 CMSIS-DAP 上游命令处理前，验证实际输入长度及响应容量？ | 明确产品启用命令/功能、厂商命令覆盖策略、字符串回调最大写入量、USB 实际收包长度及请求/响应缓冲容量；把有界 dispatch 接入真实产品 USB 收包路径并覆盖产品命令配置 | USB, FW, TEST | 通用预检与有界 dispatch 已实现：102 项预检检查、5 个上游 dispatch 主机用例及 WCH GCC ELF32 RISC-V 对象编译通过；截断输入和容量不足会在上游调用前被拒绝，vendor/SWO/CMSIS-DAP UART 失败关闭。产品命令与 feature profile、Info 最大写入、USB 收包长度/响应容量及 USB 调用接入尚未实现，O21 保持开放；测试夹具不是产品配置 |
 
 ## O18 更新证据
 

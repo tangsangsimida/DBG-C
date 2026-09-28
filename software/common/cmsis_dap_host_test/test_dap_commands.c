@@ -380,6 +380,61 @@ static void test_bounded_dispatch_detects_length_contract_mismatch(void)
     CHECK(result.response_bytes == 0U);
 }
 
+static void test_bounded_dispatch_execute_commands(void)
+{
+    static const uint8_t request[] = {
+        ID_DAP_ExecuteCommands, 2U,
+        ID_DAP_Connect, DAP_PORT_SWD,
+        ID_DAP_Transfer, 0U, 1U, DAP_TRANSFER_RnW
+    };
+    uint8_t response[16] = {0U};
+    dbgc_cmsis_dap_dispatch_result_t result = { 0U, 0U };
+    dbgc_cmsis_dap_bounds_status_t status;
+
+    DAP_Setup();
+    mock_swd_calls = 0U;
+    mock_read_value = 0x89ABCDEFu;
+    mock_final_response = DAP_TRANSFER_OK;
+    status = dbgc_cmsis_dap_bounds_dispatch(
+        request, sizeof(request), response, sizeof(response),
+        &dispatch_profile, DAP_ExecuteCommand, &result);
+
+    CHECK(status == DBGC_CMSIS_DAP_BOUNDS_OK);
+    CHECK(result.request_bytes == sizeof(request));
+    CHECK(result.response_bytes == 11U);
+    CHECK(response[0] == ID_DAP_ExecuteCommands);
+    CHECK(response[1] == 2U);
+    CHECK(response[2] == ID_DAP_Connect);
+    CHECK(response[4] == ID_DAP_Transfer);
+    CHECK(mock_swd_calls == 1U);
+}
+
+static void test_bounded_dispatch_transfer_error_consumes_full_request(void)
+{
+    static const uint8_t request[] = {
+        ID_DAP_Transfer, 0U, 2U,
+        DAP_TRANSFER_RnW, DAP_TRANSFER_RnW
+    };
+    uint8_t response[16] = {0U};
+    dbgc_cmsis_dap_dispatch_result_t result = { 0U, 0U };
+    dbgc_cmsis_dap_bounds_status_t status;
+
+    connect_swd();
+    mock_swd_calls = 0U;
+    mock_final_response = DAP_TRANSFER_FAULT;
+    status = dbgc_cmsis_dap_bounds_dispatch(
+        request, sizeof(request), response, sizeof(response),
+        &dispatch_profile, DAP_ExecuteCommand, &result);
+
+    CHECK(status == DBGC_CMSIS_DAP_BOUNDS_OK);
+    CHECK(result.request_bytes == sizeof(request));
+    CHECK(result.response_bytes == 3U);
+    CHECK(response[0] == ID_DAP_Transfer);
+    CHECK(response[1] == 0U);
+    CHECK(response[2] == DAP_TRANSFER_FAULT);
+    CHECK(mock_swd_calls == 1U);
+}
+
 int main(void)
 {
     test_firmware_version_info();
@@ -393,12 +448,14 @@ int main(void)
     test_bounded_dispatch_rejects_before_upstream();
     test_bounded_dispatch_runs_upstream_after_preflight();
     test_bounded_dispatch_detects_length_contract_mismatch();
+    test_bounded_dispatch_execute_commands();
+    test_bounded_dispatch_transfer_error_consumes_full_request();
 
     if (failures != 0U) {
         fprintf(stderr, "%u CMSIS-DAP host checks failed\n", failures);
         return 1;
     }
 
-    puts("CMSIS-DAP host checks passed: 8 command-core and 3 bounded-dispatch cases");
+    puts("CMSIS-DAP host checks passed: 8 command-core and 5 bounded-dispatch cases");
     return 0;
 }
