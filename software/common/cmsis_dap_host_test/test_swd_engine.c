@@ -240,12 +240,50 @@ static void test_swd_wait_and_fault_acknowledgements(void)
     }
 }
 
+static void test_swd_sequence_output_and_input(void)
+{
+    static const uint8_t sequence_output[] = {0xA5U, 0x03U};
+    static const uint8_t expected_output_bits[] = {
+        1U, 0U, 1U, 0U, 0U, 1U, 0U, 1U, 1U, 1U
+    };
+    static const uint8_t sequence_input_bits[] = {
+        1U, 0U, 1U, 1U, 0U, 0U, 1U, 0U, 1U, 1U
+    };
+    uint8_t captured[2] = {0U, 0U};
+    unsigned int bit;
+
+    DAP_Setup();
+    DAP_Data.fast_clock = 1U;
+    reset_line_model();
+
+    SWD_Sequence(10U, sequence_output, NULL);
+
+    CHECK(output_bit_count == sizeof(expected_output_bits));
+    for (bit = 0U; bit < sizeof(expected_output_bits); ++bit) {
+        CHECK(output_bits[bit] == expected_output_bits[bit]);
+    }
+    CHECK(clock_rising_count == 10U);
+
+    reset_line_model();
+    for (bit = 0U; bit < sizeof(sequence_input_bits); ++bit) {
+        append_input_bit(sequence_input_bits[bit]);
+    }
+
+    SWD_Sequence(SWD_SEQUENCE_DIN | 10U, NULL, captured);
+
+    CHECK(captured[0] == 0x4DU);
+    CHECK(captured[1] == 0x03U);
+    CHECK(input_bit_index == input_bit_count);
+    CHECK(clock_rising_count == 10U);
+}
+
 int main(void)
 {
     test_swd_read_request_and_data();
     test_swd_read_parity_error();
     test_swd_write_data_and_parity();
     test_swd_wait_and_fault_acknowledgements();
+    test_swd_sequence_output_and_input();
 
     if (failures != 0U) {
         fprintf(stderr, "%u of %u CMSIS-DAP SWD engine checks failed\n",
@@ -253,7 +291,7 @@ int main(void)
         return 1;
     }
 
-    printf("CMSIS-DAP SWD engine checks passed: %u assertions, 4 cases\n",
+    printf("CMSIS-DAP SWD engine checks passed: %u assertions, 5 cases\n",
            checks);
     return 0;
 }
