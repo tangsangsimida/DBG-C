@@ -1,6 +1,6 @@
 # DBG-C Firmware Architecture 与 PoC-1 记录
 
-**文档编号：** DBG-C-FW-001　**版本：** V0.16　**状态：** 实验草案；通用 FIFO 及 CMSIS-DAP/SWD 命令层主机检查已通过；产品 HAL 适配未完成；验证板设计门已通过；实板运行及产品硬件冻结未通过
+**文档编号：** DBG-C-FW-001　**版本：** V0.17　**状态：** 实验草案；通用 FIFO、CMSIS-DAP 命令层和上游 SWD 引擎主机检查已通过；产品 HAL 适配未完成；验证板设计门已通过；实板运行及产品硬件冻结未通过
 
 ## 1. 范围与状态
 
@@ -145,6 +145,7 @@ WCH 示例的 `highcode_init()` 初始化 HSI PLL 到 62.4 MHz，并配置相关
 |---|---|---|---|
 | 通用字节 FIFO | `software/common/byte_fifo/`；对应 MCU-001 规划的 USB CDC、UART 与 RF 收发缓冲 | 调用方提供固定存储；支持任意非零容量、部分读写、不覆盖未读数据、清空与容量查询；无动态分配、无芯片寄存器/中断/ThreadX API；不保证并发安全，调用方必须串行化访问 | 已加入现有 CMake 构建并通过 CH585 交叉编译；既有构建脚本中的主机验证运行通过 3683 项断言；当前未接入 USB/UART/RF，未做实板测试；不是冻结的产品 ABI |
 | CMSIS-DAP / DAP command core | MCU-001 USBFS 分配；PRD 的 CMSIS-DAP v2 目标；Arm 官方源码固定于 `software/third_party/cmsis-dap/` 提交 `12636590eec66fae2d1bba4518749426ad5a4595` | `DAP.h` 声明 `DAP_ProcessCommand()`/`DAP_ExecuteCommand()`，固件版本宏为 2.1.2；上游依赖缺失的 `cmsis_compiler.h`，非 ArmCC 分支使用 Arm `subs` 内联汇编，不能直接用于 WCH RISC-V GCC | 8 项主机用例覆盖 Info/错误响应、TransferConfigure 重试配置、DP 读写、WAIT 重试、DAP_Transfer AP posted-read 与 `DP_RDBUFF` 响应顺序，以及 AP DAP_TransferBlock 读；WCH RISC-V GCC 将启用 SWD 命令分支的 `DAP.c` 编译为 ELF32 RISC-V 对象。测试 pin 宏为空操作、SWD 事务为模拟桩、JTAG 关闭；对象未链接到 PoC。这不是产品 HAL/配置，不验证 GPIO、电气时序、USB、线程或实板 |
+| CMSIS-DAP SWD I/O engine | 固定上游 `Firmware/Source/SW_DP.c`；MCU-001 分配 PB5=SWDIO、PB6=SWCLK | 上游位级算法经 `DAP_config.h` 的 pin 宏调用 IO；本项目 host-test 用回调式线模型，未连接 WCH GPIO API；fast 延时为空操作 | 两项主机用例检查读请求位序、ACK/数据/奇偶校验、方向切换和模型周期数；WCH RISC-V GCC 将上游 `SW_DP.c` 编译成 ELF32 RISC-V 对象。对象未与产品 HAL 链接，也未在 Target 或 CH585M 板上运行；不证明 PB5/PB6 波形、频率、电平或时序 |
 | USBFS Device + CDC transport | MCU-001 USBFS、PB10/PB11；EVT `CH58x_usbdev.h/.c` 及 USB Device COM 示例 | 已查到归档底层 API、EP0–EP4 缓冲结构与 CDC 示例描述符；当前示例把 CDC/厂商模式分开，未证明 DAP + CDC 组合、当前工程兼容性或 ThreadX ISR 同步 | 暂不实现；需验证 O02/O08，冻结 USB-001 并完成主机枚举/传输验证 |
 | UART0 driver/bridge | MCU-001 UART0、PB4/PB7；EVT `CH58x_uart.h`、`CH58x_uart0.c` | 已查到归档 API 名称和轮询实现；COM 示例把 UART0 重映射至 PA15/PA14，与 MCU-001 的 PB4/PB7 分配不同；实际 PB4/PB7 初始化、CDC 行为、波特率/流控和 ThreadX 同步仍待确认 | 暂不实现；取得 PB4/PB7 的当前 SDK 初始化证据，并定义 O09 参数与 ISR/任务并发行为 |
 | SWD Engine / Target Manager | MCU-001 的 PB5/PB6 SWD GPIO、PA4 Reset GPIO | SWD 时序、方向切换、电气边界及 Target 电压/保护未形成完整可执行规范 | 暂不实现；需冻结 IF-001 并按 O11/O12 验证时序及电气要求 |
@@ -154,7 +155,7 @@ WCH 示例的 `highcode_init()` 初始化 HSI PLL 到 62.4 MHz，并配置相关
 
 字节 FIFO 只建立与硬件无关的存储边界。USB、UART、RF 调用方不得直接依赖其内部索引；在同步/并发模型和传输 API 确认前，不把该模块包装成 ISR-safe queue 或产品数据协议。FIFO 主机用例由 `software/common/byte_fifo/tests/test_dbgc_byte_fifo.c` 提供，并由既有 `software/poc1-ch585-threadx/build.sh` 使用本机 C99 编译器构建和运行；当前 3683 项断言通过。该结果不验证并发、ISR、CH585M SRAM 或板级行为。
 
-CMSIS-DAP 检查位于 `software/common/cmsis_dap_host_test/`，由既有 `software/poc1-ch585-threadx/build.sh` 编译固定上游提交的 `DAP.c` 副本并运行。适配脚本核对 CMSIS-DAP 提交并确认相关源文件未被修改，只在构建目录复制 `DAP.h` 并将 `__CC_ARM` 延时分支选择条件改为专用测试宏；没有定义 `__CC_ARM`，没有改动第三方子模块。测试配置启用 SWD 命令分支、关闭 JTAG；SWD 引脚宏为空操作，`SWD_Transfer()` 由测试桩模拟，不代表 CH585M HAL。主机运行覆盖 8 项命令/状态检查，包括 TransferConfigure 重试配置生效，以及 DAP_Transfer 和 DAP_TransferBlock 的 AP posted-read 响应；同一配置由 WCH RISC-V GCC 编译为 ELF32 RISC-V 对象，但没有链接到 PoC。USB/时钟参数不代表产品设置；这些结果不验证 GPIO、电气时序、USBFS 集成、线程或 CH585M 硬件行为。
+CMSIS-DAP 测试位于 `software/common/cmsis_dap_host_test/`，由既有 `software/poc1-ch585-threadx/build.sh` 编译固定上游源码副本并运行。准备脚本核对 CMSIS-DAP 提交及原始源码未修改，只在构建目录副本中把 `DAP.h` 的 `__CC_ARM` 延时分支切换到专用测试宏；未定义 `__CC_ARM`，未改动第三方子模块。命令核心的 8 项检查使用空操作引脚及 `SWD_Transfer()` 模拟桩。另将原始上游 `SW_DP.c` 与同一 `DAP.c` 编译到独立测试程序，pin 宏通过回调连接到纯主机位流模型；两项测试检查读请求位序、ACK、32 位数据、小端数据奇偶校验、方向切换和模型周期数。模型 fast 延时为空操作，周期数不是实测时钟。WCH RISC-V GCC 分别将测试配置下的 `DAP.c` 和 `SW_DP.c` 编译为 ELF32 RISC-V 对象，均未链接 PoC。以上均不验证产品 GPIO HAL、PB5/PB6 电气及时序、USBFS、ThreadX 或 CH585M 板级行为。
 
 
 ### 8.1 WCH USBFS 与 UART0 源码审查
@@ -170,7 +171,13 @@ CMSIS-DAP 检查位于 `software/common/cmsis_dap_host_test/`，由既有 `softw
 | `EVT/EXAM/SRC/StdPeriphDriver/CH58x_uart0.c`；SHA-256 `f0b6b252dcb69530428f32cf2bb50cb585fbecd6f5cfd0eb57f194e257d86338` | 文件头标记 V1.2、2021/11/17；默认初始化把波特率设为 115200、FIFO 触发级别字段设为 4-byte、使能 TXD 中断；收发字符串函数轮询 FIFO 状态/计数 | 这些是示例默认值，不是 DBG-C 冻结参数。轮询 API 不满足尚未定义的 UART/ThreadX 并发服务契约，不能直接作为产品桥接驱动 |
 | `EVT/EXAM/USB/Device/COM/src/Main.c` 中 `DebugInit()` | 调用 `GPIOPinRemap(ENABLE, RB_PIN_UART0)`，然后配置 PA15/PA14 并初始化 UART0 | 该 CDC 示例将 UART0 重映射到 PA15/PA14；DBG-C MCU-001 分配 PB4/PB7。不得复制此示例的引脚初始化到产品固件。PB4/PB7 的最终 SDK 初始化证据仍需取得 |
 
-目前可复用到产品实现的硬件无关模块仍只有通用字节 FIFO。CMSIS-DAP 已增加命令处理主机检查，包括由模拟 SWD 事务桩驱动的上游 SWD DP 读写处理路径，以及测试配置下的目标对象编译；这不构成产品 GPIO HAL 或完整调试器移植。USBFS + CDC、UART0 驱动/桥接、SWD 物理 Engine、BLE 和私有 RF 尚无足够完整的接口/调度/电气证据进入产品实现，对应参数不得从示例默认值推定。O02、O08、O09 与 O18 保持开放，所有 ThreadX/USB/UART ISR 行为仍需相应实板验证。
+通用字节 FIFO 是当前已实现且可复用的硬件无关产品模块。CMSIS-DAP 命令核心及上游 SWD 位级算法已增加主机检查；SWD host-test 的 pin 回调/线模型是验证夹具，不是产品 HAL 或实际 GPIO 实现。EVT GPIO API 已静态核对，但未集成编译到固件：PB5/PB6 输入输出模式、输出能力、目标电压兼容、外部保护及所需 SWD 时序仍须按 IF-001/O11/O12 确认，并在验证板上测量。USBFS + CDC、UART0 驱动/桥接、BLE 和私有 RF 仍缺产品接口/调度/硬件证据。O02、O08、O09 与 O18 保持开放，所有 ThreadX/USB/UART ISR 行为仍需实板验证。
+
+### 8.3 上游 SWD 引擎主机线模型与 WCH GPIO 证据
+
+固定 CMSIS-DAP 提交中的 `Firmware/Source/SW_DP.c` 提供 SWJ/SWD 序列与 `SWD_Transfer()` 位级算法。测试配置通过 `PIN_SWCLK_TCK_*`、`PIN_SWDIO_*` 宏连接到测试回调；主机位流模型提供 ACK、数据和奇偶校验输入，并记录输出位、时钟上升调用及输入/输出方向调用。读取用例覆盖正确和错误奇偶校验。测试选择 fast-clock 分支，测试 `__NOP()` 为空操作；因此模型中的 46 次时钟置高调用不是频率或时序测量。
+
+WCH EVT 官方归档 GPIO 文件：`EVT/EXAM/SRC/StdPeriphDriver/inc/CH58x_gpio.h`（SHA-256 `c7f450ceaa501e4c5a912bc0429bca1540fa3c3f26e3fd55dfd908fad9b06183`）声明 `GPIOB_ModeCfg(uint32_t pin, GPIOModeTypeDef mode)`，并定义 `GPIOB_SetBits`、`GPIOB_ResetBits`、`GPIOB_ReadPortPin`；`EVT/EXAM/SRC/StdPeriphDriver/CH58x_gpio.c`（SHA-256 `c2c7c9b2518a2a56144f107776418911ae0849df523481ee7b999cbdfab01757`）给出 GPIOB 模式配置实现。MCU-001 将 PB5/PB6 分配给 SWDIO/SWCLK。资料支持确认 SDK 符号与端口 API，但尚未证明已编入本工程，也不能决定产品驱动模式、目标电平/保护或 GPIO 切换时序。取得 IF-001 电气约束和目标兼容范围后，才可实现 WCH GPIO BSP 并在验证板上测量波形。
 
 ### 8.2 CMSIS-DAP 上游源码固定与适配缺口
 

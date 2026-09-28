@@ -1185,3 +1185,183 @@ CMSIS-DAP host command checks passed: 8 cases
   Class:                             ELF32
   Machine:                           RISC-V
   Entry point address:               0x0
+Repository HEAD: a01f4c098b40e8d7c5c6985fafa0301998ed4cd5
+ThreadX commit: b91b03b9e75fa523b17127f9e0eca09dca916459
+ThreadX tag: v6.5.1.202602a_rel
+CMSIS-DAP commit: 12636590eec66fae2d1bba4518749426ad5a4595
+cmake version 3.28.3
+riscv-wch-elf-gcc (xPack GNU RISC-V Embedded GCC x86_64) 12.2.0
+GNU assembler (xPack GNU RISC-V Embedded GCC x86_64) 2.38
+GNU ld (xPack GNU RISC-V Embedded GCC x86_64) 2.38
+Host C compiler: cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+-- Building standard ThreadX version
+-- THREADX_ARCH: risc-v32
+-- THREADX_TOOLCHAIN: gnu
+-- Using custom tx_user.h file from /home/dennis/Desktop/workspace/github_projects/DBG-C/software/poc1-ch585-threadx/platform/ch585/tx_user.h
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/dennis/Desktop/workspace/github_projects/DBG-C/software/poc1-ch585-threadx/build/cmsis-dap-swd-test
+[  0%] Built target dbgc_byte_fifo
+[ 97%] Built target threadx
+[100%] Built target dbgc_poc1
+PASS: 3683 byte FIFO checks
+DAP.h source SHA-256: 1fa6a1489d199de159a0bd1a814845ac8e1f6e0335d349b883f341f84c1b73c5
+DAP.c source SHA-256: 87f72c3e84fec0a4a5cf6970a83cdfa08bd864a3127666e1e371fac3fecc0ad3
+CMSIS-DAP commit: 12636590eec66fae2d1bba4518749426ad5a4595
+Test adaptation: select upstream C-loop delay branch without defining __CC_ARM
+In file included from /home/dennis/Desktop/workspace/github_projects/DBG-C/software/poc1-ch585-threadx/build/cmsis-dap-swd-test/host-tests/cmsis-dap/src/DAP.c:29:
+/home/dennis/Desktop/workspace/github_projects/DBG-C/software/common/cmsis_dap_host_test/DAP_config.h:115: error: "PIN_SWCLK_TCK_SET" redefined [-Werror]
+  115 | #define PIN_SWCLK_TCK_SET() dbgc_test_swclk_set()
+      |
+/home/dennis/Desktop/workspace/github_projects/DBG-C/software/common/cmsis_dap_host_test/DAP_config.h:86: note: this is the location of the previous definition
+   86 | #define PIN_SWCLK_TCK_SET() ((void)0)
+      |
+/home/dennis/Desktop/workspace/github_projects/DBG-C/software/common/cmsis_dap_host_test/DAP_config.h:116: error: "PIN_SWCLK_TCK_CLR" redefined [-Werror]
+  116 | #define PIN_SWCLK_TCK_CLR() dbgc_test_swclk_clear()
+      |
+/home/dennis/Desktop/workspace/github_projects/DBG-C/software/common/cmsis_dap_host_test/DAP_config.h:87: note: this is the location of the previous definition
+   87 | #define PIN_SWCLK_TCK_CLR() ((void)0)
+      |
+/home/dennis/Desktop/workspace/github_projects/DBG-C/software/common/cmsis_dap_host_test/DAP_config.h:117: error: "PIN_SWDIO_TMS_SET" redefined [-Werror]
+  117 | #define PIN_SWDIO_TMS_SET() dbgc_test_swdio_output(1U)
+      |
+/home/dennis/Desktop/workspace/github_projects/DBG-C/software/common/cmsis_dap_host_test/DAP_config.h:89: note: this is the location of the previous definition
+   89 | #define PIN_SWDIO_TMS_SET() ((void)0)
+      |
+/home/dennis/Desktop/workspace/github_projects/DBG-C/software/common/cmsis_dap_host_test/DAP_config.h:118: error: "PIN_SWDIO_TMS_CLR" redefined [-Werror]
+  118 | #define PIN_SWDIO_TMS_CLR() dbgc_test_swdio_output(0U)
+      |
+/home/dennis/Desktop/workspace/github_projects/DBG-C/software/common/cmsis_dap_host_test/DAP_config.h:90: note: this is the location of the previous definition
+   90 | #define PIN_SWDIO_TMS_CLR() ((void)0)
+      |
+/home/dennis/Desktop/workspace/github_projects/DBG-C/software/common/cmsis_dap_host_test/DAP_config.h:119: error: "PIN_SWDIO_TMS_IN" redefined [-Werror]
+  119 | #define PIN_SWDIO_TMS_IN() dbgc_test_swdio_input()
+      |
+/home/dennis/Desktop/workspace/github_projects/DBG-C/software/common/cmsis_dap_host_test/DAP_config.h:91: note: this is the location of the previous definition
+   91 | #define PIN_SWDIO_TMS_IN() 0U
+      |
+/home/dennis/Desktop/workspace/github_projects/DBG-C/software/common/cmsis_dap_host_test/DAP_config.h:122: error: "PIN_SWDIO_OUT_ENABLE" redefined [-Werror]
+  122 | #define PIN_SWDIO_OUT_ENABLE() dbgc_test_swdio_output_enable()
+      |
+/home/dennis/Desktop/workspace/github_projects/DBG-C/software/common/cmsis_dap_host_test/DAP_config.h:92: note: this is the location of the previous definition
+   92 | #define PIN_SWDIO_OUT_ENABLE() ((void)0)
+      |
+/home/dennis/Desktop/workspace/github_projects/DBG-C/software/common/cmsis_dap_host_test/DAP_config.h:123: error: "PIN_SWDIO_OUT_DISABLE" redefined [-Werror]
+  123 | #define PIN_SWDIO_OUT_DISABLE() dbgc_test_swdio_output_disable()
+      |
+/home/dennis/Desktop/workspace/github_projects/DBG-C/software/common/cmsis_dap_host_test/DAP_config.h:93: note: this is the location of the previous definition
+   93 | #define PIN_SWDIO_OUT_DISABLE() ((void)0)
+      |
+cc1: all warnings being treated as errors
+In file included from /home/dennis/Desktop/workspace/github_projects/DBG-C/software/common/cmsis_dap_host_test/test_dap_commands.c:5:
+/home/dennis/Desktop/workspace/github_projects/DBG-C/software/common/cmsis_dap_host_test/DAP_config.h:115: error: "PIN_SWCLK_TCK_SET" redefined [-Werror]
+  115 | #define PIN_SWCLK_TCK_SET() dbgc_test_swclk_set()
+      |
+/home/dennis/Desktop/workspace/github_projects/DBG-C/software/common/cmsis_dap_host_test/DAP_config.h:86: note: this is the location of the previous definition
+   86 | #define PIN_SWCLK_TCK_SET() ((void)0)
+      |
+/home/dennis/Desktop/workspace/github_projects/DBG-C/software/common/cmsis_dap_host_test/DAP_config.h:116: error: "PIN_SWCLK_TCK_CLR" redefined [-Werror]
+  116 | #define PIN_SWCLK_TCK_CLR() dbgc_test_swclk_clear()
+      |
+/home/dennis/Desktop/workspace/github_projects/DBG-C/software/common/cmsis_dap_host_test/DAP_config.h:87: note: this is the location of the previous definition
+   87 | #define PIN_SWCLK_TCK_CLR() ((void)0)
+      |
+/home/dennis/Desktop/workspace/github_projects/DBG-C/software/common/cmsis_dap_host_test/DAP_config.h:117: error: "PIN_SWDIO_TMS_SET" redefined [-Werror]
+  117 | #define PIN_SWDIO_TMS_SET() dbgc_test_swdio_output(1U)
+      |
+/home/dennis/Desktop/workspace/github_projects/DBG-C/software/common/cmsis_dap_host_test/DAP_config.h:89: note: this is the location of the previous definition
+   89 | #define PIN_SWDIO_TMS_SET() ((void)0)
+      |
+/home/dennis/Desktop/workspace/github_projects/DBG-C/software/common/cmsis_dap_host_test/DAP_config.h:118: error: "PIN_SWDIO_TMS_CLR" redefined [-Werror]
+  118 | #define PIN_SWDIO_TMS_CLR() dbgc_test_swdio_output(0U)
+      |
+/home/dennis/Desktop/workspace/github_projects/DBG-C/software/common/cmsis_dap_host_test/DAP_config.h:90: note: this is the location of the previous definition
+   90 | #define PIN_SWDIO_TMS_CLR() ((void)0)
+      |
+/home/dennis/Desktop/workspace/github_projects/DBG-C/software/common/cmsis_dap_host_test/DAP_config.h:119: error: "PIN_SWDIO_TMS_IN" redefined [-Werror]
+  119 | #define PIN_SWDIO_TMS_IN() dbgc_test_swdio_input()
+      |
+/home/dennis/Desktop/workspace/github_projects/DBG-C/software/common/cmsis_dap_host_test/DAP_config.h:91: note: this is the location of the previous definition
+   91 | #define PIN_SWDIO_TMS_IN() 0U
+      |
+/home/dennis/Desktop/workspace/github_projects/DBG-C/software/common/cmsis_dap_host_test/DAP_config.h:122: error: "PIN_SWDIO_OUT_ENABLE" redefined [-Werror]
+  122 | #define PIN_SWDIO_OUT_ENABLE() dbgc_test_swdio_output_enable()
+      |
+/home/dennis/Desktop/workspace/github_projects/DBG-C/software/common/cmsis_dap_host_test/DAP_config.h:92: note: this is the location of the previous definition
+   92 | #define PIN_SWDIO_OUT_ENABLE() ((void)0)
+      |
+/home/dennis/Desktop/workspace/github_projects/DBG-C/software/common/cmsis_dap_host_test/DAP_config.h:123: error: "PIN_SWDIO_OUT_DISABLE" redefined [-Werror]
+  123 | #define PIN_SWDIO_OUT_DISABLE() dbgc_test_swdio_output_disable()
+      |
+/home/dennis/Desktop/workspace/github_projects/DBG-C/software/common/cmsis_dap_host_test/DAP_config.h:93: note: this is the location of the previous definition
+   93 | #define PIN_SWDIO_OUT_DISABLE() ((void)0)
+      |
+cc1: all warnings being treated as errors
+Repository HEAD: a01f4c098b40e8d7c5c6985fafa0301998ed4cd5
+ThreadX commit: b91b03b9e75fa523b17127f9e0eca09dca916459
+ThreadX tag: v6.5.1.202602a_rel
+CMSIS-DAP commit: 12636590eec66fae2d1bba4518749426ad5a4595
+cmake version 3.28.3
+riscv-wch-elf-gcc (xPack GNU RISC-V Embedded GCC x86_64) 12.2.0
+GNU assembler (xPack GNU RISC-V Embedded GCC x86_64) 2.38
+GNU ld (xPack GNU RISC-V Embedded GCC x86_64) 2.38
+Host C compiler: cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+-- Building standard ThreadX version
+-- THREADX_ARCH: risc-v32
+-- THREADX_TOOLCHAIN: gnu
+-- Using custom tx_user.h file from /home/dennis/Desktop/workspace/github_projects/DBG-C/software/poc1-ch585-threadx/platform/ch585/tx_user.h
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/dennis/Desktop/workspace/github_projects/DBG-C/software/poc1-ch585-threadx/build/cmsis-dap-swd-test
+[  0%] Built target dbgc_byte_fifo
+[ 97%] Built target threadx
+[100%] Built target dbgc_poc1
+PASS: 3683 byte FIFO checks
+DAP.h source SHA-256: 1fa6a1489d199de159a0bd1a814845ac8e1f6e0335d349b883f341f84c1b73c5
+DAP.c source SHA-256: 87f72c3e84fec0a4a5cf6970a83cdfa08bd864a3127666e1e371fac3fecc0ad3
+CMSIS-DAP commit: 12636590eec66fae2d1bba4518749426ad5a4595
+Test adaptation: select upstream C-loop delay branch without defining __CC_ARM
+CMSIS-DAP host command checks passed: 8 cases
+CMSIS-DAP SWD engine checks passed: 22 assertions, 2 cases
+  Class:                             ELF32
+  Machine:                           RISC-V
+   text	   data	    bss	    dec	    hex	filename
+   8876	      8	   5564	  14448	   3870	/home/dennis/Desktop/workspace/github_projects/DBG-C/software/poc1-ch585-threadx/build/cmsis-dap-swd-test/dbgc_poc1.elf
+  Class:                             ELF32
+  Machine:                           RISC-V
+  Entry point address:               0x0
+Repository HEAD: a01f4c098b40e8d7c5c6985fafa0301998ed4cd5
+ThreadX commit: b91b03b9e75fa523b17127f9e0eca09dca916459
+ThreadX tag: v6.5.1.202602a_rel
+CMSIS-DAP commit: 12636590eec66fae2d1bba4518749426ad5a4595
+cmake version 3.28.3
+riscv-wch-elf-gcc (xPack GNU RISC-V Embedded GCC x86_64) 12.2.0
+GNU assembler (xPack GNU RISC-V Embedded GCC x86_64) 2.38
+GNU ld (xPack GNU RISC-V Embedded GCC x86_64) 2.38
+Host C compiler: cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+-- Building standard ThreadX version
+-- THREADX_ARCH: risc-v32
+-- THREADX_TOOLCHAIN: gnu
+-- Using custom tx_user.h file from /home/dennis/Desktop/workspace/github_projects/DBG-C/software/poc1-ch585-threadx/platform/ch585/tx_user.h
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/dennis/Desktop/workspace/github_projects/DBG-C/software/poc1-ch585-threadx/build/cmsis-dap-swd-test
+[  0%] Built target dbgc_byte_fifo
+[ 97%] Built target threadx
+[100%] Built target dbgc_poc1
+PASS: 3683 byte FIFO checks
+DAP.h source SHA-256: 1fa6a1489d199de159a0bd1a814845ac8e1f6e0335d349b883f341f84c1b73c5
+DAP.c source SHA-256: 87f72c3e84fec0a4a5cf6970a83cdfa08bd864a3127666e1e371fac3fecc0ad3
+CMSIS-DAP commit: 12636590eec66fae2d1bba4518749426ad5a4595
+Test adaptation: select upstream C-loop delay branch without defining __CC_ARM
+CMSIS-DAP host command checks passed: 8 cases
+CMSIS-DAP SWD engine checks passed: 22 assertions, 2 cases
+  Class:                             ELF32
+  Machine:                           RISC-V
+  Class:                             ELF32
+  Machine:                           RISC-V
+   text	   data	    bss	    dec	    hex	filename
+   8876	      8	   5564	  14448	   3870	/home/dennis/Desktop/workspace/github_projects/DBG-C/software/poc1-ch585-threadx/build/cmsis-dap-swd-test/dbgc_poc1.elf
+  Class:                             ELF32
+  Machine:                           RISC-V
+  Entry point address:               0x0

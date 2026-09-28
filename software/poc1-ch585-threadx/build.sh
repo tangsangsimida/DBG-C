@@ -57,6 +57,17 @@ esac
         "${repo_dir}/software/common/cmsis_dap_host_test/test_dap_commands.c" \
         -o "${build_dir}/host-tests/test_cmsis_dap_commands"
     "${build_dir}/host-tests/test_cmsis_dap_commands"
+    "${host_cc}" -std=c99 -Wall -Wextra -Werror \
+        -Wno-unused-parameter -Wno-unused-variable -pedantic \
+        -DDBGC_CMSIS_DAP_TEST_C_LOOP \
+        -DDBGC_CMSIS_DAP_SWD_ENGINE_TEST \
+        -I"${repo_dir}/software/common/cmsis_dap_host_test" \
+        -I"${cmsis_dap_host_dir}/include" \
+        "${cmsis_dap_host_dir}/src/DAP.c" \
+        "${repo_dir}/software/third_party/cmsis-dap/Firmware/Source/SW_DP.c" \
+        "${repo_dir}/software/common/cmsis_dap_host_test/test_swd_engine.c" \
+        -o "${build_dir}/host-tests/test_cmsis_dap_swd_engine"
+    "${build_dir}/host-tests/test_cmsis_dap_swd_engine"
     mkdir -p "${build_dir}/target-tests"
     "${toolchain_bin}/riscv-wch-elf-gcc" -std=c99 -Wall -Wextra -Werror \
         -Wno-unused-parameter -Wno-unused-variable \
@@ -66,8 +77,20 @@ esac
         -I"${cmsis_dap_host_dir}/include" \
         -c "${cmsis_dap_host_dir}/src/DAP.c" \
         -o "${build_dir}/target-tests/cmsis_dap_command_core.o"
+    "${toolchain_bin}/riscv-wch-elf-gcc" -std=c99 -Wall -Wextra -Werror \
+        -Wno-unused-parameter -Wno-unused-variable \
+        -march=rv32imac -mabi=ilp32 -mcmodel=medany \
+        -DDBGC_CMSIS_DAP_TEST_C_LOOP \
+        -DDBGC_CMSIS_DAP_SWD_ENGINE_TEST \
+        -I"${repo_dir}/software/common/cmsis_dap_host_test" \
+        -I"${cmsis_dap_host_dir}/include" \
+        -c "${repo_dir}/software/third_party/cmsis-dap/Firmware/Source/SW_DP.c" \
+        -o "${build_dir}/target-tests/cmsis_dap_swd_engine.o"
     "${toolchain_bin}/riscv-wch-elf-readelf" -h \
         "${build_dir}/target-tests/cmsis_dap_command_core.o" | \
+        rg 'Class:|Machine:'
+    "${toolchain_bin}/riscv-wch-elf-readelf" -h \
+        "${build_dir}/target-tests/cmsis_dap_swd_engine.o" | \
         rg 'Class:|Machine:'
     "${toolchain_bin}/riscv-wch-elf-size" "${build_dir}/dbgc_poc1.elf"
     "${toolchain_bin}/riscv-wch-elf-readelf" -h "${build_dir}/dbgc_poc1.elf" | \

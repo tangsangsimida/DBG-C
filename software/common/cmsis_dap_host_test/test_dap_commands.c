@@ -16,6 +16,32 @@ static uint32_t mock_last_request;
 static uint32_t mock_last_write_value;
 static uint8_t mock_final_response;
 
+void dbgc_test_swclk_set(void)
+{
+}
+
+void dbgc_test_swclk_clear(void)
+{
+}
+
+void dbgc_test_swdio_output(uint32_t bit)
+{
+    (void)bit;
+}
+
+uint32_t dbgc_test_swdio_input(void)
+{
+    return 0U;
+}
+
+void dbgc_test_swdio_output_enable(void)
+{
+}
+
+void dbgc_test_swdio_output_disable(void)
+{
+}
+
 #define CHECK(condition) do { \
     if (!(condition)) { \
         fprintf(stderr, "FAIL %s:%d: %s\n", __FILE__, __LINE__, #condition); \

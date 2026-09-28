@@ -1,7 +1,7 @@
 /*
- * Test-only configuration for exercising the pinned CMSIS-DAP command core.
- * SWD command logic is enabled, but pin operations are no-ops and SWD
- * transactions are supplied by a test mock. These are not product settings.
+ * Test-only configuration for the pinned CMSIS-DAP command core and SWD
+ * engine. Command-core tests use no-op pins and a mocked SWD transaction;
+ * engine tests select callback-backed simulated pins. Neither is product I/O.
  */
 #ifndef DBGC_CMSIS_DAP_HOST_TEST_CONFIG_H
 #define DBGC_CMSIS_DAP_HOST_TEST_CONFIG_H
@@ -83,14 +83,6 @@ static inline uint8_t DAP_GetProductFirmwareVersionString(char *str)
 #define RESET_TARGET() 0U
 #define LED_CONNECTED_OUT(value) ((void)(value))
 #define LED_RUNNING_OUT(value) ((void)(value))
-#define PIN_SWCLK_TCK_SET() ((void)0)
-#define PIN_SWCLK_TCK_CLR() ((void)0)
-#define PIN_SWCLK_TCK_IN() 0U
-#define PIN_SWDIO_TMS_SET() ((void)0)
-#define PIN_SWDIO_TMS_CLR() ((void)0)
-#define PIN_SWDIO_TMS_IN() 0U
-#define PIN_SWDIO_OUT_ENABLE() ((void)0)
-#define PIN_SWDIO_OUT_DISABLE() ((void)0)
 #define PIN_TDI_OUT(value) ((void)(value))
 #define PIN_TDI_IN() 0U
 #define PIN_TDO_IN() 0U
@@ -105,4 +97,34 @@ static inline uint8_t DAP_GetProductFirmwareVersionString(char *str)
 #define __NOP() ((void)0)
 #define __WEAK __attribute__((weak))
 
+#if defined(DBGC_CMSIS_DAP_SWD_ENGINE_TEST)
+void dbgc_test_swclk_set(void);
+void dbgc_test_swclk_clear(void);
+void dbgc_test_swdio_output(uint32_t bit);
+uint32_t dbgc_test_swdio_input(void);
+void dbgc_test_swdio_output_enable(void);
+void dbgc_test_swdio_output_disable(void);
+
+#define PIN_SWCLK_TCK_SET() dbgc_test_swclk_set()
+#define PIN_SWCLK_TCK_CLR() dbgc_test_swclk_clear()
+#define PIN_SWCLK_TCK_IN() 0U
+#define PIN_SWDIO_TMS_SET() dbgc_test_swdio_output(1U)
+#define PIN_SWDIO_TMS_CLR() dbgc_test_swdio_output(0U)
+#define PIN_SWDIO_TMS_IN() dbgc_test_swdio_input()
+#define PIN_SWDIO_OUT(bit) dbgc_test_swdio_output(bit)
+#define PIN_SWDIO_IN() dbgc_test_swdio_input()
+#define PIN_SWDIO_OUT_ENABLE() dbgc_test_swdio_output_enable()
+#define PIN_SWDIO_OUT_DISABLE() dbgc_test_swdio_output_disable()
+#else
+#define PIN_SWCLK_TCK_SET() ((void)0)
+#define PIN_SWCLK_TCK_CLR() ((void)0)
+#define PIN_SWCLK_TCK_IN() 0U
+#define PIN_SWDIO_TMS_SET() ((void)0)
+#define PIN_SWDIO_TMS_CLR() ((void)0)
+#define PIN_SWDIO_TMS_IN() 0U
+#define PIN_SWDIO_OUT(bit) ((void)(bit))
+#define PIN_SWDIO_IN() 0U
+#define PIN_SWDIO_OUT_ENABLE() ((void)0)
+#define PIN_SWDIO_OUT_DISABLE() ((void)0)
+#endif
 #endif

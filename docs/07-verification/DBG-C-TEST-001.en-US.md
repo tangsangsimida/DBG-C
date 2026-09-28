@@ -1,6 +1,6 @@
 # DBG-C Verification Specification
 
-**Document ID:** DBG-C-TEST-001　**Version:** V0.14　**Status:** Test-plan draft; FIFO and CMSIS-DAP/SWD command-layer host checks executed, ThreadX board tests have not run
+**Document ID:** DBG-C-TEST-001　**Version:** V0.15　**Status:** Test-plan draft; FIFO, CMSIS-DAP command-core, and upstream SWD-engine host-model checks executed, ThreadX board tests have not run
 
 ## 1. Pass Criteria
 
@@ -63,6 +63,17 @@ The test target is `Firmware/Source/DAP.c` from the pinned upstream commit, call
 
 These eight cases cover the pinned command layer, including TransferConfigure retry-count application, AP posted reads in both Transfer and TransferBlock, DP/AP read/write handling, and WAIT retries across a mocked physical-transaction boundary. They do not verify GPIO, SWD electrical timing, DAP packet bounds, CMSIS-DAP v2 USB transport, or CH585M behavior. The build script separately compiles the SWD-enabled test configuration to an ELF32 RISC-V object with WCH RISC-V GCC; pin macros are no-ops and transactions are mocked. The object is not linked into PoC or run on CH585M. These checks do not replace product cases in Sections 2–7.
 
+## 9.1 CMSIS-DAP Upstream SWD-Engine Host Line Model
+
+The test compiles pinned upstream `Firmware/Source/SW_DP.c` with its `DAP.c` dependency. Test pin macros call a pure host bit-stream model that supplies ACK, data, and parity inputs and records output bits, clock-high calls, and direction changes. The model fast delay is a no-op; call counts are not clock-frequency or timing measurements.
+
+| Case | Check | Pass condition | Status |
+|---|---|---|---|
+| SWD-ENG-01 | SWD read request, ACK=OK, 32-bit data, and valid parity | Request bit order, returned data, direction changes, final clock-line state, and model call counts match fixture expectations | Pass |
+| SWD-ENG-02 | SWD read returns invalid parity | Engine reports `DAP_TRANSFER_ERROR`; captured data, direction changes, and model call counts match fixture expectations | Pass |
+
+WCH RISC-V GCC also compiles upstream `SW_DP.c` with the test configuration to an ELF32 RISC-V object. Neither host case nor target-object compilation uses WCH GPIO, USB, ThreadX, or CH585M; the object is not linked into product firmware. These checks cover pinned upstream bit-level logic against a simulated line model. They do not verify PB5/PB6 waveforms, voltage, SWD frequency, setup/hold timing, or Target electrical behavior.
+
 ## 10. Current Execution Status
 
-The repository contains the CH585M datasheet, CH585EVT archive, and ThreadX PoC-1. A host cross-build log for the PoC is recorded in FW-001; the user confirms no hardware is currently available, so no CH585M programming/debug or runtime evidence exists. DBG-C product firmware, cable samples, and captures are also unavailable. All product-level verification cases remain **Not run**. The seven FIFO host case groups and eight CMSIS-DAP/SWD command-layer host checks passed, but none count as board or product-function tests; neither does the PoC cross-build count as board runtime evidence. Build, ELF/link checks, and source static review are complete; the verification-board design gate has passed for limited-purpose verification hardware. Board runtime remains Not run, and product-hardware freeze is not released. ThreadX startup, interrupt, tick, thread switch/sleep/wakeup, clock measurement, reset recovery, and sustained-runtime cases remain Not run. Define duration, repetitions, load, and thresholds in the specific test plan before execution. See OPEN-001 O18/O19 for software and board release gates. This document defines coverage and is not a board verification report.
+The repository contains the CH585M datasheet, CH585EVT archive, and ThreadX PoC-1. A host cross-build log for the PoC is recorded in FW-001; the user confirms no hardware is currently available, so no CH585M programming/debug or runtime evidence exists. DBG-C product firmware, cable samples, and captures are also unavailable. All product-level verification cases remain **Not run**. The seven FIFO host case groups and eight CMSIS-DAP command-core host checks and two upstream SWD-engine line-model checks passed, but none count as board or product-function tests; neither does the PoC cross-build count as board runtime evidence. Build, ELF/link checks, and source static review are complete; the verification-board design gate has passed for limited-purpose verification hardware. Board runtime remains Not run, and product-hardware freeze is not released. ThreadX startup, interrupt, tick, thread switch/sleep/wakeup, clock measurement, reset recovery, and sustained-runtime cases remain Not run. Define duration, repetitions, load, and thresholds in the specific test plan before execution. See OPEN-001 O18/O19 for software and board release gates. This document defines coverage and is not a board verification report.
