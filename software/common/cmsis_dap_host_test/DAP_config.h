@@ -1,7 +1,8 @@
 /*
  * Test-only configuration for the pinned CMSIS-DAP command core and SWD
  * engine. Command-core tests use no-op pins and a mocked SWD transaction;
- * engine tests select callback-backed simulated pins. Neither is product I/O.
+ * engine tests route callbacks through the CH585 SWD GPIO BSP against modeled
+ * registers and a scripted line model. Neither path is product I/O.
  */
 #ifndef DBGC_CMSIS_DAP_HOST_TEST_CONFIG_H
 #define DBGC_CMSIS_DAP_HOST_TEST_CONFIG_H

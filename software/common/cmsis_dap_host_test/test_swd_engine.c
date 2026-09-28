@@ -3,6 +3,8 @@
 
 #include "DAP_config.h"
 #include "DAP.h"
+#include "dbgc_ch585_swd_gpio.h"
+#include "dbgc_ch585_swd_gpio_host_regs.h"
 
 static unsigned int checks;
 static unsigned int failures;
@@ -14,6 +16,13 @@ static unsigned int output_bit_count;
 static unsigned int clock_rising_count;
 static unsigned int output_enable_count;
 static unsigned int output_disable_count;
+
+volatile uint32_t dbgc_host_R32_PB_DIR;
+volatile uint32_t dbgc_host_R32_PB_PIN;
+volatile uint32_t dbgc_host_R32_PB_CLR;
+volatile uint32_t dbgc_host_R32_PB_PU;
+volatile uint32_t dbgc_host_R32_PB_PD_DRV;
+volatile uint32_t dbgc_host_R32_PB_SET;
 
 #define CHECK(condition) do { \
     ++checks; \
@@ -57,14 +66,29 @@ static uint32_t word_parity(uint32_t value)
 void dbgc_test_swclk_set(void)
 {
     ++clock_rising_count;
+    CHECK(dbgc_ch585_swd_gpio_write(DBGC_CH585_SWD_SIGNAL_SWCLK, 1U) == 0);
+    CHECK(dbgc_host_R32_PB_SET == (1UL << 6));
 }
 
 void dbgc_test_swclk_clear(void)
 {
+    CHECK(dbgc_ch585_swd_gpio_write(DBGC_CH585_SWD_SIGNAL_SWCLK, 0U) == 0);
+    CHECK(dbgc_host_R32_PB_CLR == (1UL << 6));
 }
 
 void dbgc_test_swdio_output(uint32_t bit)
 {
+    const uint32_t mask = 1UL << 5;
+
+    CHECK(dbgc_ch585_swd_gpio_write(DBGC_CH585_SWD_SIGNAL_SWDIO,
+                                    (uint8_t)(bit & 1U)) == 0);
+    CHECK(((bit & 1U) != 0U ? dbgc_host_R32_PB_SET : dbgc_host_R32_PB_CLR)
+          == mask);
+    if ((bit & 1U) != 0U) {
+        dbgc_host_R32_PB_PIN |= mask;
+    } else {
+        dbgc_host_R32_PB_PIN &= ~mask;
+    }
     if (output_bit_count < (sizeof(output_bits) / sizeof(output_bits[0]))) {
         output_bits[output_bit_count++] = (uint8_t)(bit & 1U);
     } else {
@@ -74,26 +98,50 @@ void dbgc_test_swdio_output(uint32_t bit)
 
 uint32_t dbgc_test_swdio_input(void)
 {
+    uint8_t bit;
+
     if (input_bit_index >= input_bit_count) {
         ++failures;
         return 0U;
     }
 
-    return input_bits[input_bit_index++];
+    bit = input_bits[input_bit_index++];
+    if (bit != 0U) {
+        dbgc_host_R32_PB_PIN |= 1UL << 5;
+    } else {
+        dbgc_host_R32_PB_PIN &= ~(1UL << 5);
+    }
+    CHECK(dbgc_ch585_swd_gpio_read(DBGC_CH585_SWD_SIGNAL_SWDIO, &bit) == 0);
+
+    return bit;
 }
 
 void dbgc_test_swdio_output_enable(void)
 {
     ++output_enable_count;
+    /* This mode is a host-test fixture, not a product electrical choice. */
+    CHECK(dbgc_ch585_swd_gpio_configure(DBGC_CH585_SWD_SIGNAL_SWDIO,
+                                        DBGC_CH585_GPIO_OUTPUT_PP_5MA) == 0);
+    CHECK((dbgc_host_R32_PB_DIR & (1UL << 5)) != 0U);
 }
 
 void dbgc_test_swdio_output_disable(void)
 {
     ++output_disable_count;
+    /* This mode is a host-test fixture, not a product electrical choice. */
+    CHECK(dbgc_ch585_swd_gpio_configure(DBGC_CH585_SWD_SIGNAL_SWDIO,
+                                        DBGC_CH585_GPIO_INPUT_FLOATING) == 0);
+    CHECK((dbgc_host_R32_PB_DIR & (1UL << 5)) == 0U);
 }
 
 static void reset_line_model(void)
 {
+    dbgc_host_R32_PB_DIR = 0U;
+    dbgc_host_R32_PB_PIN = 0U;
+    dbgc_host_R32_PB_CLR = 0U;
+    dbgc_host_R32_PB_PU = 0U;
+    dbgc_host_R32_PB_PD_DRV = 0U;
+    dbgc_host_R32_PB_SET = 0U;
     input_bit_count = 0U;
     input_bit_index = 0U;
     output_bit_count = 0U;

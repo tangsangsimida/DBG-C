@@ -129,8 +129,12 @@ esac
         -Wno-unused-parameter -Wno-unused-variable -pedantic \
         -DDBGC_CMSIS_DAP_TEST_C_LOOP \
         -DDBGC_CMSIS_DAP_SWD_ENGINE_TEST \
+        -DDBGC_CH585_SWD_GPIO_HOST_TEST \
+        -I"${repo_dir}/software/common/ch585_swd_gpio_host_test" \
         -I"${repo_dir}/software/common/cmsis_dap_host_test" \
+        -I"${project_dir}/platform/ch585" \
         -I"${cmsis_dap_host_dir}/include" \
+        "${project_dir}/platform/ch585/dbgc_ch585_swd_gpio.c" \
         "${cmsis_dap_host_dir}/src/DAP.c" \
         "${repo_dir}/software/third_party/cmsis-dap/Firmware/Source/SW_DP.c" \
         "${repo_dir}/software/common/cmsis_dap_host_test/test_swd_engine.c" \

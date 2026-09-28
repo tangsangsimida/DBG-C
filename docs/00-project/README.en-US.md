@@ -8,9 +8,9 @@ This document set is a V0.x engineering baseline draft, not a frozen interface o
 | SYS-001 | [System Architecture](../02-system/DBG-C-SYS-001.en-US.md) | V0.2, for review |
 | IF-001 | [DBG-C Interface Specification](../03-interfaces/DBG-C-IF-001.en-US.md) | V0.1 concept draft; pins not frozen |
 | MCU-001 | [MCU Selection and Resource Assessment](../04-hardware/DBG-C-MCU-001.en-US.md) | V0.8; EVT confirms UID ROM command and 8-byte construction; silicon read and Device ID security semantics remain open |
-| FW-001 | [Firmware Architecture and PoC-1 Record](../05-firmware/DBG-C-FW-001.en-US.md) | V0.45; two clean rebuilds at a fixed path produced matching ELF/map hashes; current ELF text/data/bss are 8916/8/5580 bytes; ThreadX board runtime remains unverified |
+| FW-001 | [Firmware Architecture and PoC-1 Record](../05-firmware/DBG-C-FW-001.en-US.md) | V0.46; nine SWD-engine host line-model cases now execute through the GPIO BSP modeled-register path (2759 assertions); two clean rebuilds at a fixed path produced matching ELF/map hashes; current ELF text/data/bss are 8916/8/5580 bytes; ThreadX board runtime remains unverified |
 | RF-001 | [Private 2.4G Protocol Specification](../06-protocols/DBG-C-RF-001.en-US.md) | V0.1 framework; not ready for implementation |
-| TEST-001 | [Verification Specification](../07-verification/DBG-C-TEST-001.en-US.md) | V0.41; adds ThreadX board-observation cases, all Not run; UID adapter 31 mock checks and target-object compile recorded; silicon read not run; UART0 and bridge host checks are detailed in the document |
+| TEST-001 | [Verification Specification](../07-verification/DBG-C-TEST-001.en-US.md) | V0.42; adds ThreadX board-observation cases, all Not run; UID adapter 31 mock checks and target-object compile recorded; silicon read not run; UART0 and bridge host checks are detailed in the document |
 | RISK-001 | [Risk Register](../08-risk/DBG-C-RISK-001.en-US.md) | V0.6; ThreadX port awaits board verification, tick target pending decision |
 | OPEN-001 | [Open Questions and Verification List](DBG-C-OPEN-001.en-US.md) | V0.37; PoC exposes ThreadX creation status/tick observations, but board runtime has not run; verification-board design released, product-hardware freeze not released; O11/O21 remain open |
 

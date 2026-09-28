@@ -1,6 +1,6 @@
 # DBG-C Verification Specification
 
-**文档编号：** DBG-C-TEST-001　**版本：** V0.41　**状态：** 测试计划草案；FIFO、单向/双向字节流桥接、CMSIS-DAP 命令层、有界 dispatch、SWD 引擎主机模型、边界预检器、CMSIS 编译器映射及 CH585 SWD GPIO、Target Reset GPIO 与 UART0、UID 读取适配器主机/目标静态链接检查已执行；PoC ThreadX 创建状态/tick 观测代码已加入并随目标交叉构建；CH585 BSP/适配器静态库纳入 PoC 交叉构建；产品 UART/命令边界、硅片 UID 与 ThreadX 实板测试未执行
+**文档编号：** DBG-C-TEST-001　**版本：** V0.42　**状态：** 测试计划草案；SWD 引擎线模型已接入 CH585 GPIO BSP 模拟寄存器路径，2759 项断言通过；FIFO、单向/双向字节流桥接、CMSIS-DAP 命令层、有界 dispatch、SWD 引擎主机模型、边界预检器、CMSIS 编译器映射及 CH585 SWD GPIO、Target Reset GPIO 与 UART0、UID 读取适配器主机/目标静态链接检查已执行；PoC ThreadX 创建状态/tick 观测代码已加入并随目标交叉构建；CH585 BSP/适配器静态库纳入 PoC 交叉构建；产品 UART/命令边界、硅片 UID 与 ThreadX 实板测试未执行
 
 ## 1. 通过规则
 
@@ -102,7 +102,7 @@ Discovery、设备信息、Pair/Unpair、配置、状态、OTA、中断恢复、
 
 ## 9.1 CMSIS-DAP 上游 SWD 引擎主机线模型
 
-测试对象为固定上游 `Firmware/Source/SW_DP.c` 和配套 `DAP.c`。测试 pin 宏通过回调连接到纯主机位流模型；模型提供 ACK、数据和奇偶校验输入，并记录输出位、时钟置高调用及方向切换。模型 fast 延时为空操作，调用计数不是时钟频率或时序测量。
+测试对象为固定上游 `Firmware/Source/SW_DP.c` 和配套 `DAP.c`。测试 pin 宏调用回调；回调调用实际 `dbgc_ch585_swd_gpio.c` BSP API，再通过模拟 GPIOB 寄存器提供 PB5 输入并检查 PB5/PB6 写掩码。位流模型提供 ACK、数据和奇偶校验输入，并记录输出位、时钟置高调用及方向切换。夹具显式选用 `DBGC_CH585_GPIO_OUTPUT_PP_5MA` 和 `DBGC_CH585_GPIO_INPUT_FLOATING`，仅用于主机测试，不代表产品电气策略。模型 fast 延时为空操作，调用计数不是时钟频率或时序测量。
 
 | 用例 | 检查内容 | 通过条件 | 状态 |
 |---|---|---|---|
@@ -116,11 +116,11 @@ Discovery、设备信息、Pair/Unpair、配置、状态、OTA、中断恢复、
 | SWD-ENG-08 | 经 `DAP_Connect` 建立 SWD 端口后，执行两项 AP `DAP_TransferBlock` 读 | 模型消费初始 posted read、后续 AP 读和末项 RDBUFF 三个 SWD 事务；DAP 按小端序返回两项数据及正确计数/状态 | 通过 |
 | SWD-ENG-09 | 执行包含 10 位 SWD 输出及 10 位输入序列的 `DAP_SWD_Sequence` 命令 | 返回命令长度与成功状态；输出位序、输入字节打包、模型时钟次数及方向切换调用符合预期 | 通过 |
 
-另由 WCH RISC-V GCC 将测试配置下的上游 `SW_DP.c` 编译为 ELF32 RISC-V 对象。九项主机用例共 168 项断言；它们与目标对象编译均不使用 WCH GPIO、USB、ThreadX 或 CH585M；对象未链接至产品固件。它们验证固定上游位级算法在模拟线模型中的逻辑，不验证 PB5/PB6 波形、电平、SWD 频率、建立/保持时间或 Target 电气行为。
+另由 WCH RISC-V GCC 将测试配置下的上游 `SW_DP.c` 编译为 ELF32 RISC-V 对象。九项主机用例共 2759 项断言，并调用 CH585 SWD GPIO BSP 源码；寄存器由普通主机变量模拟。对象未链接至产品固件。测试验证固定上游位级算法经 BSP API 的软件调用路径及模拟寄存器映射，不验证芯片 GPIO、电平、波形、SWD 频率、建立/保持时间或 Target 电气行为，也不涉及 USB、ThreadX 或 CH585M 实板运行。复现命令：`DBGC_BUILD_DIR=build/ch585-gpio-swd-integration software/poc1-ch585-threadx/build.sh`。
 
 ## 10. 当前执行状态
 
-当前仓库包含 CH585M 数据手册、CH585EVT 压缩包及 ThreadX PoC-1。PoC 已有主机交叉构建日志，详见 FW-001；用户确认目前没有可用硬件，故无 CH585M 下载/调试及运行证据。DBG-C 产品固件、线缆样品或抓包也未提供。本文列出的产品级验证用例均未执行；FIFO 七组主机用例、八项 CMSIS-DAP 命令核心检查、五项 CMSIS-DAP 边界预检/dispatch 主机用例、九项 CMSIS-DAP 命令到 SWD 引擎集成线模型检查、两项 CMSIS 编译器宏目标对象检查、SWD GPIO BSP 模拟寄存器 57 项、Target Reset GPIO BSP 模拟寄存器 33 项、UART0 BSP/双向桥接适配器模拟寄存器与回调 94 项、UID 读取适配器 mock 31 项、单向/双向字节流桥接各 15 项主机检查及 UID ROM 底层库可重定位链接、其余 BSP/适配器目标对象编译及 `dbgc_ch585_platform` 静态库构建检查已通过，但均不计为板级或产品功能测试，PoC 交叉构建也不计为实板运行证据。构建、ELF/链接检查和源码静态审查已完成，验证板设计门已通过，可设计限定用途的验证板。该门要求可复现的干净构建、ELF/链接/资源检查，以及对启动、上下文和中断路径的静态审查；仅允许设计验证板，不放行产品原理图或 PCB 冻结。实板运行仍未执行，产品硬件冻结未放行。ThreadX 启动、中断进入/退出、SysTick 频率与 tick 投递、线程切换/睡眠/唤醒、栈完整性、复位恢复和持续运行项目均保持未执行，须在具体测试方案中预先定义时长、重复次数、负载和通过门限。软件放行与实板门见 OPEN-001 O18/O19。本文件定义覆盖面，不构成实板验证报告。
+当前仓库包含 CH585M 数据手册、CH585EVT 压缩包及 ThreadX PoC-1。PoC 已有主机交叉构建日志，详见 FW-001；用户确认目前没有可用硬件，故无 CH585M 下载/调试及运行证据。DBG-C 产品固件、线缆样品或抓包也未提供。本文列出的产品级验证用例均未执行；FIFO 七组主机用例、八项 CMSIS-DAP 命令核心检查、五项 CMSIS-DAP 边界预检/dispatch 主机用例、九项 CMSIS-DAP 命令到 SWD 引擎主机线模型检查（现接入 CH585 GPIO BSP 模拟寄存器）、两项 CMSIS 编译器宏目标对象检查、SWD GPIO BSP 模拟寄存器 57 项、Target Reset GPIO BSP 模拟寄存器 33 项、UART0 BSP/双向桥接适配器模拟寄存器与回调 94 项、UID 读取适配器 mock 31 项、单向/双向字节流桥接各 15 项主机检查及 UID ROM 底层库可重定位链接、其余 BSP/适配器目标对象编译及 `dbgc_ch585_platform` 静态库构建检查已通过，但均不计为板级或产品功能测试，PoC 交叉构建也不计为实板运行证据。构建、ELF/链接检查和源码静态审查已完成，验证板设计门已通过，可设计限定用途的验证板。该门要求可复现的干净构建、ELF/链接/资源检查，以及对启动、上下文和中断路径的静态审查；仅允许设计验证板，不放行产品原理图或 PCB 冻结。实板运行仍未执行，产品硬件冻结未放行。ThreadX 启动、中断进入/退出、SysTick 频率与 tick 投递、线程切换/睡眠/唤醒、栈完整性、复位恢复和持续运行项目均保持未执行，须在具体测试方案中预先定义时长、重复次数、负载和通过门限。软件放行与实板门见 OPEN-001 O18/O19。本文件定义覆盖面，不构成实板验证报告。
 
 ### 10.1 CMSIS 与 CH585 GPIO 主机/目标检查
 

@@ -8,9 +8,9 @@
 | SYS-001 | [系统架构设计](../02-system/DBG-C-SYS-001.zh-CN.md) | V0.2，待评审 |
 | IF-001 | [DBG-C Interface Specification](../03-interfaces/DBG-C-IF-001.zh-CN.md) | V0.1 概念草案，Pin 未冻结 |
 | MCU-001 | [MCU 选型与资源评估](../04-hardware/DBG-C-MCU-001.zh-CN.md) | V0.8；UID ROM 命令与 8 字节构造有 EVT 依据；硅片读取和 Device ID 安全语义待验证 |
-| FW-001 | [固件架构与 PoC-1 记录](../05-firmware/DBG-C-FW-001.zh-CN.md) | V0.45；两次固定路径 clean rebuild 的 ELF/map 一致，当前 ELF text/data/bss 为 8916/8/5580 字节；ThreadX 实板运行仍未验证 |
+| FW-001 | [固件架构与 PoC-1 记录](../05-firmware/DBG-C-FW-001.zh-CN.md) | V0.46；SWD 引擎 9 个主机线模型用例经 GPIO BSP 模拟寄存器执行，2759 项断言；两次固定路径 clean rebuild 的 ELF/map 一致，当前 ELF text/data/bss 为 8916/8/5580 字节；ThreadX 实板运行仍未验证 |
 | RF-001 | [Private 2.4G Protocol Specification](../06-protocols/DBG-C-RF-001.zh-CN.md) | V0.1 协议框架，不可据此编码 |
-| TEST-001 | [Verification Specification](../07-verification/DBG-C-TEST-001.zh-CN.md) | V0.41；新增 ThreadX 实板观测用例，当前全部未执行；UID 适配器 31 项 mock 检查和目标对象编译已执行，硅片读取未执行；UART0 与桥接主机检查结果见文档 |
+| TEST-001 | [Verification Specification](../07-verification/DBG-C-TEST-001.zh-CN.md) | V0.42；新增 ThreadX 实板观测用例，当前全部未执行；UID 适配器 31 项 mock 检查和目标对象编译已执行，硅片读取未执行；UART0 与桥接主机检查结果见文档 |
 | RISK-001 | [Risk Register](../08-risk/DBG-C-RISK-001.zh-CN.md) | V0.6 风险清单；ThreadX 移植待实板验证，tick 目标待决策 |
 | OPEN-001 | [未决问题与验证清单](DBG-C-OPEN-001.zh-CN.md) | V0.37；ThreadX 创建状态/tick 观测符号已加入 PoC，实板运行未执行；验证板设计已放行，产品硬件冻结未放行；O11/O21 仍开放 |
 
