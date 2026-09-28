@@ -348,3 +348,57 @@ PASS: 57 byte FIFO checks
   Class:                             ELF32
   Machine:                           RISC-V
   Entry point address:               0x0
+
+Latest verification with deterministic FIFO state-sequence coverage:
+Command: software/poc1-ch585-threadx/build.sh
+Repository HEAD: 3e22ed28ab9d243b6463c6d9877ce83ab85d37cf
+ThreadX commit: b91b03b9e75fa523b17127f9e0eca09dca916459
+ThreadX tag: v6.5.1.202602a_rel
+cmake version 3.28.3
+riscv-wch-elf-gcc (xPack GNU RISC-V Embedded GCC x86_64) 12.2.0
+GNU assembler (xPack GNU RISC-V Embedded GCC x86_64) 2.38
+GNU ld (xPack GNU RISC-V Embedded GCC x86_64) 2.38
+Host C compiler: cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+-- Building standard ThreadX version
+-- THREADX_ARCH: risc-v32
+-- THREADX_TOOLCHAIN: gnu
+-- Using custom tx_user.h file from /home/dennis/Desktop/workspace/github_projects/DBG-C/software/poc1-ch585-threadx/platform/ch585/tx_user.h
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/dennis/Desktop/workspace/github_projects/DBG-C/software/poc1-ch585-threadx/build
+[  0%] Built target dbgc_byte_fifo
+[ 97%] Built target threadx
+[100%] Built target dbgc_poc1
+PASS: 3678 byte FIFO checks
+   text	   data	    bss	    dec	    hex	filename
+   8876	      8	   5564	  14448	   3870	/home/dennis/Desktop/workspace/github_projects/DBG-C/software/poc1-ch585-threadx/build/dbgc_poc1.elf
+  Class:                             ELF32
+  Machine:                           RISC-V
+  Entry point address:               0x0
+
+Latest verification with deterministic FIFO state-sequence coverage:
+Command: software/poc1-ch585-threadx/build.sh
+Repository HEAD: 9169a37537edb09c6fc5ae0c113f499f1b235119
+ThreadX commit: b91b03b9e75fa523b17127f9e0eca09dca916459
+ThreadX tag: v6.5.1.202602a_rel
+cmake version 3.28.3
+riscv-wch-elf-gcc (xPack GNU RISC-V Embedded GCC x86_64) 12.2.0
+GNU assembler (xPack GNU RISC-V Embedded GCC x86_64) 2.38
+GNU ld (xPack GNU RISC-V Embedded GCC x86_64) 2.38
+Host C compiler: cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+-- Building standard ThreadX version
+-- THREADX_ARCH: risc-v32
+-- THREADX_TOOLCHAIN: gnu
+-- Using custom tx_user.h file from /home/dennis/Desktop/workspace/github_projects/DBG-C/software/poc1-ch585-threadx/platform/ch585/tx_user.h
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/dennis/Desktop/workspace/github_projects/DBG-C/software/poc1-ch585-threadx/build
+[  0%] Built target dbgc_byte_fifo
+[ 97%] Built target threadx
+[100%] Built target dbgc_poc1
+PASS: 3678 byte FIFO checks
+   text	   data	    bss	    dec	    hex	filename
+   8876	      8	   5564	  14448	   3870	/home/dennis/Desktop/workspace/github_projects/DBG-C/software/poc1-ch585-threadx/build/dbgc_poc1.elf
+  Class:                             ELF32
+  Machine:                           RISC-V
+  Entry point address:               0x0

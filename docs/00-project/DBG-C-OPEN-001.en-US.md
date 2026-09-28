@@ -1,6 +1,6 @@
 # DBG-C Open Questions and Verification List
 
-**Document ID:** DBG-C-OPEN-001　**Version:** V0.9　**Status:** Open items
+**Document ID:** DBG-C-OPEN-001　**Version:** V0.10　**Status:** Open items
 
 | ID | Question | Evidence/decision required | Affected documents | Status |
 |---|---|---|---|---|
@@ -26,7 +26,7 @@
 
 ## O18 Evidence Update
 
-- Host cases FIFO-01 through FIFO-06 for the generic byte FIFO pass; the existing build entry reports 57 assertions passed. This covers only pure C FIFO behavior, does not close O18, and does not prove ThreadX/ISR/chip runtime behavior.
+- Host cases FIFO-01 through FIFO-07 for the generic byte FIFO pass; the existing build entry reports 3678 assertions passed. This covers only pure C FIFO behavior, does not close O18, and does not prove ThreadX/ISR/chip runtime behavior.
 - ThreadX is pinned to `v6.5.1.202602a_rel`, commit `b91b03b9e75fa523b17127f9e0eca09dca916459`; MounRiver Linux x64 Toolchain V2.4.0 GCC 12.2.0 is installed in the current user account.
 - PoC-1 now contains experimental clock initialization, a low-level unused-memory boundary, VTF SysTick registration, and a ThreadX tick ISR. The threads read `tx_time_get()` and sleep for one tick. Host cross-build passed; output is ELF32 RISC-V, text 8876, data 8, bss 5564 bytes.
 - The tick uses the upstream ThreadX header default of 100 ticks/s. HPE/VTF behavior, exception frames, actual SysTick frequency, tick delivery, sleep/wakeup, scheduling, and endurance remain unverified on hardware; O18 remains open.

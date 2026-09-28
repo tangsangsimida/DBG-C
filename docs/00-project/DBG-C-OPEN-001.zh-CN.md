@@ -1,6 +1,6 @@
 # DBG-C 未决问题与验证清单
 
-**文档编号：** DBG-C-OPEN-001　**版本：** V0.9　**状态：** 开放项
+**文档编号：** DBG-C-OPEN-001　**版本：** V0.10　**状态：** 开放项
 
 | ID | 问题 | 需要的证据/决策 | 影响文档 | 状态 |
 |---|---|---|---|---|
@@ -26,7 +26,7 @@
 
 ## O18 更新证据
 
-- 通用字节 FIFO 的 FIFO-01 至 FIFO-06 主机用例已通过，既有构建入口报告 57 项断言通过；该结果只覆盖纯 C FIFO 行为，不关闭 O18，也不证明 ThreadX/ISR/芯片运行正确。
+- 通用字节 FIFO 的 FIFO-01 至 FIFO-07 主机用例已通过，既有构建入口报告 3678 项断言通过；该结果只覆盖纯 C FIFO 行为，不关闭 O18，也不证明 ThreadX/ISR/芯片运行正确。
 - ThreadX 已锁定为 `v6.5.1.202602a_rel`，提交 `b91b03b9e75fa523b17127f9e0eca09dca916459`；MounRiver Linux x64 Toolchain V2.4.0 的 GCC 12.2.0 已安装到当前用户目录。
 - PoC-1 有实验性时钟初始化、low-level 内存边界、VTF SysTick 注册和 ThreadX tick ISR；线程读取 `tx_time_get()` 并睡眠一个 tick。主机交叉构建通过，输出为 ELF32 RISC-V，text 8876、data 8、bss 5564 字节。
 - Tick 采用 ThreadX 上游头文件默认值 100 tick/s。HPE/VTF 行为、异常栈帧、SysTick 实际频率、tick 投递、睡眠唤醒、调度和长期稳定性都未在板上验证；因此 O18 仍未关闭。

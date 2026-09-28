@@ -1,6 +1,6 @@
 # DBG-C Firmware Architecture 与 PoC-1 记录
 
-**文档编号：** DBG-C-FW-001　**版本：** V0.7　**状态：** 实验草案；通用 FIFO 模块及 57 项主机断言已通过；验证板设计门已通过；tick 目标冲突待决策；实板运行及产品硬件冻结未通过
+**文档编号：** DBG-C-FW-001　**版本：** V0.8　**状态：** 实验草案；通用 FIFO 模块及 3678 项主机断言已通过；验证板设计门已通过；tick 目标冲突待决策；实板运行及产品硬件冻结未通过
 
 ## 1. 范围与状态
 
@@ -142,7 +142,7 @@ WCH 示例的 `highcode_init()` 初始化 HSI PLL 到 62.4 MHz，并配置相关
 
 | 模块 | 软件位置/资源依据 | 当前实现边界 | 状态/验证 |
 |---|---|---|---|
-| 通用字节 FIFO | `software/common/byte_fifo/`；对应 MCU-001 规划的 USB CDC、UART 与 RF 收发缓冲 | 调用方提供固定存储；支持任意非零容量、部分读写、不覆盖未读数据、清空与容量查询；无动态分配、无芯片寄存器/中断/ThreadX API；不保证并发安全，调用方必须串行化访问 | 已加入现有 CMake 构建并通过 CH585 交叉编译；既有构建脚本中的主机验证运行通过 57 项断言；当前未接入 USB/UART/RF，未做实板测试；不是冻结的产品 ABI |
+| 通用字节 FIFO | `software/common/byte_fifo/`；对应 MCU-001 规划的 USB CDC、UART 与 RF 收发缓冲 | 调用方提供固定存储；支持任意非零容量、部分读写、不覆盖未读数据、清空与容量查询；无动态分配、无芯片寄存器/中断/ThreadX API；不保证并发安全，调用方必须串行化访问 | 已加入现有 CMake 构建并通过 CH585 交叉编译；既有构建脚本中的主机验证运行通过 3678 项断言；当前未接入 USB/UART/RF，未做实板测试；不是冻结的产品 ABI |
 | CMSIS-DAP / DAP command core | MCU-001 USBFS 分配；PRD 的 CMSIS-DAP v2 目标 | 仓库没有 CMSIS-DAP 源码或已选定版本，USB/DAP 接口和 VID/PID 也未冻结 | 暂不实现；需先锁定上游源码/版本并完成 USB-001 及 O02/O08 |
 | USBFS Device + CDC transport | MCU-001 USBFS、PB10/PB11；WCH EVT 含 USB 示例 | Endpoint、描述符、WCH USB Device API、WinUSB 与组织 VID 尚未确定 | 暂不实现；按 O02/O08 取证并定义 USB-001 后再做 |
 | UART0 driver/bridge | MCU-001 UART0、PB4/PB7 | WCH UART API/复用初始化、波特率/流控和 ISR 到 ThreadX 的同步规则待核实 | 暂不实现；需核对 EVT 的 CH585 UART 例程并确定 CDC/UART 行为（O09） |
@@ -151,4 +151,4 @@ WCH 示例的 `highcode_init()` 初始化 HSI PLL 到 62.4 MHz，并配置相关
 | 私有 2.4G transport | 集成 Radio，DBG-C RF Protocol 目标 | PHY/API、包格式、序列、重试、恢复和时延目标未确定 | 暂不实现；需先完成 RF-001、O01/O03/O12 |
 | CH585M ThreadX port | 当前 `software/poc1-ch585-threadx/platform/ch585/` | reset、SysTick、PFIC/VTF/HPE 与上下文切换依赖芯片硬件语义 | 仅实验 PoC；启动、中断、tick、上下文切换、调度、睡眠/唤醒均未做 CH585M 实板验证，保持 O18 开放 |
 
-字节 FIFO 只建立与硬件无关的存储边界。USB、UART、RF 调用方不得直接依赖其内部索引；在同步/并发模型和传输 API 确认前，不把该模块包装成 ISR-safe queue 或产品数据协议。FIFO 主机用例由 `software/common/byte_fifo/tests/test_dbgc_byte_fifo.c` 提供，并由既有 `software/poc1-ch585-threadx/build.sh` 使用本机 C99 编译器构建和运行；当前 57 项断言通过。该结果不验证并发、ISR、CH585M SRAM 或板级行为。
+字节 FIFO 只建立与硬件无关的存储边界。USB、UART、RF 调用方不得直接依赖其内部索引；在同步/并发模型和传输 API 确认前，不把该模块包装成 ISR-safe queue 或产品数据协议。FIFO 主机用例由 `software/common/byte_fifo/tests/test_dbgc_byte_fifo.c` 提供，并由既有 `software/poc1-ch585-threadx/build.sh` 使用本机 C99 编译器构建和运行；当前 3678 项断言通过。该结果不验证并发、ISR、CH585M SRAM 或板级行为。

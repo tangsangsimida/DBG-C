@@ -8,11 +8,11 @@ This document set is a V0.x engineering baseline draft, not a frozen interface o
 | SYS-001 | [System Architecture](../02-system/DBG-C-SYS-001.en-US.md) | V0.2, for review |
 | IF-001 | [DBG-C Interface Specification](../03-interfaces/DBG-C-IF-001.en-US.md) | V0.1 concept draft; pins not frozen |
 | MCU-001 | [MCU Selection and Resource Assessment](../04-hardware/DBG-C-MCU-001.en-US.md) | V0.6; verification-board design gate passed, tick target pending decision, board verification not run |
-| FW-001 | [Firmware Architecture and PoC-1 Record](../05-firmware/DBG-C-FW-001.en-US.md) | V0.7 generic FIFO host assertions pass; verification-board design gate passed, board runtime unverified |
+| FW-001 | [Firmware Architecture and PoC-1 Record](../05-firmware/DBG-C-FW-001.en-US.md) | V0.8 generic FIFO has 3678 passing host assertions; verification-board design gate passed, board runtime unverified |
 | RF-001 | [Private 2.4G Protocol Specification](../06-protocols/DBG-C-RF-001.en-US.md) | V0.1 framework; not ready for implementation |
-| TEST-001 | [Verification Specification](../07-verification/DBG-C-TEST-001.en-US.md) | V0.7; FIFO host cases pass, ThreadX board tests not run; verification-board design gate passed |
+| TEST-001 | [Verification Specification](../07-verification/DBG-C-TEST-001.en-US.md) | V0.8; FIFO host cases pass, ThreadX board tests not run; verification-board design gate passed |
 | RISK-001 | [Risk Register](../08-risk/DBG-C-RISK-001.en-US.md) | V0.5; ThreadX port awaits board verification, tick target pending decision |
-| OPEN-001 | [Open Questions and Verification List](DBG-C-OPEN-001.en-US.md) | V0.9; FIFO host cases pass; verification-board design gate passed, tick target pending decision, product-hardware freeze not released |
+| OPEN-001 | [Open Questions and Verification List](DBG-C-OPEN-001.en-US.md) | V0.10; FIFO host cases pass; verification-board design gate passed, tick target pending decision, product-hardware freeze not released |
 
 Future phase documents DBG-C-HW-001, USB-001, and BLE-001 have not yet been created.
 
