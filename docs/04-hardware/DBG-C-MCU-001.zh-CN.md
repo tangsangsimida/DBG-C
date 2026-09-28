@@ -1,6 +1,6 @@
 # DBG-C MCU 选型与资源评估
 
-**文档编号：** DBG-C-MCU-001　**版本：** V0.3　**状态：** CH585M V1 原理图资源分配草案；ThreadX 主机构建已验证，板级/电气核验待完成
+**文档编号：** DBG-C-MCU-001　**版本：** V0.4　**状态：** CH585M V1 原理图资源分配草案；先完成软件验证门槛，再进行硬件设计和板级核验
 
 ## 1. 证据来源
 
@@ -152,7 +152,7 @@ SPI、I2C、ADC、NFC、TouchKey、LCD/LED Matrix、USBHS、SWO/JTAG、Target Po
 
 ## 6. ThreadX 对资源分配的增量要求
 
-项目已确定 V1 固件运行 ThreadX。PoC-1 固定 Eclipse ThreadX `v6.5.1.202602a_rel`（commit `b91b03b9e75fa523b17127f9e0eca09dca916459`），使用其 `ports/risc-v32/gnu` 上下文例程，并加入实验性 CH585M low-level、SysTick 和 WCH 启动/时钟适配。MounRiver Linux x64 Toolchain V2.4.0 的 GCC 12.2.0 主机交叉构建通过；WCH EVT `.cproject` 选择 GCC12 配置但未记载补丁版本。编译通过不证明 QingKe RISC-V3C 的硬件压栈、VTF/HPE、异常返回或调度兼容；板上验证未执行。
+项目已确定 V1 固件运行 ThreadX。PoC-1 固定 Eclipse ThreadX `v6.5.1.202602a_rel`（commit `b91b03b9e75fa523b17127f9e0eca09dca916459`），使用其 `ports/risc-v32/gnu` 上下文例程，并加入实验性 CH585M low-level、SysTick 和 WCH 启动/时钟适配。MounRiver Linux x64 Toolchain V2.4.0 的 GCC 12.2.0 主机交叉构建通过；WCH EVT `.cproject` 选择 GCC12 配置但未记载补丁版本。用户确认目前没有可用板卡，且要求软件验证通过后才能设计硬件，再以实物验证。主机编译通过不证明 QingKe RISC-V3C 的硬件压栈、VTF/HPE、异常返回或调度兼容；软件验证门槛见 OPEN-001 O19，板上验证尚未执行。
 
 | 资源 | ThreadX 需求 | DBG-C 分配 | 当前证据边界 |
 |---|---|---|---|

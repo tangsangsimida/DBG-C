@@ -1,6 +1,6 @@
 # DBG-C 未决问题与验证清单
 
-**文档编号：** DBG-C-OPEN-001　**版本：** V0.5　**状态：** 开放项
+**文档编号：** DBG-C-OPEN-001　**版本：** V0.6　**状态：** 开放项
 
 | ID | 问题 | 需要的证据/决策 | 影响文档 | 状态 |
 |---|---|---|---|---|
@@ -22,12 +22,14 @@
 | O16 | BLE 无线下载的应用协议、镜像格式、Target 范围和断点续传规则？ | 定义 DBG-C Tool ↔ Probe 协议并选定 Target 验收板 | PRD, BLE, TEST | 待决策 |
 | O17 | USBFS/USBHS 是否可同时运行？V1 已分配 USBFS，什么实现限制会要求改用 USBHS？ | SDK 实例、官方资源限制与对照实测 | MCU, USB, SYS | 待验证 |
 | O18 | Eclipse ThreadX RISC-V32/GNU 线程上下文例程及本地 CH585M 低层适配能否正确运行于 QingKe V3C？ | 在 CH585M 板上验证 HPE、PFIC/VTF、启动入口、异常栈帧、SysTick、睡眠唤醒、调度和持续运行 | MCU, FW, TEST | 待验证；实验性 ISR/时基已实现，主机 ELF 构建通过 |
+| O19 | 进入硬件设计前，PoC-1 的“软件验证通过”门槛是什么？ | 明确可复现构建、ELF/链接检查、静态审查或其他验证项及通过规则；评审后再进入硬件设计 | MCU, FW, SYS, TEST | 待决策；主机交叉构建通过不代表 CH585M 板级行为通过 |
 
 ## O18 更新证据
 
 - ThreadX 已锁定为 `v6.5.1.202602a_rel`，提交 `b91b03b9e75fa523b17127f9e0eca09dca916459`；MounRiver Linux x64 Toolchain V2.4.0 的 GCC 12.2.0 已安装到当前用户目录。
 - PoC-1 有实验性时钟初始化、low-level 内存边界、VTF SysTick 注册和 ThreadX tick ISR；线程读取 `tx_time_get()` 并睡眠一个 tick。主机交叉构建通过，输出为 ELF32 RISC-V，text 8876、data 8、bss 5564 字节。
 - Tick 采用 ThreadX 上游头文件默认值 100 tick/s。HPE/VTF 行为、异常栈帧、SysTick 实际频率、tick 投递、睡眠唤醒、调度和长期稳定性都未在板上验证；因此 O18 仍未关闭。
+- 用户确认当前没有可用板卡；要求先完成软件验证，再设计硬件，最后通过实物进行板级验证。板级运行保持待验证；硬件设计前的软件门槛由 O19 跟踪。
 - `docs/05-firmware/DBG-C-FW-001.zh-CN.md` 记录 EVT 来源、原始归档散列和主机环境。WCH EVT `.cproject` 只确定 GCC12 选项，未确定 GCC 补丁版本；当前安装工具链实测 GCC 12.2.0。
 
 ## 当前确认边界

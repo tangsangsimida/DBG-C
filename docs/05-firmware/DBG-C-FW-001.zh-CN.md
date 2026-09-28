@@ -1,6 +1,6 @@
 # DBG-C Firmware Architecture 与 PoC-1 记录
 
-**文档编号：** DBG-C-FW-001　**版本：** V0.2　**状态：** 实验草案；主机交叉构建通过，CH585M 板级运行未验证
+**文档编号：** DBG-C-FW-001　**版本：** V0.3　**状态：** 实验草案；主机交叉构建通过，用户确认当前无板卡，板级运行待验证
 
 ## 1. 范围与状态
 
@@ -17,7 +17,7 @@
 | ThreadX tick | PoC 使用上游 `tx_api.h` 默认 `TX_TIMER_TICKS_PER_SECOND`，其定义为 100 tick/s；SysTick ISR 调用 `_tx_thread_context_save`、`_tx_timer_interrupt`，清除 EVT 头文件定义的 SysTick `SR` | ISR 汇编能构建；HPE/VTF、异常返回和调度语义尚未验证 |
 | PoC 线程 | 两个同优先级线程递增独立计数器，记录 `tx_time_get()` 并执行 `tx_thread_sleep(1U)` | 仅是待板测的可观测量设计 |
 | ELF 构建 | `text=8876`、`data=8`、`bss=5564` 字节；ELF32 RISC-V，入口地址 `0x0` | 当前主机的一次交叉构建，日志见 `software/poc1-ch585-threadx/build-evidence.log`；不等于烧录或运行证据 |
-| CH585M 板级运行 | 未执行 | 尚无已确认连接的 CH585M 板卡与下载/调试路径 |
+| CH585M 板级运行 | 未执行，待验证 | 用户确认目前没有可用板卡；暂无下载/调试和运行证据 |
 
 ## 2. 软件层和目录
 
@@ -110,7 +110,11 @@ WCH 示例的 `highcode_init()` 初始化 HSI PLL 到 62.4 MHz，并配置相关
 
 本轮主机交叉构建通过，证据记录在 `software/poc1-ch585-threadx/build-evidence.log`：ThreadX 精确修订 `b91b03b9e75fa523b17127f9e0eca09dca916459`，ELF 为 ELF32 RISC-V，入口 `0x0`，text 8876、data 8、bss 5564 字节。没有执行烧录、板上中断/调度、时钟测量或长时间运行测试。
 
-完成 PoC-1 仍需：
+### 6.1 软件验证与硬件设计顺序
+
+用户确认当前没有可用硬件，并要求先验证软件，再设计硬件，最后通过实际硬件验证。当前已通过的项目仅为主机交叉构建；这不足以证明 CH585M 上的中断、tick 和线程调度正确。硬件设计前的软件验证门槛及其通过标准尚未定义，记录在 OPEN-001 O19；在标准明确并通过评审前，不把本 PoC 标为软件验证完成或板级通过。
+
+### 6.2 尚需完成
 
 1. 在具体 CH585M 板卡上确认编程器、下载流程、芯片修订和启动行为。
 2. 观察 `thread_a_runs`、`thread_b_runs`、`threadx_tick_observed` 的持续变化；验证 `tx_thread_sleep(1U)` 的超时/唤醒、同优先级轮转及系统复位后的稳定性。

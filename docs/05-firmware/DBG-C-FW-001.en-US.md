@@ -1,6 +1,6 @@
 # DBG-C Firmware Architecture and PoC-1 Record
 
-**Document ID:** DBG-C-FW-001　**Version:** V0.2　**Status:** Experimental draft; host cross-build passes, CH585M board runtime is unverified
+**Document ID:** DBG-C-FW-001　**Version:** V0.3　**Status:** Experimental draft; host cross-build passes, user confirms no board is currently available, board runtime is pending
 
 ## 1. Scope and status
 
@@ -17,7 +17,7 @@ This phase checks whether Eclipse ThreadX can be cross-built in a CH585M project
 | ThreadX tick | Uses upstream `tx_api.h` default `TX_TIMER_TICKS_PER_SECOND`, defined as 100 ticks/s; SysTick ISR calls `_tx_thread_context_save` and `_tx_timer_interrupt`, then clears SysTick `SR` as defined by the EVT header | ISR assembly builds; HPE/VTF, exception return, and scheduling semantics remain unverified |
 | PoC threads | Two same-priority threads increment separate counters, record `tx_time_get()`, and call `tx_thread_sleep(1U)` | Observable values are designed for later board testing only |
 | ELF build | `text=8876`, `data=8`, `bss=5564` bytes; ELF32 RISC-V, entry `0x0` | One cross-build on this host; log: `software/poc1-ch585-threadx/build-evidence.log`; not flash or runtime evidence |
-| CH585M board runtime | Not run | No confirmed CH585M board and programming/debug path are available |
+| CH585M board runtime | Not run; pending | User confirms no board is currently available; no programming/debug or runtime evidence exists |
 
 ## 2. Software layers and layout
 
@@ -110,7 +110,11 @@ The current SysTick ISR assembly entry is placed in the highcode region used by 
 
 The host cross-build passed. The evidence log at `software/poc1-ch585-threadx/build-evidence.log` records ThreadX commit `b91b03b9e75fa523b17127f9e0eca09dca916459`, ELF32 RISC-V, entry `0x0`, and text 8876, data 8, bss 5564 bytes. No flashing, board interrupt/scheduling test, clock measurement, or endurance run was performed.
 
-PoC-1 still requires:
+### 6.1 Software verification before hardware design
+
+The user confirms that no hardware is currently available and requires software verification first, followed by hardware design and then verification on actual hardware. Only the host cross-build has passed so far; this does not prove CH585M interrupt, tick, or thread-scheduling behavior. The pre-hardware software verification gate and its pass criteria have not yet been defined; see OPEN-001 O19. Do not mark this PoC software-verified or board-verified until the criteria are agreed and met.
+
+### 6.2 Remaining work
 
 1. Confirm the exact CH585M board, programming/debug adapter, programming procedure, silicon revision, and boot behavior.
 2. Observe `thread_a_runs`, `thread_b_runs`, and `threadx_tick_observed` changing continuously; verify `tx_thread_sleep(1U)` timeout/wakeup, same-priority rotation, and stability after reset.
