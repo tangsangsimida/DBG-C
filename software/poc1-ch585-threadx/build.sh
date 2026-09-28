@@ -25,6 +25,8 @@ esac
     git -C "${repo_dir}/software/third_party/threadx" rev-parse HEAD
     printf 'ThreadX tag: '
     git -C "${repo_dir}/software/third_party/threadx" describe --tags --exact-match HEAD
+    printf 'CMSIS-DAP commit: '
+    git -C "${repo_dir}/software/third_party/cmsis-dap" rev-parse HEAD
     cmake --version | head -n 1
     "${toolchain_bin}/riscv-wch-elf-gcc" --version | head -n 1
     "${toolchain_bin}/riscv-wch-elf-as" --version | head -n 1
@@ -43,7 +45,29 @@ esac
         "${repo_dir}/software/common/byte_fifo/tests/test_dbgc_byte_fifo.c" \
         -o "${build_dir}/host-tests/test_dbgc_byte_fifo"
     "${build_dir}/host-tests/test_dbgc_byte_fifo"
+    cmsis_dap_host_dir="${build_dir}/host-tests/cmsis-dap"
+    python3 "${repo_dir}/software/common/cmsis_dap_host_test/prepare_upstream.py" \
+        "${repo_dir}/software/third_party/cmsis-dap" "${cmsis_dap_host_dir}"
+    "${host_cc}" -std=c99 -Wall -Wextra -Werror -Wno-unused-parameter -pedantic \
+        -DDBGC_CMSIS_DAP_TEST_C_LOOP \
+        -I"${repo_dir}/software/common/cmsis_dap_host_test" \
+        -I"${cmsis_dap_host_dir}/include" \
+        "${cmsis_dap_host_dir}/src/DAP.c" \
+        "${repo_dir}/software/common/cmsis_dap_host_test/test_dap_commands.c" \
+        -o "${build_dir}/host-tests/test_cmsis_dap_commands"
+    "${build_dir}/host-tests/test_cmsis_dap_commands"
+    mkdir -p "${build_dir}/target-tests"
+    "${toolchain_bin}/riscv-wch-elf-gcc" -std=c99 -Wall -Wextra -Werror \
+        -Wno-unused-parameter -march=rv32imac -mabi=ilp32 -mcmodel=medany \
+        -DDBGC_CMSIS_DAP_TEST_C_LOOP \
+        -I"${repo_dir}/software/common/cmsis_dap_host_test" \
+        -I"${cmsis_dap_host_dir}/include" \
+        -c "${cmsis_dap_host_dir}/src/DAP.c" \
+        -o "${build_dir}/target-tests/cmsis_dap_command_core.o"
+    "${toolchain_bin}/riscv-wch-elf-readelf" -h \
+        "${build_dir}/target-tests/cmsis_dap_command_core.o" | \
+        rg 'Class:|Machine:'
     "${toolchain_bin}/riscv-wch-elf-size" "${build_dir}/dbgc_poc1.elf"
     "${toolchain_bin}/riscv-wch-elf-readelf" -h "${build_dir}/dbgc_poc1.elf" | \
         rg 'Class:|Machine:|Entry point address:'
-} 2>&1 | tee "${project_dir}/build-evidence.log"
+} 2>&1 | tee -a "${project_dir}/build-evidence.log"

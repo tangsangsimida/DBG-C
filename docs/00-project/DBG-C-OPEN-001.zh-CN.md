@@ -1,6 +1,6 @@
 # DBG-C 未决问题与验证清单
 
-**文档编号：** DBG-C-OPEN-001　**版本：** V0.13　**状态：** 开放项
+**文档编号：** DBG-C-OPEN-001　**版本：** V0.14　**状态：** 开放项
 
 | ID | 问题 | 需要的证据/决策 | 影响文档 | 状态 |
 |---|---|---|---|---|
@@ -23,7 +23,7 @@
 | O17 | USBFS/USBHS 是否可同时运行？V1 已分配 USBFS，什么实现限制会要求改用 USBHS？ | SDK 实例、官方资源限制与对照实测 | MCU, USB, SYS | 待验证 |
 | O18 | Eclipse ThreadX RISC-V32/GNU 线程上下文例程及本地 CH585M 低层适配能否正确运行于 QingKe V3C？ | 在 CH585M 板上验证 HPE、PFIC/VTF、启动入口、异常栈帧、SysTick、睡眠唤醒、调度和持续运行 | MCU, FW, TEST | 待实板验证；软件门已放行验证板设计，但当前无可用板卡，芯片运行未执行 |
 | O19 | 进入硬件设计前，PoC-1 的“软件验证通过”门槛是什么？ | 采用 O19 放行标准：两次可复现构建、ELF/链接资源检查、startup/ThreadX 上下文与中断路径静态审查；仅放行验证硬件设计，产品冻结须实板验证 | MCU, FW, SYS, TEST | 软件放行门已通过，仅允许设计验证用硬件；tick 目标冲突仍待确认；实板运行与产品硬件冻结未通过 |
-| O20 | Arm CMSIS-DAP 固件核心能否直接由 CH585M 的 WCH RISC-V GCC 编译，需做哪些有依据的编译器/指令集适配？ | 对固定上游提交审查编译器头、内联汇编及端口依赖；适配后执行 CH585M 交叉构建和主机命令层验证，禁止引入 Arm ISA 汇编 | FW, MCU, TEST | 待验证；固定上游的 `DAP.h` 依赖当前仓库缺失的 `cmsis_compiler.h`，且非 ArmCC 分支含 Arm `subs` 汇编；当前未适配或编译 |
+| O20 | Arm CMSIS-DAP 固件核心能否由 CH585M 的 WCH RISC-V GCC 编译，需做哪些有依据的编译器/指令集适配？ | 对固定上游提交审查编译器头、内联汇编及端口依赖；完成有依据的适配后验证目标编译和主机命令层，禁止引入 Arm ISA 汇编 | FW, MCU, TEST | 仍待验证；测试专用、关闭 SWD/JTAG 的 `DAP.c` 目标对象编译已通过，3 条非 SWD 命令响应主机检查通过；产品 CMSIS 编译器适配、SWD HAL/配置和固件链接尚未完成 |
 
 ## O18 更新证据
 
@@ -35,6 +35,13 @@
 - ThreadX 上游 `qemu_virt` 示例使用 QEMU virt 地址/入口/链接布局，与 PoC 的 WCH CH585 启动和 PFIC/VTF 代码不同；当前环境无 QEMU、Spike、Renode，模拟器运行证据不存在。
 - 当前 PoC 实际使用 `TX_TIMER_TICKS_PER_SECOND=100`；在源码声明的 62.4 MHz 下，比较值计算为 623999。用户描述中出现的 1000 tick/s 尚未在源码中实现，须确认后才能修改配置。
 - `docs/05-firmware/DBG-C-FW-001.zh-CN.md` 记录 EVT 来源、原始归档散列和主机环境。WCH EVT `.cproject` 只确定 GCC12 选项，未确定 GCC 补丁版本；当前安装工具链实测 GCC 12.2.0。
+
+## O20 更新证据
+
+- 在固定 CMSIS-DAP 提交 `12636590eec66fae2d1bba4518749426ad5a4595` 上新增隔离主机检查；现有构建入口报告 3 条命令响应检查通过，覆盖固件版本 Info、未知 Info 标识符和未实现命令。
+- 主机测试关闭 SWD/JTAG，不调用 GPIO、时钟、USB、ThreadX 或 CH585M API；构建目录中的头文件副本仅修改延时分支选择条件，没有定义 `__CC_ARM` 或改动第三方子模块。
+- 同一测试配置下，WCH RISC-V GCC 将 `DAP.c` 编译为 ELF32 RISC-V 对象；该对象未链接至 PoC，且 SWD/JTAG 关闭。
+- 这些结果不证明产品 CMSIS 编译器适配、DAP SWD 传输、产品配置或 USB 接口。O20 保持开放。
 
 ## O19 放行标准与判定
 

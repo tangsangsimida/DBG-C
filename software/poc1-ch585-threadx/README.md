@@ -6,4 +6,4 @@ The local adapter configures SysTick using ThreadX's upstream default of 100 tic
 
 See `docs/05-firmware/DBG-C-FW-001.*.md` for exact source provenance, environment setup, build commands, and unresolved target-port work.
 
-The build script keeps build output under this PoC directory. Its default output directory is `build/`; set `DBGC_BUILD_DIR` to another relative directory under this project when a clean build is needed.
+Run `./build.sh` to build the PoC, run the generic byte FIFO checks, exercise three isolated CMSIS-DAP command responses with the host compiler, and compile the test-only CMSIS-DAP command core to an ELF32 RISC-V object with WCH GCC. The script keeps build output under this PoC directory. Its default output directory is `build/`; set `DBGC_BUILD_DIR` to another relative directory under this project when a clean build is needed. The CMSIS-DAP test configuration disables SWD/JTAG and is not product firmware. None of these checks verifies CH585M runtime behavior.
