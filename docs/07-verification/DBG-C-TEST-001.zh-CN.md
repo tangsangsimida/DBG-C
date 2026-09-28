@@ -1,6 +1,6 @@
 # DBG-C Verification Specification
 
-**文档编号：** DBG-C-TEST-001　**版本：** V0.45　**状态：** 测试计划草案；SWD 引擎线模型已接入 CH585 GPIO BSP 模拟寄存器路径，2759 项断言通过；通用 Target Reset 序列服务 24 项主机回调检查及 PA4 BSP 集成 37 项主机模拟寄存器检查通过；FIFO、单向/双向字节流桥接、CMSIS-DAP 命令层、有界 dispatch、SWD 引擎主机模型、边界预检器、CMSIS 编译器映射及 CH585 SWD GPIO、Target Reset GPIO 与 UART0、UID 读取适配器主机/目标静态链接检查已执行；PoC ThreadX 创建状态/tick 观测代码已加入并随目标交叉构建；CH585 BSP/适配器静态库纳入 PoC 交叉构建；产品 UART/命令边界、硅片 UID 与 ThreadX 实板测试未执行
+**文档编号：** DBG-C-TEST-001　**版本：** V0.46　**状态：** 测试计划草案；SWD 引擎线模型已接入 CH585 GPIO BSP 模拟寄存器路径，2759 项断言通过；通用 Target Reset 序列服务 24 项主机回调检查及 PA4 BSP 集成 37 项主机模拟寄存器检查通过；FIFO、单向/双向字节流桥接、CMSIS-DAP 命令层、有界 dispatch、SWD 引擎主机模型、边界预检器、CMSIS 编译器映射及 CH585 SWD GPIO、Target Reset GPIO 与 UART0、UID 读取适配器主机/目标静态链接检查已执行；PoC ThreadX 创建状态/tick 观测代码已加入并随目标交叉构建；CH585 BSP/适配器静态库纳入 PoC 交叉构建；产品 UART/命令边界、硅片 UID 与 ThreadX 实板测试未执行
 
 ## 1. 通过规则
 
@@ -195,4 +195,4 @@ SWD GPIO 与 Target Reset GPIO 主机检查分别以普通变量模拟 GPIOB/GPI
 | 保持失败恢复 | 保持回调返回错误时仍执行释放，并原样返回保持错误 | 通过 |
 | 配置入参检查 | 空配置、无保持回调或非 0/1 原始电平不触发 GPIO 操作并返回错误 | 通过 |
 
-37 项集成检查通过。它只验证源代码调用顺序和模拟寄存器操作，不验证真实 PA4、电气驱动、Target_nRESET 极性、脉宽或 CH585M 实板行为。调用前须由调用方按已评审电气策略配置 PA4 输出模式；保持回调策略和调度上下文由上层提供。复现命令：`DBGC_BUILD_DIR=build/reset-sequence-pa4-repro software/poc1-ch585-threadx/build.sh`。
+37 项集成检查通过。它只验证源代码调用顺序和模拟寄存器操作，不验证真实 PA4、电气驱动、Target_nRESET 极性、脉宽或 CH585M 实板行为。调用前须由调用方按已评审电气策略使 PA4 处于释放输出态；主机测试未验证 GPIO 初始化期间的电平转换或目标复位效果。保持回调策略和调度上下文由上层提供。复现命令：`DBGC_BUILD_DIR=build/reset-sequence-pa4-repro software/poc1-ch585-threadx/build.sh`。

@@ -11,9 +11,11 @@ typedef struct {
     void *context;
 } dbgc_ch585_target_reset_sequence_config_t;
 
-/* PA4 must already be configured as a suitable output by the caller. The
- * caller supplies raw assertion level and hold policy; this adapter defines
- * neither reset polarity, pulse width, electrical mode, nor scheduler use.
+/* Before calling, the caller must place PA4 in its approved, released output
+ * state. The caller supplies raw assertion level and hold policy; this adapter
+ * defines neither reset polarity, pulse width, electrical mode, nor scheduler
+ * use. Safe GPIO initialization and output-transition behavior require
+ * electrical review and board verification.
  */
 int dbgc_ch585_target_reset_sequence_execute(
     const dbgc_ch585_target_reset_sequence_config_t *configuration);
