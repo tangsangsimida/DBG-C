@@ -1,6 +1,6 @@
 # DBG-C Open Questions and Verification List
 
-**Document ID:** DBG-C-OPEN-001　**Version:** V0.14　**Status:** Open items
+**Document ID:** DBG-C-OPEN-001　**Version:** V0.15　**Status:** Open items
 
 | ID | Question | Evidence/decision required | Affected documents | Status |
 |---|---|---|---|---|
@@ -23,7 +23,7 @@
 | O17 | Can USBFS and USBHS operate concurrently? What implementation constraint would require V1 to switch from its USBFS allocation to USBHS? | SDK examples, official resource limits, comparative measurements | MCU, USB, SYS | To verify |
 | O18 | Can Eclipse ThreadX RISC-V32/GNU context routines and the local CH585M low-level adapter run correctly on QingKe V3C? | Verify HPE, PFIC/VTF, startup, exception frames, SysTick, sleep/wakeup, scheduling, and sustained runtime on CH585M | MCU, FW, TEST | Board verification pending; software gate releases verification-board design, but no board is currently available and chip runtime has not been tested |
 | O19 | What is the PoC-1 software-verification gate before hardware design? | Apply the O19 criteria: two reproducible builds, ELF/link resource checks, and static review of startup/ThreadX context/interrupt paths; release verification-board design only, with product freeze gated by board tests | MCU, FW, SYS, TEST | Software gate passed for verification-hardware design only; tick-target conflict remains open; board runtime and product-hardware freeze have not passed |
-| O20 | Can the Arm CMSIS-DAP firmware core compile with the CH585M WCH RISC-V GCC, and what compiler/ISA adaptation is evidence-based? | Review compiler headers, inline assembly, and port dependencies in the pinned upstream commit; verify target compilation and host command-layer behavior without Arm ISA assembly | FW, MCU, TEST | Still open; a test-only `DAP.c` object build with SWD/JTAG disabled and three non-SWD host response checks pass; product CMSIS compiler adaptation, SWD HAL/configuration, and firmware link are incomplete |
+| O20 | Can the Arm CMSIS-DAP firmware core compile with the CH585M WCH RISC-V GCC, and what compiler/ISA adaptation is evidence-based? | Review compiler headers, inline assembly, and port dependencies in the pinned upstream commit; verify target compilation and host command-layer behavior without Arm ISA assembly | FW, MCU, TEST | Still open; the test configuration compiles `DAP.c` with SWD command branches enabled and passes five host checks; SWD pin operations are no-ops and bus transactions are mocked; product CMSIS compiler adaptation, SWD HAL/configuration, and firmware link are incomplete |
 
 ## O18 Evidence Update
 
@@ -38,10 +38,10 @@
 
 ## O20 Evidence Update
 
-- An isolated host check was added for pinned CMSIS-DAP commit `12636590eec66fae2d1bba4518749426ad5a4595`; the existing build entry reports three command-response checks passing: firmware-version Info, unknown Info identifier, and unsupported command.
-- The host test disables SWD/JTAG and calls no GPIO, clock, USB, ThreadX, or CH585M API. A build-directory copy of the header changes only the delay-branch selection condition; it does not define `__CC_ARM` or modify the third-party submodule.
-- The same test-only configuration compiles `DAP.c` to an ELF32 RISC-V object with WCH RISC-V GCC; the object is not linked into PoC, and SWD/JTAG are disabled.
-- These results do not prove product CMSIS compiler adaptation, DAP SWD transfers, product configuration, or USB integration. O20 remains open.
+- Five host checks pass for pinned CMSIS-DAP commit `12636590eec66fae2d1bba4518749426ad5a4595`: firmware-version Info, unknown Info identifier, unsupported command, DP read with WAIT retries, and DP write completion.
+- SWD command processing is enabled, but pin macros are no-ops and `SWD_Transfer()` is a deterministic mock. The test calls no GPIO, USB, ThreadX, or CH585M API. A build-directory header copy changes only the delay-branch selector; it does not define `__CC_ARM` or modify the third-party submodule.
+- WCH RISC-V GCC compiles the SWD-enabled test configuration to an ELF32 RISC-V object; the object is not linked into PoC.
+- These results do not prove product CMSIS compiler adaptation, physical SWD transfers, product configuration, or USB integration. O20 remains open.
 
 ## O19 Release Criteria and Verdict
 

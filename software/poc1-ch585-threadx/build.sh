@@ -48,7 +48,8 @@ esac
     cmsis_dap_host_dir="${build_dir}/host-tests/cmsis-dap"
     python3 "${repo_dir}/software/common/cmsis_dap_host_test/prepare_upstream.py" \
         "${repo_dir}/software/third_party/cmsis-dap" "${cmsis_dap_host_dir}"
-    "${host_cc}" -std=c99 -Wall -Wextra -Werror -Wno-unused-parameter -pedantic \
+    "${host_cc}" -std=c99 -Wall -Wextra -Werror \
+        -Wno-unused-parameter -Wno-unused-variable -pedantic \
         -DDBGC_CMSIS_DAP_TEST_C_LOOP \
         -I"${repo_dir}/software/common/cmsis_dap_host_test" \
         -I"${cmsis_dap_host_dir}/include" \
@@ -58,7 +59,8 @@ esac
     "${build_dir}/host-tests/test_cmsis_dap_commands"
     mkdir -p "${build_dir}/target-tests"
     "${toolchain_bin}/riscv-wch-elf-gcc" -std=c99 -Wall -Wextra -Werror \
-        -Wno-unused-parameter -march=rv32imac -mabi=ilp32 -mcmodel=medany \
+        -Wno-unused-parameter -Wno-unused-variable \
+        -march=rv32imac -mabi=ilp32 -mcmodel=medany \
         -DDBGC_CMSIS_DAP_TEST_C_LOOP \
         -I"${repo_dir}/software/common/cmsis_dap_host_test" \
         -I"${cmsis_dap_host_dir}/include" \

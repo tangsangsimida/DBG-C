@@ -1,6 +1,6 @@
 # DBG-C Verification Specification
 
-**文档编号：** DBG-C-TEST-001　**版本：** V0.10　**状态：** 测试计划草案；FIFO 与 CMSIS-DAP 命令核心主机检查已执行，ThreadX 实板测试尚未执行
+**文档编号：** DBG-C-TEST-001　**版本：** V0.11　**状态：** 测试计划草案；FIFO 与 CMSIS-DAP/SWD 命令层主机检查已执行，ThreadX 实板测试尚未执行
 
 ## 1. 通过规则
 
@@ -48,16 +48,18 @@ Discovery、设备信息、Pair/Unpair、配置、状态、OTA、中断恢复、
 
 ## 9. CMSIS-DAP 命令核心主机检查
 
-测试对象为固定上游提交的 `Firmware/Source/DAP.c`，通过 `DAP_ExecuteCommand()` 调用。配置位于 `software/common/cmsis_dap_host_test/`，是仅供主机检查的值，不是 DBG-C 产品配置；SWD/JTAG 均关闭。测试构建只在 `software/poc1-ch585-threadx/build/host-tests/` 复制并修改 `DAP.h` 延时分支选择条件，没有定义 `__CC_ARM`，也不改动第三方子模块。
+测试对象为固定上游提交的 `Firmware/Source/DAP.c`，通过 `DAP_ExecuteCommand()` 调用。配置位于 `software/common/cmsis_dap_host_test/`，不是 DBG-C 产品配置；SWD 命令处理开启，JTAG 关闭。SWD pin 操作是空操作，底层 `SWD_Transfer()` 由测试桩模拟。测试构建只在 `software/poc1-ch585-threadx/build/host-tests/` 复制并修改 `DAP.h` 延时分支选择条件，没有定义 `__CC_ARM`，也不改动第三方子模块。
 
 | 用例 | 请求/检查 | 通过条件 | 状态 |
 |---|---|---|---|
 | DAP-HOST-01 | `ID_DAP_Info` 查询 `DAP_ID_DAP_FW_VER` | 响应命令、长度和固件版本字符串与固定上游实现一致 | 通过 |
 | DAP-HOST-02 | `ID_DAP_Info` 查询未定义的信息标识符 `0xA0` | 响应长度为 2，信息长度为 0 | 通过 |
 | DAP-HOST-03 | 发送未实现命令 `0x30` | 返回 `ID_DAP_Invalid`，响应长度为 1 | 通过 |
+| DAP-HOST-04 | 执行单次 DP 读，模拟桩先返回两次 WAIT 再返回 OK 和数据 | 上游命令层重试两次，返回计数、状态及小端数据正确 | 通过 |
+| DAP-HOST-05 | 执行 DP 写并检查写完成读回请求 | 写入值传给事务桩，随后发出 `DP_RDBUFF | DAP_TRANSFER_RnW`，响应计数与状态正确 | 通过 |
 
-这三项只验证主机 C 编译器下固定上游命令响应路径，不验证 SWD 命令、DAP 包边界、RISC-V 交叉编译、CMSIS-DAP v2 USB 传输或 CH585M 行为。构建脚本另使用 WCH RISC-V GCC 将关闭 SWD/JTAG 的测试配置编译为 ELF32 RISC-V 对象；此对象未链接到 PoC，也未在 CH585M 上运行。它们不能替代 TEST-001 第 2–7 节的产品级用例。
+这五项验证固定上游命令层，包括由桩模拟物理事务边界的 DP 读写逻辑；不验证 GPIO、SWD 电气时序、DAP 包边界、CMSIS-DAP v2 USB 传输或 CH585M 行为。构建脚本另使用 WCH RISC-V GCC 将启用 SWD 命令分支的测试配置编译为 ELF32 RISC-V 对象；引脚宏为空操作，事务函数为测试桩，该对象未链接到 PoC，也未在 CH585M 上运行。它们不能替代 TEST-001 第 2–7 节的产品级用例。
 
 ## 10. 当前执行状态
 
-当前仓库包含 CH585M 数据手册、CH585EVT 压缩包及 ThreadX PoC-1。PoC 已有主机交叉构建日志，详见 FW-001；用户确认目前没有可用硬件，故无 CH585M 下载/调试及运行证据。DBG-C 产品固件、线缆样品或抓包也未提供。本文列出的产品级验证用例均未执行；FIFO 七组主机用例及三项 CMSIS-DAP 命令核心主机检查已通过，但不计为板级或产品功能测试，PoC 交叉构建也不计为实板运行证据。构建、ELF/链接检查和源码静态审查已完成，验证板设计门已通过，可设计限定用途的验证板；实板运行仍未执行，产品硬件冻结未放行。ThreadX 启动、中断、tick、线程切换/睡眠/唤醒、时钟测量、复位恢复和持续运行项目均保持未执行，须按具体测试方案记录时长、重复次数、负载和门限。软件门槛及实板放行见 OPEN-001 O18/O19。本文件定义覆盖面，不构成实板验证报告。
+当前仓库包含 CH585M 数据手册、CH585EVT 压缩包及 ThreadX PoC-1。PoC 已有主机交叉构建日志，详见 FW-001；用户确认目前没有可用硬件，故无 CH585M 下载/调试及运行证据。DBG-C 产品固件、线缆样品或抓包也未提供。本文列出的产品级验证用例均未执行；FIFO 七组主机用例及五项 CMSIS-DAP/SWD 命令层主机检查已通过，但不计为板级或产品功能测试，PoC 交叉构建也不计为实板运行证据。构建、ELF/链接检查和源码静态审查已完成，验证板设计门已通过，可设计限定用途的验证板；实板运行仍未执行，产品硬件冻结未放行。ThreadX 启动、中断、tick、线程切换/睡眠/唤醒、时钟测量、复位恢复和持续运行项目均保持未执行，须按具体测试方案记录时长、重复次数、负载和门限。软件门槛及实板放行见 OPEN-001 O18/O19。本文件定义覆盖面，不构成实板验证报告。

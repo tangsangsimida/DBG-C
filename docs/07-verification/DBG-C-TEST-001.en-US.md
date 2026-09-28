@@ -1,6 +1,6 @@
 # DBG-C Verification Specification
 
-**Document ID:** DBG-C-TEST-001　**Version:** V0.10　**Status:** Test-plan draft; FIFO and CMSIS-DAP command-core host checks executed, ThreadX board tests have not run
+**Document ID:** DBG-C-TEST-001　**Version:** V0.11　**Status:** Test-plan draft; FIFO and CMSIS-DAP/SWD command-layer host checks executed, ThreadX board tests have not run
 
 ## 1. Pass Criteria
 
@@ -48,16 +48,18 @@ This FIFO has no concurrency-safety guarantee, so no multi-thread/ISR concurrenc
 
 ## 9. CMSIS-DAP Command-Core Host Checks
 
-The test target is `Firmware/Source/DAP.c` from the pinned upstream commit, called through `DAP_ExecuteCommand()`. The configuration under `software/common/cmsis_dap_host_test/` is host-test-only and is not the DBG-C product configuration; SWD/JTAG are disabled. The build copies `DAP.h` into `software/poc1-ch585-threadx/build/host-tests/` and changes only its delay-branch selection condition. It does not define `__CC_ARM` or modify the third-party submodule.
+The test target is `Firmware/Source/DAP.c` from the pinned upstream commit, called through `DAP_ExecuteCommand()`. The configuration under `software/common/cmsis_dap_host_test/` is test-only and is not the DBG-C product configuration; SWD command processing is enabled and JTAG is disabled. SWD pin operations are no-ops, and `SWD_Transfer()` is mocked. The build copies `DAP.h` into `software/poc1-ch585-threadx/build/host-tests/` and changes only its delay-branch selection condition. It does not define `__CC_ARM` or modify the third-party submodule.
 
 | Case | Request/check | Pass condition | Status |
 |---|---|---|---|
 | DAP-HOST-01 | `ID_DAP_Info` for `DAP_ID_DAP_FW_VER` | Response command, length, and firmware-version string match the pinned upstream implementation | Pass |
 | DAP-HOST-02 | `ID_DAP_Info` for undefined information identifier `0xA0` | Response length is 2 and information length is 0 | Pass |
 | DAP-HOST-03 | Unsupported command `0x30` | Returns `ID_DAP_Invalid` with response length 1 | Pass |
+| DAP-HOST-04 | Single DP read; mock returns WAIT twice, then OK and data | Upstream command layer retries twice and returns correct count, status, and little-endian data | Pass |
+| DAP-HOST-05 | DP write followed by write-completion check | Write value reaches the transaction mock, followed by `DP_RDBUFF | DAP_TRANSFER_RnW`, with correct response count/status | Pass |
 
-These cases cover only command responses under the host C compiler. The build script separately compiles the SWD/JTAG-disabled test configuration to an ELF32 RISC-V object with WCH RISC-V GCC; the object is not linked into PoC or run on CH585M. The checks do not verify SWD commands, DAP packet bounds, CMSIS-DAP v2 USB transport, or CH585M behavior. They do not replace product cases in Sections 2–7.
+These five cases cover the pinned command layer, including DP read/write handling across a mocked physical-transaction boundary. They do not verify GPIO, SWD electrical timing, DAP packet bounds, CMSIS-DAP v2 USB transport, or CH585M behavior. The build script separately compiles the SWD-enabled test configuration to an ELF32 RISC-V object with WCH RISC-V GCC; pin macros are no-ops and transactions are mocked. The object is not linked into PoC or run on CH585M. These checks do not replace product cases in Sections 2–7.
 
 ## 10. Current Execution Status
 
-The repository contains the CH585M datasheet, CH585EVT archive, and ThreadX PoC-1. A host cross-build log for the PoC is recorded in FW-001; the user confirms no hardware is currently available, so no CH585M programming/debug or runtime evidence exists. DBG-C product firmware, cable samples, and captures are also unavailable. All product-level verification cases remain **Not run**. The seven FIFO host case groups and three CMSIS-DAP command-core host checks passed, but none count as board or product-function tests; neither does the PoC cross-build count as board runtime evidence. Build, ELF/link checks, and source static review are complete; the verification-board design gate has passed for limited-purpose verification hardware. Board runtime remains Not run, and product-hardware freeze is not released. ThreadX startup, interrupt, tick, thread switch/sleep/wakeup, clock measurement, reset recovery, and sustained-runtime cases remain Not run. Define duration, repetitions, load, and thresholds in the specific test plan before execution. See OPEN-001 O18/O19 for software and board release gates. This document defines coverage and is not a board verification report.
+The repository contains the CH585M datasheet, CH585EVT archive, and ThreadX PoC-1. A host cross-build log for the PoC is recorded in FW-001; the user confirms no hardware is currently available, so no CH585M programming/debug or runtime evidence exists. DBG-C product firmware, cable samples, and captures are also unavailable. All product-level verification cases remain **Not run**. The seven FIFO host case groups and five CMSIS-DAP/SWD command-layer host checks passed, but none count as board or product-function tests; neither does the PoC cross-build count as board runtime evidence. Build, ELF/link checks, and source static review are complete; the verification-board design gate has passed for limited-purpose verification hardware. Board runtime remains Not run, and product-hardware freeze is not released. ThreadX startup, interrupt, tick, thread switch/sleep/wakeup, clock measurement, reset recovery, and sustained-runtime cases remain Not run. Define duration, repetitions, load, and thresholds in the specific test plan before execution. See OPEN-001 O18/O19 for software and board release gates. This document defines coverage and is not a board verification report.

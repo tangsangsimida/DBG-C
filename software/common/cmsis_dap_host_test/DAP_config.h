@@ -1,6 +1,7 @@
 /*
- * Host-only configuration for exercising the pinned CMSIS-DAP command core.
- * These values do not define DBG-C product capabilities or USB parameters.
+ * Test-only configuration for exercising the pinned CMSIS-DAP command core.
+ * SWD command logic is enabled, but pin operations are no-ops and SWD
+ * transactions are supplied by a test mock. These are not product settings.
  */
 #ifndef DBGC_CMSIS_DAP_HOST_TEST_CONFIG_H
 #define DBGC_CMSIS_DAP_HOST_TEST_CONFIG_H
@@ -9,7 +10,7 @@
 
 #define CPU_CLOCK 4U
 #define IO_PORT_WRITE_CYCLES 1U
-#define DAP_SWD 0
+#define DAP_SWD 1
 #define DAP_JTAG 0
 #define DAP_JTAG_DEV_CNT 0U
 #define DAP_DEFAULT_PORT 0U
@@ -78,9 +79,26 @@ static inline uint8_t DAP_GetProductFirmwareVersionString(char *str)
 
 #define DAP_SETUP() ((void)0)
 #define PORT_OFF() ((void)0)
+#define PORT_SWD_SETUP() ((void)0)
 #define RESET_TARGET() 0U
 #define LED_CONNECTED_OUT(value) ((void)(value))
 #define LED_RUNNING_OUT(value) ((void)(value))
+#define PIN_SWCLK_TCK_SET() ((void)0)
+#define PIN_SWCLK_TCK_CLR() ((void)0)
+#define PIN_SWCLK_TCK_IN() 0U
+#define PIN_SWDIO_TMS_SET() ((void)0)
+#define PIN_SWDIO_TMS_CLR() ((void)0)
+#define PIN_SWDIO_TMS_IN() 0U
+#define PIN_SWDIO_OUT_ENABLE() ((void)0)
+#define PIN_SWDIO_OUT_DISABLE() ((void)0)
+#define PIN_TDI_OUT(value) ((void)(value))
+#define PIN_TDI_IN() 0U
+#define PIN_TDO_IN() 0U
+#define PIN_nTRST_OUT(value) ((void)(value))
+#define PIN_nTRST_IN() 0U
+#define PIN_nRESET_OUT(value) ((void)(value))
+#define PIN_nRESET_IN() 0U
+#define TIMESTAMP_GET() 0U
 
 #define __STATIC_INLINE static inline
 #define __STATIC_FORCEINLINE static inline
