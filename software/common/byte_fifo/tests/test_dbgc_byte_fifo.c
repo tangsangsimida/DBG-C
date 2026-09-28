@@ -173,7 +173,9 @@ static void test_deterministic_state_sequence(void)
         CHECK(actual_read == expected_read);
         CHECK(memcmp(output, reference, expected_read) == 0);
         reference_count -= expected_read;
-        (void)memmove(reference, &reference[expected_read], reference_count);
+        if (reference_count != 0U) {
+            (void)memmove(reference, &reference[expected_read], reference_count);
+        }
 
         CHECK(dbgc_byte_fifo_count(&fifo) == reference_count);
         CHECK(dbgc_byte_fifo_space(&fifo) == FIFO_CAPACITY - reference_count);
