@@ -1,6 +1,6 @@
 # DBG-C Firmware Architecture 与 PoC-1 记录
 
-**文档编号：** DBG-C-FW-001　**版本：** V0.10　**状态：** 实验草案；通用 FIFO 模块及 3683 项主机断言已通过；验证板设计门已通过；tick 目标冲突待决策；实板运行及产品硬件冻结未通过
+**文档编号：** DBG-C-FW-001　**版本：** V0.11　**状态：** 实验草案；通用 FIFO 模块及 3683 项主机断言已通过；CMSIS-DAP 上游已固定但尚未适配；验证板设计门已通过；实板运行及产品硬件冻结未通过
 
 ## 1. 范围与状态
 
@@ -144,7 +144,7 @@ WCH 示例的 `highcode_init()` 初始化 HSI PLL 到 62.4 MHz，并配置相关
 | 模块 | 软件位置/资源依据 | 当前实现边界 | 状态/验证 |
 |---|---|---|---|
 | 通用字节 FIFO | `software/common/byte_fifo/`；对应 MCU-001 规划的 USB CDC、UART 与 RF 收发缓冲 | 调用方提供固定存储；支持任意非零容量、部分读写、不覆盖未读数据、清空与容量查询；无动态分配、无芯片寄存器/中断/ThreadX API；不保证并发安全，调用方必须串行化访问 | 已加入现有 CMake 构建并通过 CH585 交叉编译；既有构建脚本中的主机验证运行通过 3683 项断言；当前未接入 USB/UART/RF，未做实板测试；不是冻结的产品 ABI |
-| CMSIS-DAP / DAP command core | MCU-001 USBFS 分配；PRD 的 CMSIS-DAP v2 目标；Arm 官方源码固定于 `software/third_party/cmsis-dap/` 提交 `12636590eec66fae2d1bba4518749426ad5a4595` | `DAP.h` 声明 `DAP_ProcessCommand()`/`DAP_ExecuteCommand()`，固件版本宏为 2.1.2；头文件依赖 `cmsis_compiler.h`，仓库和 CH585EVT 归档均未提供该头文件。上游 `DAP_config.h` 模板默认 `CPU_CLOCK=100000000U`、启用 JTAG、`DAP_PACKET_SIZE=512U`、`DAP_PACKET_COUNT=8U`，均不是 DBG-C 已确认配置 | 已固定上游源码，尚未集成/编译；须补齐并验证 RISC-V 编译器抽象，确定 CMSIS-DAP v2 配置及 SWD GPIO HAL；不得复制模板默认值 |
+| CMSIS-DAP / DAP command core | MCU-001 USBFS 分配；PRD 的 CMSIS-DAP v2 目标；Arm 官方源码固定于 `software/third_party/cmsis-dap/` 提交 `12636590eec66fae2d1bba4518749426ad5a4595` | `DAP.h` 声明 `DAP_ProcessCommand()`/`DAP_ExecuteCommand()`，固件版本宏为 2.1.2；依赖缺失的 `cmsis_compiler.h`；非 ArmCC 分支使用 Arm `subs` 内联汇编，不能直接用于 WCH RISC-V GCC。上游 `DAP_config.h` 模板默认 `CPU_CLOCK=100000000U`、启用 JTAG、`DAP_PACKET_SIZE=512U`、`DAP_PACKET_COUNT=8U`，都不是 DBG-C 已确认配置 | 已固定上游源码，尚未集成/编译；需通过有依据的 RISC-V 编译器及内联汇编适配，确定 CMSIS-DAP v2 配置及 SWD GPIO HAL；不得复制模板默认值 |
 | USBFS Device + CDC transport | MCU-001 USBFS、PB10/PB11；EVT `CH58x_usbdev.h/.c` 及 USB Device COM 示例 | 已查到归档底层 API、EP0–EP4 缓冲结构与 CDC 示例描述符；当前示例把 CDC/厂商模式分开，未证明 DAP + CDC 组合、当前工程兼容性或 ThreadX ISR 同步 | 暂不实现；需验证 O02/O08，冻结 USB-001 并完成主机枚举/传输验证 |
 | UART0 driver/bridge | MCU-001 UART0、PB4/PB7；EVT `CH58x_uart.h`、`CH58x_uart0.c` | 已查到归档 API 名称和轮询实现；COM 示例把 UART0 重映射至 PA15/PA14，与 MCU-001 的 PB4/PB7 分配不同；实际 PB4/PB7 初始化、CDC 行为、波特率/流控和 ThreadX 同步仍待确认 | 暂不实现；取得 PB4/PB7 的当前 SDK 初始化证据，并定义 O09 参数与 ISR/任务并发行为 |
 | SWD Engine / Target Manager | MCU-001 的 PB5/PB6 SWD GPIO、PA4 Reset GPIO | SWD 时序、方向切换、电气边界及 Target 电压/保护未形成完整可执行规范 | 暂不实现；需冻结 IF-001 并按 O11/O12 验证时序及电气要求 |
@@ -174,4 +174,4 @@ WCH 示例的 `highcode_init()` 初始化 HSI PLL 到 62.4 MHz，并配置相关
 
 Arm 官方 CMSIS-DAP 仓库已作为 Git 子模块固定到提交 `12636590eec66fae2d1bba4518749426ad5a4595`。该提交 `Firmware/Include/DAP.h` 声明 `DAP_ProcessCommand()` 与 `DAP_ExecuteCommand()`，并通过 `DAP_FW_VER` 声明固件版本 2.1.2。此源码是 CMSIS-DAP 固件实现，不是 DAPLink 完整固件体系。上游 `Firmware/Config/DAP_config.h` 是面向示例工程的模板：其中 CPU 时钟、JTAG 能力、DAP 包尺寸及缓冲包数的默认值不得直接用于 DBG-C。
 
-当前子模块的 `DAP.h` 包含 `cmsis_compiler.h`；该文件既不在 CMSIS-DAP 子模块，也未出现在仓库提供的 CH585EVT ZIP 条目中。CH585M/RISC-V 所需的编译器宏适配来源及许可证需补齐后才能编译该上游命令层。SWD 实现还依赖 DAP 配置中的 GPIO 操作和时钟延迟接口；CH585M GPIO HAL、实际系统时钟及 PB5/PB6 波形能力尚未有当前产品工程证据。因此本次仅固定上游源，不将其接入 PoC，也不宣称 CMSIS-DAP 命令层已编译或运行。
+当前子模块的 `DAP.h` 包含 `cmsis_compiler.h`；该文件既不在 CMSIS-DAP 子模块，也未出现在仓库提供的 CH585EVT ZIP 条目中。另一个独立的指令集障碍是该头文件的 `PIN_DELAY_SLOW()`：只有定义 `__CC_ARM` 时使用 C 循环，其余编译器分支使用 `subs %0,%0,#1` Arm 内联汇编；WCH RISC-V GCC 不能直接汇编该指令。不得通过伪定义 `__CC_ARM` 绕过，因为这会把 Arm 编译器选择分支错误地冒充为 GCC/RISC-V。需采用可审查的 RISC-V 实现或维护清晰的上游补丁，并以目标工具链编译确认。SWD 实现还依赖 DAP 配置中的 GPIO 操作和时钟延迟接口；CH585M GPIO HAL、实际系统时钟及 PB5/PB6 波形能力尚未有当前产品工程证据。因此本次仅固定上游源，不将其接入 PoC，也不宣称 CMSIS-DAP 命令层已编译或运行。
