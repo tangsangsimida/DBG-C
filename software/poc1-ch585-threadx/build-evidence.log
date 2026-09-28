@@ -1514,3 +1514,38 @@ CMSIS-DAP SWD engine checks passed: 99 assertions, 5 cases
   Class:                             ELF32
   Machine:                           RISC-V
   Entry point address:               0x0
+Repository HEAD: 9afb10341890c035af1e576efd1d3a2f563f5726
+ThreadX commit: b91b03b9e75fa523b17127f9e0eca09dca916459
+ThreadX tag: v6.5.1.202602a_rel
+CMSIS-DAP commit: 12636590eec66fae2d1bba4518749426ad5a4595
+cmake version 3.28.3
+riscv-wch-elf-gcc (xPack GNU RISC-V Embedded GCC x86_64) 12.2.0
+GNU assembler (xPack GNU RISC-V Embedded GCC x86_64) 2.38
+GNU ld (xPack GNU RISC-V Embedded GCC x86_64) 2.38
+Host C compiler: cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+-- Building standard ThreadX version
+-- THREADX_ARCH: risc-v32
+-- THREADX_TOOLCHAIN: gnu
+-- Using custom tx_user.h file from /home/dennis/Desktop/workspace/github_projects/DBG-C/software/poc1-ch585-threadx/platform/ch585/tx_user.h
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/dennis/Desktop/workspace/github_projects/DBG-C/software/poc1-ch585-threadx/build/cmsis-dap-swd-test
+[  0%] Built target dbgc_byte_fifo
+[ 97%] Built target threadx
+[100%] Built target dbgc_poc1
+PASS: 3683 byte FIFO checks
+DAP.h source SHA-256: 1fa6a1489d199de159a0bd1a814845ac8e1f6e0335d349b883f341f84c1b73c5
+DAP.c source SHA-256: 87f72c3e84fec0a4a5cf6970a83cdfa08bd864a3127666e1e371fac3fecc0ad3
+CMSIS-DAP commit: 12636590eec66fae2d1bba4518749426ad5a4595
+Test adaptation: select upstream C-loop delay branch without defining __CC_ARM
+CMSIS-DAP host command checks passed: 8 cases
+CMSIS-DAP SWD engine checks passed: 111 assertions, 6 cases
+  Class:                             ELF32
+  Machine:                           RISC-V
+  Class:                             ELF32
+  Machine:                           RISC-V
+   text	   data	    bss	    dec	    hex	filename
+   8876	      8	   5564	  14448	   3870	/home/dennis/Desktop/workspace/github_projects/DBG-C/software/poc1-ch585-threadx/build/cmsis-dap-swd-test/dbgc_poc1.elf
+  Class:                             ELF32
+  Machine:                           RISC-V
+  Entry point address:               0x0

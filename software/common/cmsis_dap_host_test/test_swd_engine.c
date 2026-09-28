@@ -277,6 +277,46 @@ static void test_swd_sequence_output_and_input(void)
     CHECK(clock_rising_count == 10U);
 }
 
+static void test_dap_transfer_through_swd_engine(void)
+{
+    const uint32_t expected_value = 0x2BA01477U;
+    const uint8_t connect_request[] = {
+        ID_DAP_Connect,
+        DAP_PORT_SWD
+    };
+    const uint8_t transfer_request[] = {
+        ID_DAP_Transfer,
+        0U,
+        1U,
+        DAP_TRANSFER_RnW | DP_IDCODE
+    };
+    uint8_t response[DAP_PACKET_SIZE] = {0U};
+    uint32_t result;
+
+    DAP_Setup();
+    DAP_Data.fast_clock = 1U;
+    result = DAP_ExecuteCommand(connect_request, response);
+    CHECK((result & 0xFFFFU) == 2U);
+    CHECK(response[0] == ID_DAP_Connect);
+    CHECK(response[1] == DAP_PORT_SWD);
+
+    reset_line_model();
+    append_read_response(DAP_TRANSFER_OK,
+                         expected_value,
+                         word_parity(expected_value));
+    result = DAP_ExecuteCommand(transfer_request, response);
+
+    CHECK(result == ((4U << 16) | 7U));
+    CHECK(response[0] == ID_DAP_Transfer);
+    CHECK(response[1] == 1U);
+    CHECK(response[2] == DAP_TRANSFER_OK);
+    CHECK(response[3] == (uint8_t)expected_value);
+    CHECK(response[4] == (uint8_t)(expected_value >> 8));
+    CHECK(response[5] == (uint8_t)(expected_value >> 16));
+    CHECK(response[6] == (uint8_t)(expected_value >> 24));
+    CHECK(input_bit_index == input_bit_count);
+}
+
 int main(void)
 {
     test_swd_read_request_and_data();
@@ -284,6 +324,7 @@ int main(void)
     test_swd_write_data_and_parity();
     test_swd_wait_and_fault_acknowledgements();
     test_swd_sequence_output_and_input();
+    test_dap_transfer_through_swd_engine();
 
     if (failures != 0U) {
         fprintf(stderr, "%u of %u CMSIS-DAP SWD engine checks failed\n",
@@ -291,7 +332,7 @@ int main(void)
         return 1;
     }
 
-    printf("CMSIS-DAP SWD engine checks passed: %u assertions, 5 cases\n",
+    printf("CMSIS-DAP SWD engine checks passed: %u assertions, 6 cases\n",
            checks);
     return 0;
 }
