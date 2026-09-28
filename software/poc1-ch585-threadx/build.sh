@@ -53,6 +53,14 @@ esac
         "${repo_dir}/software/common/ch585_swd_gpio_host_test/test_ch585_swd_gpio.c" \
         -o "${build_dir}/host-tests/test_ch585_swd_gpio"
     "${build_dir}/host-tests/test_ch585_swd_gpio"
+    "${host_cc}" -std=c99 -Wall -Wextra -Werror -pedantic \
+        -DDBGC_CH585_TARGET_RESET_GPIO_HOST_TEST \
+        -I"${repo_dir}/software/common/ch585_target_reset_gpio_host_test" \
+        -I"${project_dir}/platform/ch585" \
+        "${project_dir}/platform/ch585/dbgc_ch585_target_reset_gpio.c" \
+        "${repo_dir}/software/common/ch585_target_reset_gpio_host_test/test_ch585_target_reset_gpio.c" \
+        -o "${build_dir}/host-tests/test_ch585_target_reset_gpio"
+    "${build_dir}/host-tests/test_ch585_target_reset_gpio"
     cmsis_dap_host_dir="${build_dir}/host-tests/cmsis-dap"
     python3 "${repo_dir}/software/common/cmsis_dap_host_test/prepare_upstream.py" \
         "${repo_dir}/software/third_party/cmsis-dap" "${cmsis_dap_host_dir}"
@@ -89,6 +97,15 @@ esac
         -I"${project_dir}/platform/ch585/wch" \
         -c "${project_dir}/platform/ch585/dbgc_ch585_swd_gpio.c" \
         -o "${build_dir}/target-tests/dbgc_ch585_swd_gpio.o"
+    "${toolchain_bin}/riscv-wch-elf-gcc" -std=gnu99 -Wall -Wextra -Werror \
+        -march=rv32imac -mabi=ilp32 -mcmodel=medany \
+        -I"${project_dir}/platform/ch585" \
+        -I"${project_dir}/platform/ch585/wch" \
+        -c "${project_dir}/platform/ch585/dbgc_ch585_target_reset_gpio.c" \
+        -o "${build_dir}/target-tests/dbgc_ch585_target_reset_gpio.o"
+    "${toolchain_bin}/riscv-wch-elf-readelf" -h \
+        "${build_dir}/target-tests/dbgc_ch585_target_reset_gpio.o" | \
+        rg 'Class:|Machine:'
     "${toolchain_bin}/riscv-wch-elf-readelf" -h \
         "${build_dir}/target-tests/dbgc_ch585_swd_gpio.o" | \
         rg 'Class:|Machine:'

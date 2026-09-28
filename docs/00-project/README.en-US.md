@@ -8,11 +8,11 @@ This document set is a V0.x engineering baseline draft, not a frozen interface o
 | SYS-001 | [System Architecture](../02-system/DBG-C-SYS-001.en-US.md) | V0.2, for review |
 | IF-001 | [DBG-C Interface Specification](../03-interfaces/DBG-C-IF-001.en-US.md) | V0.1 concept draft; pins not frozen |
 | MCU-001 | [MCU Selection and Resource Assessment](../04-hardware/DBG-C-MCU-001.en-US.md) | V0.6; verification-board design gate passed, tick target pending decision, board verification not run |
-| FW-001 | [Firmware Architecture and PoC-1 Record](../05-firmware/DBG-C-FW-001.en-US.md) | V0.27; 57 modeled-register host checks added for CH585 SWD GPIO BSP; board runtime and product-hardware freeze not released |
+| FW-001 | [Firmware Architecture and PoC-1 Record](../05-firmware/DBG-C-FW-001.en-US.md) | V0.28; PA4 Target Reset GPIO BSP added; 57 SWD GPIO and 33 Reset GPIO modeled-register checks; board runtime and product-hardware freeze not released |
 | RF-001 | [Private 2.4G Protocol Specification](../06-protocols/DBG-C-RF-001.en-US.md) | V0.1 framework; not ready for implementation |
-| TEST-001 | [Verification Specification](../07-verification/DBG-C-TEST-001.en-US.md) | V0.25; 57 modeled-register host checks added for CH585 SWD GPIO BSP; ThreadX board cases not run |
+| TEST-001 | [Verification Specification](../07-verification/DBG-C-TEST-001.en-US.md) | V0.26; 33 modeled-register checks added for PA4 Target Reset GPIO BSP; ThreadX board cases not run |
 | RISK-001 | [Risk Register](../08-risk/DBG-C-RISK-001.en-US.md) | V0.5; ThreadX port awaits board verification, tick target pending decision |
-| OPEN-001 | [Open Questions and Verification List](DBG-C-OPEN-001.en-US.md) | V0.28; O11 tracks SWD GPIO electrical modes and O21 tracks DAP request bounds; USB/link integration and ThreadX board verification remain open |
+| OPEN-001 | [Open Questions and Verification List](DBG-C-OPEN-001.en-US.md) | V0.29; O11 tracks GPIO electrical modes and reset-pulse decisions; O21 tracks DAP request bounds; USB/link integration and ThreadX board verification remain open |
 
 Future phase documents DBG-C-HW-001, USB-001, and BLE-001 have not yet been created.
 
