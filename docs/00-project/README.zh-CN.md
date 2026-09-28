@@ -8,9 +8,9 @@
 | SYS-001 | [系统架构设计](../02-system/DBG-C-SYS-001.zh-CN.md) | V0.2，待评审 |
 | IF-001 | [DBG-C Interface Specification](../03-interfaces/DBG-C-IF-001.zh-CN.md) | V0.1 概念草案，Pin 未冻结 |
 | MCU-001 | [MCU 选型与资源评估](../04-hardware/DBG-C-MCU-001.zh-CN.md) | V0.6；验证板设计门通过，tick 目标待决策，实板验证未执行 |
-| FW-001 | [固件架构与 PoC-1 记录](../05-firmware/DBG-C-FW-001.zh-CN.md) | V0.26；新增 PB5/PB6 GPIO BSP 目标对象编译检查；DAP/电气时序未集成验证；ThreadX 实板运行未验证 |
+| FW-001 | [固件架构与 PoC-1 记录](../05-firmware/DBG-C-FW-001.zh-CN.md) | V0.27；新增 CH585 SWD GPIO BSP 57 项模拟寄存器主机检查；实板运行与产品硬件冻结未放行 |
 | RF-001 | [Private 2.4G Protocol Specification](../06-protocols/DBG-C-RF-001.zh-CN.md) | V0.1 协议框架，不可据此编码 |
-| TEST-001 | [Verification Specification](../07-verification/DBG-C-TEST-001.zh-CN.md) | V0.24；新增 CH585 SWD GPIO 目标对象编译检查；命令长度安全用例和 ThreadX 板测未执行 |
+| TEST-001 | [Verification Specification](../07-verification/DBG-C-TEST-001.zh-CN.md) | V0.25；新增 CH585 SWD GPIO 57 项模拟寄存器主机检查；ThreadX 实板用例未执行 |
 | RISK-001 | [Risk Register](../08-risk/DBG-C-RISK-001.zh-CN.md) | V0.5 风险清单；ThreadX 移植待实板验证，tick 目标待决策 |
 | OPEN-001 | [未决问题与验证清单](DBG-C-OPEN-001.zh-CN.md) | V0.28；O11 跟踪 SWD GPIO 电气模式，O21 跟踪 DAP 请求边界；USB/链接与 ThreadX 实板验证仍未完成 |
 

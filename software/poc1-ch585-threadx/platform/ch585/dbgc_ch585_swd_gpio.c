@@ -1,6 +1,10 @@
 #include "dbgc_ch585_swd_gpio.h"
 
+#if defined(DBGC_CH585_SWD_GPIO_HOST_TEST)
+#include "dbgc_ch585_swd_gpio_host_regs.h"
+#else
 #include "wch/CH585SFR.h"
+#endif
 
 #define DBGC_CH585_PB5_MASK (1UL << 5)
 #define DBGC_CH585_PB6_MASK (1UL << 6)
