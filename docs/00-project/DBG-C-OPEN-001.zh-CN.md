@@ -1,6 +1,6 @@
 # DBG-C 未决问题与验证清单
 
-**文档编号：** DBG-C-OPEN-001　**版本：** V0.36　**状态：** 开放项
+**文档编号：** DBG-C-OPEN-001　**版本：** V0.37　**状态：** 开放项
 
 | ID | 问题 | 需要的证据/决策 | 影响文档 | 状态 |
 |---|---|---|---|---|
@@ -37,7 +37,7 @@
 
 - 通用字节 FIFO 的 FIFO-01 至 FIFO-07 主机用例已通过，既有构建入口报告 3683 项断言通过；该结果只覆盖纯 C FIFO 行为，不关闭 O18，也不证明 ThreadX/ISR/芯片运行正确。
 - ThreadX 已锁定为 `v6.5.1.202602a_rel`，提交 `b91b03b9e75fa523b17127f9e0eca09dca916459`；MounRiver Linux x64 Toolchain V2.4.0 的 GCC 12.2.0 已安装到当前用户目录。
-- PoC-1 有实验性时钟初始化、low-level 内存边界、VTF SysTick 注册和 ThreadX tick ISR；线程读取 `tx_time_get()` 并睡眠一个 tick。主机交叉构建通过，输出为 ELF32 RISC-V，text 8876、data 8、bss 5564 字节。
+- PoC-1 有实验性时钟初始化、low-level 内存边界、VTF SysTick 注册和 ThreadX tick ISR；线程读取 `tx_time_get()` 并睡眠一个 tick，并公开两线程创建状态及各自最近 tick 供调试观察。主机交叉构建输出为 ELF32 RISC-V，text 8916、data 8、bss 5580 字节；固定构建路径两次 clean rebuild 的 ELF/map SHA-256 一致。该结果不是实板运行证据。
 - Tick 采用 ThreadX 上游头文件默认值 100 tick/s。HPE/VTF 行为、异常栈帧、SysTick 实际频率、tick 投递、睡眠唤醒、调度和长期稳定性都未在板上验证；因此 O18 仍未关闭。
 - 用户确认当前没有可用板卡。按两道放行门处理：两次 clean rebuild 的 ELF/map SHA-256 相同，ELF 与链接脚本及启动符号完成静态核对，源码审查已覆盖启动、ThreadX 上下文及中断路径，因此软件门通过，允许进入限定用途的验证硬件设计。此许可不代表 ThreadX 已在 CH585M 上运行验证，也不允许冻结产品原理图或 PCB。源码当前为 100 tick/s，既有需求描述为 1000 tick/s，冲突仍待确认；在定义实板 tick 频率验收门限前必须解决。中断、SysTick、调度、睡眠/唤醒仍未运行验证。
 - ThreadX 上游 `qemu_virt` 示例使用 QEMU virt 地址/入口/链接布局，与 PoC 的 WCH CH585 启动和 PFIC/VTF 代码不同；当前环境无 QEMU、Spike、Renode，模拟器运行证据不存在。
@@ -66,7 +66,7 @@
 进入限定用途的**验证硬件设计**前，必须满足以下可复核条件：
 
 1. 固定源码/子模块修订和工具链版本；执行至少两次干净构建，均生成 ELF 和 map，二者 SHA-256 完全一致。对尚未决策的功能配置作显式记录，不将其伪装成已冻结要求。
-2. 检查 ELF 架构、端序、入口、启动符号、段装载地址/运行地址；与实际 startup 和 linker script 对照，所有静态段都落在脚本声明的 Flash/RAM 范围内。记录 text/data/bss 和已静态分配栈/缓冲占用。本 PoC 静态声明两个 1024-byte 应用线程栈、2048-byte ISR 栈和 512-byte ThreadX timer stack；ELF 的 data 为 8 byte、bss 为 5564 byte。该记录不包含实板栈水位结论。
+2. 检查 ELF 架构、端序、入口、启动符号、段装载地址/运行地址；与实际 startup 和 linker script 对照，所有静态段都落在脚本声明的 Flash/RAM 范围内。记录 text/data/bss 和已静态分配栈/缓冲占用。本 PoC 静态声明两个 1024-byte 应用线程栈、2048-byte ISR 栈和 512-byte ThreadX timer stack；当前 ELF 的 text/data/bss 为 8916/8/5580 byte。该记录不包含实板栈水位结论。
 3. 静态审查 reset/时钟初始化、ThreadX 上下文保存/恢复、异常栈帧和栈切换、MIE/HPE/PFIC/VTF 配置、SysTick 装载值/状态清除及 ISR 到调度器的调用顺序。不得存在已发现且未处置的源码、符号或链接矛盾。
 4. 区分静态可判定项和芯片运行项。无法由源码/ELF证明的硬件异常语义、实际频率、中断投递、tick、调度、睡眠唤醒，列为实板测试项，不得记通过。
 5. 验证板设计输入须覆盖编程/恢复、复位、系统时钟、SysTick、中断活动的观察/测量路径，并为调试和测量保留接入点；具体引脚和电路要从正式资料确认。

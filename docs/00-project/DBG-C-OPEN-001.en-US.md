@@ -1,6 +1,6 @@
 # DBG-C Open Questions and Verification List
 
-**Document ID:** DBG-C-OPEN-001　**Version:** V0.36　**Status:** Open items
+**Document ID:** DBG-C-OPEN-001　**Version:** V0.37　**Status:** Open items
 
 | ID | Question | Evidence/decision required | Affected documents | Status |
 |---|---|---|---|---|
@@ -37,7 +37,7 @@
 
 - Host cases FIFO-01 through FIFO-07 for the generic byte FIFO pass; the existing build entry reports 3683 assertions passed. This covers only pure C FIFO behavior, does not close O18, and does not prove ThreadX/ISR/chip runtime behavior.
 - ThreadX is pinned to `v6.5.1.202602a_rel`, commit `b91b03b9e75fa523b17127f9e0eca09dca916459`; MounRiver Linux x64 Toolchain V2.4.0 GCC 12.2.0 is installed in the current user account.
-- PoC-1 now contains experimental clock initialization, a low-level unused-memory boundary, VTF SysTick registration, and a ThreadX tick ISR. The threads read `tx_time_get()` and sleep for one tick. Host cross-build passed; output is ELF32 RISC-V, text 8876, data 8, bss 5564 bytes.
+- PoC-1 contains experimental clock initialization, a low-level unused-memory boundary, VTF SysTick registration, and a ThreadX tick ISR. The threads read `tx_time_get()` and sleep for one tick; two-thread create statuses and independent latest-tick values are exposed for debugger observation. The host cross-build output is ELF32 RISC-V, text 8916, data 8, bss 5580 bytes; two clean rebuilds at the fixed build path produced matching ELF/map SHA-256. This is not board runtime evidence.
 - The tick uses the upstream ThreadX header default of 100 ticks/s. HPE/VTF behavior, exception frames, actual SysTick frequency, tick delivery, sleep/wakeup, scheduling, and endurance remain unverified on hardware; O18 remains open.
 - The user confirms no hardware is currently available. Apply two release gates: two clean rebuilds produced identical ELF/map SHA-256 values, the ELF was checked against the linker script and startup symbols, and source review covered startup, ThreadX context, and interrupt paths. The software gate is therefore passed for limited-purpose verification-hardware design. This does not claim ThreadX runtime verification on CH585M and does not release product schematic or PCB freeze. Source is currently configured for 100 ticks/s while existing requirement text says 1000 ticks/s; this conflict remains open and must be resolved before the board-test tick-frequency acceptance threshold is frozen. Interrupt, SysTick, scheduling, and sleep/wakeup have not been runtime-verified.
 - The upstream ThreadX `qemu_virt` example uses QEMU virt addresses, entry, and linker layout, unlike the PoC WCH CH585 startup and PFIC/VTF code. QEMU, Spike, and Renode are unavailable in the current environment; no simulator evidence exists.
@@ -68,7 +68,7 @@
 Before limited-purpose **verification-hardware design**, all of these reviewable conditions are required:
 
 1. Source/submodule revisions and toolchain versions are fixed. At least two clean builds produce ELF and map files with identical SHA-256 values. Any undecided configuration is explicitly recorded and is not represented as a frozen requirement.
-2. Check ELF architecture, endianness, entry, startup symbols, load/run addresses, and compare them with the actual startup and linker script. Every static section must fit within the Flash/RAM ranges declared by that script. Record text/data/bss and statically allocated stacks/buffers. This PoC declares two 1024-byte application thread stacks, a 2048-byte ISR stack, and a 512-byte ThreadX timer stack; ELF data is 8 bytes and bss is 5564 bytes. This does not establish stack watermarks on hardware.
+2. Check ELF architecture, endianness, entry, startup symbols, load/run addresses, and compare them with the actual startup and linker script. Every static section must fit within the Flash/RAM ranges declared by that script. Record text/data/bss and statically allocated stacks/buffers. This PoC declares two 1024-byte application thread stacks, a 2048-byte ISR stack, and a 512-byte ThreadX timer stack; current ELF text/data/bss are 8916/8/5580 bytes. This does not establish stack watermarks on hardware.
 3. Review reset/clock initialization, ThreadX context save/restore, exception frame and stack switching, MIE/HPE/PFIC/VTF setup, SysTick reload/status clear, and ISR-to-scheduler call order. No discovered and unresolved source, symbol, or link inconsistency may remain.
 4. Separate statically decidable items from chip-runtime items. Hardware exception semantics, measured frequency, interrupt delivery, tick, scheduling, and sleep/wakeup that cannot be proven from source/ELF remain board-test items and must not be marked Pass.
 5. Verification-board design inputs must provide programming/recovery, reset, system-clock, SysTick, and interrupt-activity observation/measurement paths, with debug and measurement access points. Confirm exact pins and circuitry from authoritative project sources.

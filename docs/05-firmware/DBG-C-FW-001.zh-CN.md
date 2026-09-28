@@ -1,6 +1,6 @@
 # DBG-C Firmware Architecture 与 PoC-1 记录
 
-**文档编号：** DBG-C-FW-001　**版本：** V0.43　**状态：** 实验草案；通用 FIFO、单向/双向无调度字节流桥接、CMSIS-DAP 命令层、上游 SWD 引擎、请求/响应边界预检及有界 dispatch 主机检查已通过；CMSIS 编译器宏映射、SWD GPIO、Target Reset GPIO、UART0、UID 读取适配器、桥接适配器与 WCH ROM 命令库目标编译/链接检查通过；PB5/PB6、PA4、UART0、UID 读取适配器、单向/双向桥接主机检查分别为 57 项、33 项、94 项、31 项、15 项和 15 项；PoC 新增两线程创建状态及独立最近 tick 观测符号，目标交叉构建通过；产品 DAP/USB 接入、GPIO/UART 电气行为及时序未验证；芯片 UID 实际读取、产品命令配置与边界契约仍待验证/定义；验证板设计门已通过；PoC-1 实板运行验证未执行；产品硬件冻结未放行
+**文档编号：** DBG-C-FW-001　**版本：** V0.44　**状态：** 实验草案；通用 FIFO、单向/双向无调度字节流桥接、CMSIS-DAP 命令层、上游 SWD 引擎、请求/响应边界预检及有界 dispatch 主机检查已通过；CMSIS 编译器宏映射、SWD GPIO、Target Reset GPIO、UART0、UID 读取适配器、桥接适配器与 WCH ROM 命令库目标编译/链接检查通过；PB5/PB6、PA4、UART0、UID 读取适配器、单向/双向桥接主机检查分别为 57 项、33 项、94 项、31 项、15 项和 15 项；PoC 新增两线程创建状态及独立最近 tick 观测符号，固定路径两次 clean rebuild 的 ELF/map 散列一致；产品 DAP/USB 接入、GPIO/UART 电气行为及时序未验证；芯片 UID 实际读取、产品命令配置与边界契约仍待验证/定义；验证板设计门已通过；PoC-1 实板运行验证未执行；产品硬件冻结未放行
 
 ## 1. 范围与状态
 
@@ -16,7 +16,7 @@
 | ThreadX low-level | 设置 `_tx_initialize_unused_memory` 到链接符号 `_end` 对齐后的位置；配置 WCH VTF SysTick 入口、PFIC 优先级和 SysTick | 主机编译/链接通过；内存边界及中断行为未板测 |
 | ThreadX tick | PoC 使用上游 `tx_api.h` 默认 `TX_TIMER_TICKS_PER_SECOND`，其定义为 100 tick/s；以源码声明的 62.4 MHz 计算，`SysTick_Config` 输入为 624000，比较值为 623999 | 这是软件配置计算，不是实测时钟/tick；用户文字提及的 1000 tick/s 与当前源码不符，需确认需求；HPE/VTF、异常返回和调度语义尚未验证 |
 | PoC 线程 | 两个同优先级线程递增独立计数器，记录 `tx_time_get()` 并执行 `tx_thread_sleep(1U)` | 仅是待板测的可观测量设计 |
-| ELF 构建 | `text=8876`、`data=8`、`bss=5564` 字节；ELF32 little-endian RISC-V，入口 `_start=0x0`；`.highcode_init`/`.highcode` 位于链接 RAM，代码/数据装载地址位于链接 Flash | 两次 clean rebuild 的 ELF SHA-256 均为 `d06802e345843562221f86dfb29934442e7d15d25d55de3327ca9528c961101f`，map SHA-256 均为 `fec0082f30bbc3022aa696f7ec13f9037dc03aa8717e19bff854645d5964f936`；详见 `software/poc1-ch585-threadx/build-evidence.log`。仅证明固定环境下产物可重复且符合当前 linker script，不证明芯片运行 |
+| ELF 构建 | `text=8916`、`data=8`、`bss=5580` 字节；ELF32 little-endian RISC-V，入口 `_start=0x0`；`.highcode_init`/`.highcode` 位于链接 RAM，代码/数据装载地址位于链接 Flash | 固定构建路径两次 clean rebuild 的 ELF SHA-256 均为 `00f0e40b217d61df475f721607a6dd88b2e9f1450b511863b2984899e97e32f8`，map SHA-256 均为 `823322fcfe0849eefa6b88e4df478ac28e6bdc094a11173faaba1e85697fdfa5`；详见 `software/poc1-ch585-threadx/build-evidence.log`。仅证明固定环境下产物可重复且符合当前 linker script，不证明芯片运行 |
 | CH585M 板级运行 | 未执行，待验证 | 用户确认目前没有可用板卡；暂无下载/调试和运行证据 |
 
 ## 2. 软件层和目录
