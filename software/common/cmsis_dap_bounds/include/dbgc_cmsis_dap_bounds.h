@@ -5,34 +5,33 @@
 #include <stdint.h>
 
 typedef enum {
-    DBGC_CMSIS_DAP_BOUNDS_OK = 0,
-    DBGC_CMSIS_DAP_BOUNDS_INVALID_ARGUMENT,
-    DBGC_CMSIS_DAP_BOUNDS_NEED_MORE_INPUT,
-    DBGC_CMSIS_DAP_BOUNDS_OUTPUT_TOO_SMALL,
-    DBGC_CMSIS_DAP_BOUNDS_UNSUPPORTED_COMMAND,
-    DBGC_CMSIS_DAP_BOUNDS_LIMIT_EXCEEDED,
-    DBGC_CMSIS_DAP_BOUNDS_DISPATCH_CONTRACT
+	DBGC_CMSIS_DAP_BOUNDS_OK = 0,
+	DBGC_CMSIS_DAP_BOUNDS_INVALID_ARGUMENT,
+	DBGC_CMSIS_DAP_BOUNDS_NEED_MORE_INPUT,
+	DBGC_CMSIS_DAP_BOUNDS_OUTPUT_TOO_SMALL,
+	DBGC_CMSIS_DAP_BOUNDS_UNSUPPORTED_COMMAND,
+	DBGC_CMSIS_DAP_BOUNDS_LIMIT_EXCEEDED,
+	DBGC_CMSIS_DAP_BOUNDS_DISPATCH_CONTRACT
 } dbgc_cmsis_dap_bounds_status_t;
 
-typedef uint32_t (*dbgc_cmsis_dap_execute_fn)(const uint8_t *request,
-                                               uint8_t *response);
+typedef uint32_t (*dbgc_cmsis_dap_execute_fn)(const uint8_t *request, uint8_t *response);
 
 typedef struct {
-    uint8_t swd_enabled;
-    uint8_t jtag_enabled;
-    uint8_t timestamp_enabled;
-    uint8_t max_jtag_devices;
-    size_t max_info_payload_bytes;
+	uint8_t swd_enabled;
+	uint8_t jtag_enabled;
+	uint8_t timestamp_enabled;
+	uint8_t max_jtag_devices;
+	size_t max_info_payload_bytes;
 } dbgc_cmsis_dap_bounds_profile_t;
 
 typedef struct {
-    size_t request_bytes;
-    size_t response_bytes_max;
+	size_t request_bytes;
+	size_t response_bytes_max;
 } dbgc_cmsis_dap_bounds_result_t;
 
 typedef struct {
-    size_t request_bytes;
-    size_t response_bytes;
+	size_t request_bytes;
+	size_t response_bytes;
 } dbgc_cmsis_dap_dispatch_result_t;
 
 /*
@@ -49,11 +48,8 @@ typedef struct {
  * DBGC_CMSIS_DAP_BOUNDS_OK.
  */
 dbgc_cmsis_dap_bounds_status_t dbgc_cmsis_dap_bounds_measure(
-    const uint8_t *request,
-    size_t request_length,
-    size_t response_capacity,
-    const dbgc_cmsis_dap_bounds_profile_t *profile,
-    dbgc_cmsis_dap_bounds_result_t *result);
+	const uint8_t *request, size_t request_length, size_t response_capacity,
+	const dbgc_cmsis_dap_bounds_profile_t *profile, dbgc_cmsis_dap_bounds_result_t *result);
 
 /*
  * Preflight and dispatch one command through the upstream pointer-only API.
@@ -63,12 +59,8 @@ dbgc_cmsis_dap_bounds_status_t dbgc_cmsis_dap_bounds_measure(
  * that violates the profile; callers must verify all callback write limits.
  */
 dbgc_cmsis_dap_bounds_status_t dbgc_cmsis_dap_bounds_dispatch(
-    const uint8_t *request,
-    size_t request_length,
-    uint8_t *response,
-    size_t response_capacity,
-    const dbgc_cmsis_dap_bounds_profile_t *profile,
-    dbgc_cmsis_dap_execute_fn execute,
-    dbgc_cmsis_dap_dispatch_result_t *result);
+	const uint8_t *request, size_t request_length, uint8_t *response, size_t response_capacity,
+	const dbgc_cmsis_dap_bounds_profile_t *profile, dbgc_cmsis_dap_execute_fn execute,
+	dbgc_cmsis_dap_dispatch_result_t *result);
 
 #endif

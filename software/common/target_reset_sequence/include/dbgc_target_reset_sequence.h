@@ -6,10 +6,10 @@
 typedef int (*dbgc_target_reset_sequence_action_fn)(void *context);
 
 typedef struct {
-    void *context;
-    dbgc_target_reset_sequence_action_fn assert_reset;
-    dbgc_target_reset_sequence_action_fn hold_reset;
-    dbgc_target_reset_sequence_action_fn release_reset;
+	void *context;
+	dbgc_target_reset_sequence_action_fn assert_reset;
+	dbgc_target_reset_sequence_action_fn hold_reset;
+	dbgc_target_reset_sequence_action_fn release_reset;
 } dbgc_target_reset_sequence_ops_t;
 
 /* Return zero on success. All callbacks must return zero on success and a
@@ -18,7 +18,6 @@ typedef struct {
  * error takes precedence, otherwise the first earlier error is returned.
  * Invalid operation tables return -1 without invoking callbacks.
  */
-int dbgc_target_reset_sequence_execute(
-    const dbgc_target_reset_sequence_ops_t *operations);
+int dbgc_target_reset_sequence_execute(const dbgc_target_reset_sequence_ops_t *operations);
 
 #endif

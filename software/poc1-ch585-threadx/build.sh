@@ -143,6 +143,19 @@ mkdir -p -- "$(dirname -- "${evidence_log}")"
         "${repo_dir}/software/third_party/cmsis-dap" "${cmsis_dap_host_dir}"
     "${host_cc}" -std=c99 -Wall -Wextra -Werror -pedantic \
         -DDBGC_CMSIS_DAP_TEST_C_LOOP \
+        -I"${repo_dir}/software/common/packet_queue/include" \
+        -I"${repo_dir}/software/common/cmsis_dap_bounds/include" \
+        -I"${repo_dir}/software/common/cmsis_dap_service/include" \
+        -I"${repo_dir}/software/common/cmsis_dap_host_test" \
+        -I"${cmsis_dap_host_dir}/include" \
+        "${repo_dir}/software/common/packet_queue/src/dbgc_packet_queue.c" \
+        "${repo_dir}/software/common/cmsis_dap_bounds/src/dbgc_cmsis_dap_bounds.c" \
+        "${repo_dir}/software/common/cmsis_dap_service/src/dbgc_cmsis_dap_service.c" \
+        "${repo_dir}/software/common/cmsis_dap_service/tests/test_dbgc_cmsis_dap_service.c" \
+        -o "${build_dir}/host-tests/test_dbgc_cmsis_dap_service"
+    "${build_dir}/host-tests/test_dbgc_cmsis_dap_service"
+    "${host_cc}" -std=c99 -Wall -Wextra -Werror -pedantic \
+        -DDBGC_CMSIS_DAP_TEST_C_LOOP \
         -I"${repo_dir}/software/common/cmsis_dap_bounds/include" \
         -I"${repo_dir}/software/common/cmsis_dap_host_test" \
         -I"${cmsis_dap_host_dir}/include" \

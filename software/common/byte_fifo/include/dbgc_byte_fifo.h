@@ -16,28 +16,22 @@
  * must not overlap the FIFO object or backing storage.
  */
 typedef struct {
-    uint8_t *storage;
-    size_t capacity;
-    size_t read_index;
-    size_t write_index;
-    size_t used;
+	uint8_t *storage;
+	size_t capacity;
+	size_t read_index;
+	size_t write_index;
+	size_t used;
 } dbgc_byte_fifo_t;
 
 /* Returns zero on success and nonzero for a null object, null storage, or
  * zero capacity. Storage remains owned by the caller for the FIFO lifetime. */
-int dbgc_byte_fifo_initialize(dbgc_byte_fifo_t *fifo,
-                              uint8_t *storage,
-                              size_t capacity);
+int dbgc_byte_fifo_initialize(dbgc_byte_fifo_t *fifo, uint8_t *storage, size_t capacity);
 
 /* Copies up to length bytes. Returns the number of bytes accepted/read.
  * A null data pointer with nonzero length returns zero without changing state.
  */
-size_t dbgc_byte_fifo_write(dbgc_byte_fifo_t *fifo,
-                            const uint8_t *data,
-                            size_t length);
-size_t dbgc_byte_fifo_read(dbgc_byte_fifo_t *fifo,
-                           uint8_t *data,
-                           size_t length);
+size_t dbgc_byte_fifo_write(dbgc_byte_fifo_t *fifo, const uint8_t *data, size_t length);
+size_t dbgc_byte_fifo_read(dbgc_byte_fifo_t *fifo, uint8_t *data, size_t length);
 
 /* Reset discards buffered data but preserves the caller-owned storage. */
 void dbgc_byte_fifo_clear(dbgc_byte_fifo_t *fifo);

@@ -32,50 +32,50 @@
 
 static inline uint8_t DAP_GetVendorString(char *str)
 {
-    (void)str;
-    return 0U;
+	(void)str;
+	return 0U;
 }
 
 static inline uint8_t DAP_GetProductString(char *str)
 {
-    (void)str;
-    return 0U;
+	(void)str;
+	return 0U;
 }
 
 static inline uint8_t DAP_GetSerNumString(char *str)
 {
-    (void)str;
-    return 0U;
+	(void)str;
+	return 0U;
 }
 
 static inline uint8_t DAP_GetTargetDeviceVendorString(char *str)
 {
-    (void)str;
-    return 0U;
+	(void)str;
+	return 0U;
 }
 
 static inline uint8_t DAP_GetTargetDeviceNameString(char *str)
 {
-    (void)str;
-    return 0U;
+	(void)str;
+	return 0U;
 }
 
 static inline uint8_t DAP_GetTargetBoardVendorString(char *str)
 {
-    (void)str;
-    return 0U;
+	(void)str;
+	return 0U;
 }
 
 static inline uint8_t DAP_GetTargetBoardNameString(char *str)
 {
-    (void)str;
-    return 0U;
+	(void)str;
+	return 0U;
 }
 
 static inline uint8_t DAP_GetProductFirmwareVersionString(char *str)
 {
-    (void)str;
-    return 0U;
+	(void)str;
+	return 0U;
 }
 
 #define DAP_SETUP() ((void)0)

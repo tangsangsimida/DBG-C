@@ -6,9 +6,9 @@
 typedef int (*dbgc_ch585_target_reset_hold_fn)(void *context);
 
 typedef struct {
-    uint8_t asserted_high;
-    dbgc_ch585_target_reset_hold_fn hold;
-    void *context;
+	uint8_t asserted_high;
+	dbgc_ch585_target_reset_hold_fn hold;
+	void *context;
 } dbgc_ch585_target_reset_sequence_config_t;
 
 /* Before calling, the caller must place PA4 in its approved, released output
@@ -18,6 +18,6 @@ typedef struct {
  * electrical review and board verification.
  */
 int dbgc_ch585_target_reset_sequence_execute(
-    const dbgc_ch585_target_reset_sequence_config_t *configuration);
+	const dbgc_ch585_target_reset_sequence_config_t *configuration);
 
 #endif

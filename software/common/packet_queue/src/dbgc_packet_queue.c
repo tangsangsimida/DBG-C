@@ -116,8 +116,18 @@ dbgc_packet_queue_status_t dbgc_packet_queue_push(dbgc_packet_queue_t *queue, co
  * @param length 接收实际或所需记录长度的指针。
  * @return 操作状态。
  */
-dbgc_packet_queue_status_t dbgc_packet_queue_pop(dbgc_packet_queue_t *queue, uint8_t *data,
-						 size_t output_capacity, size_t *length)
+/**
+ * @brief 复制队首记录，并按参数决定是否将记录移出队列。
+ * @param queue 队列对象。
+ * @param data 接收记录数据的缓冲区。
+ * @param output_capacity 输出缓冲区容量。
+ * @param length 接收实际或所需记录长度的指针。
+ * @return 操作状态。
+ */
+static dbgc_packet_queue_status_t dbgc_packet_queue_copy_front(const dbgc_packet_queue_t *queue,
+							       uint8_t *data,
+							       size_t output_capacity,
+							       size_t *length)
 {
 	size_t payload_length;
 	size_t offset;
@@ -146,10 +156,44 @@ dbgc_packet_queue_status_t dbgc_packet_queue_pop(dbgc_packet_queue_t *queue, uin
 		memcpy(data, &queue->storage[offset], payload_length);
 	}
 	*length = payload_length;
-	queue->lengths[queue->head] = 0U;
-	queue->head = dbgc_packet_queue_advance(queue->head, queue->slot_count);
-	--queue->count;
 	return DBGC_PACKET_QUEUE_OK;
+}
+
+/**
+ * @brief 从队列头部取出一条记录。
+ * @param queue 队列对象。
+ * @param data 接收记录数据的缓冲区。
+ * @param output_capacity 输出缓冲区容量。
+ * @param length 接收实际或所需记录长度的指针。
+ * @return 操作状态。
+ */
+dbgc_packet_queue_status_t dbgc_packet_queue_pop(dbgc_packet_queue_t *queue, uint8_t *data,
+						 size_t output_capacity, size_t *length)
+{
+	dbgc_packet_queue_status_t status;
+
+	status = dbgc_packet_queue_copy_front(queue, data, output_capacity, length);
+	if (status == DBGC_PACKET_QUEUE_OK) {
+		queue->lengths[queue->head] = 0U;
+		queue->head = dbgc_packet_queue_advance(queue->head, queue->slot_count);
+		--queue->count;
+	}
+
+	return status;
+}
+
+/**
+ * @brief 查看队首记录但保留其在队列中的状态。
+ * @param queue 队列对象。
+ * @param data 接收记录数据的缓冲区。
+ * @param output_capacity 输出缓冲区容量。
+ * @param length 接收实际或所需记录长度的指针。
+ * @return 操作状态。
+ */
+dbgc_packet_queue_status_t dbgc_packet_queue_peek(const dbgc_packet_queue_t *queue, uint8_t *data,
+						  size_t output_capacity, size_t *length)
+{
+	return dbgc_packet_queue_copy_front(queue, data, output_capacity, length);
 }
 
 /**
@@ -185,4 +229,14 @@ size_t dbgc_packet_queue_count(const dbgc_packet_queue_t *queue)
 size_t dbgc_packet_queue_capacity(const dbgc_packet_queue_t *queue)
 {
 	return dbgc_packet_queue_is_valid(queue) ? queue->slot_count : 0U;
+}
+
+/**
+ * @brief 查询每条记录的槽位字节数。
+ * @param queue 队列对象。
+ * @return 有效队列的单条记录容量；无效队列返回零。
+ */
+size_t dbgc_packet_queue_record_capacity(const dbgc_packet_queue_t *queue)
+{
+	return dbgc_packet_queue_is_valid(queue) ? queue->slot_size : 0U;
 }

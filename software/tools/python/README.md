@@ -2,20 +2,26 @@
 
 These scripts are adapted for the C firmware tree under `software/`. They reuse the scoped formatting, comment-coverage reporting, and encoding-conversion workflows used by sibling projects. All file paths are resolved relative to this `software/` root.
 
-Run the commands below from the repository's `software/` directory. The scripts require Python 3.9 or newer; formatting also requires clang-format 11 or newer.
+The commands work from the repository root. They also work from `software/` after omitting the `software/` prefix. The scripts require Python 3.9 or newer; formatting also requires clang-format 11 or newer.
 
 ## Formatting
 
-Check all project-owned C/C++ files:
+Format all project-owned C/C++ files (write mode is the default):
 
 ```sh
-python3 tools/python/format_code.py --check --all
+python3 software/tools/python/format_code.py --all
+```
+
+Check all project-owned C/C++ files without modifying them:
+
+```sh
+python3 software/tools/python/format_code.py --check --all
 ```
 
 Format only explicitly named project-owned files:
 
 ```sh
-python3 tools/python/format_code.py --write common/packet_queue/src/dbgc_packet_queue.c
+python3 software/tools/python/format_code.py software/common/packet_queue/src/dbgc_packet_queue.c
 ```
 
 The formatter uses `software/.clang-format`. `third_party/`, generated/build trees, and the copied WCH CH585 headers are excluded. Assembly is not passed to clang-format.

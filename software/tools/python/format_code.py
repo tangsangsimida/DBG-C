@@ -50,9 +50,9 @@ def discover_sources() -> list[Path]:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    mode = parser.add_mutually_exclusive_group(required=True)
+    mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--check", action="store_true", help="检查格式，不修改文件")
-    mode.add_argument("--write", action="store_true", help="使用 clang-format 修改文件")
+    mode.add_argument("--write", action="store_true", help="使用 clang-format 修改文件（默认）")
     parser.add_argument("--all", action="store_true", help="处理 software/ 下项目自有 C/C++ 文件")
     parser.add_argument("files", nargs="*", type=Path, help="处理指定的项目自有文件")
     parser.add_argument("--clang-format", default="clang-format", help="clang-format 可执行文件")
@@ -61,8 +61,11 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
-    if args.all == bool(args.files):
-        print("必须且只能指定 --all 或一个以上文件路径", file=sys.stderr)
+    if args.all and args.files:
+        print("--all 不能与文件路径同时使用；它只扫描 software/ 下的项目源码", file=sys.stderr)
+        return 2
+    if not args.all and not args.files:
+        print("请指定 --all 或一个以上文件路径", file=sys.stderr)
         return 2
     files = discover_sources() if args.all else [path.resolve() for path in args.files]
     invalid = [path for path in files if not is_project_source(path)]

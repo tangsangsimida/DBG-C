@@ -93,6 +93,21 @@ dbgc_packet_queue_status_t dbgc_packet_queue_push(dbgc_packet_queue_t *queue, co
 dbgc_packet_queue_status_t dbgc_packet_queue_pop(dbgc_packet_queue_t *queue, uint8_t *data,
 						 size_t output_capacity, size_t *length);
 
+/**
+ * @brief 查看队首记录但不将其移出队列。
+ *
+ * 缓冲区不足时，length 写入所需长度，队首记录保持不变。length 为空指针、
+ * 队列为空或参数无效时返回对应状态。
+ *
+ * @param queue 队列对象。
+ * @param data 接收记录数据的缓冲区。
+ * @param output_capacity 输出缓冲区容量。
+ * @param length 接收实际或所需记录长度的指针。
+ * @return 操作状态。
+ */
+dbgc_packet_queue_status_t dbgc_packet_queue_peek(const dbgc_packet_queue_t *queue, uint8_t *data,
+						  size_t output_capacity, size_t *length);
+
 /** @brief 清空队列中的记录，但保留其配置和存储区。 */
 void dbgc_packet_queue_clear(dbgc_packet_queue_t *queue);
 
@@ -101,5 +116,8 @@ size_t dbgc_packet_queue_count(const dbgc_packet_queue_t *queue);
 
 /** @brief 返回队列可容纳的记录数；无效队列返回零。 */
 size_t dbgc_packet_queue_capacity(const dbgc_packet_queue_t *queue);
+
+/** @brief 返回单条记录的最大字节数；无效队列返回零。 */
+size_t dbgc_packet_queue_record_capacity(const dbgc_packet_queue_t *queue);
 
 #endif
