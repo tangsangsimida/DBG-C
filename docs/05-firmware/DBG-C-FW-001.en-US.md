@@ -35,7 +35,7 @@ The PoC keeps ThreadX upstream RISC-V32/GNU thread context save/restore, system-
 
 ### 3.1 Required tools
 
-Git, CMake 3.20 or newer, GNU Make, the MounRiver Linux x64 RISC-V Embedded GCC 12 toolchain, and a native C99 compiler are required. Host tests use `cc` by default; set `CC` to select another compiler executable. The recorded build host has Git 2.43.0, CMake 3.28.3, GNU Make 4.3, GCC 12.2.0, GNU assembler/linker 2.38, and Ubuntu cc 13.3.0. Ninja is optional.
+Python 3.9 or newer, Git, CMake 3.20 or newer, an available CMake generator, the MounRiver RISC-V Embedded GCC 12 toolchain, and a native C99 compiler are required. Host tests use `cc` by default; set `CC` or `--host-cc` to select another compiler executable. The recorded build host is Linux x64 with Git 2.43.0, CMake 3.28.3, GNU Make 4.3, GCC 12.2.0, GNU assembler/linker 2.38, and Ubuntu cc 13.3.0. The Python orchestration uses Windows/POSIX path handling, but the Windows toolchain and full build have not been verified in this project.
 
 ### 3.2 Install the MounRiver toolchain
 
@@ -72,12 +72,23 @@ git submodule update --init --recursive
 software/poc1-ch585-threadx/build.sh
 ```
 
+The cross-platform entry point is `python3 software/poc1-ch585-threadx/build.py`. `build.sh` remains as a POSIX compatibility launcher.
+
 Custom toolchain and build directory:
 
 ```bash
 DBGC_WCH_TOOLCHAIN_ROOT="/actual/path/RISC-V Embedded GCC12/bin" \
 DBGC_BUILD_DIR="build-local" \
 software/poc1-ch585-threadx/build.sh
+```
+
+Alternatively, use the Python options without shell-specific environment assignment syntax:
+
+```sh
+python3 software/poc1-ch585-threadx/build.py \
+  --toolchain-root "/actual/path/RISC-V Embedded GCC12/bin" \
+  --build-dir build-local \
+  --host-cc cc
 ```
 
 The build directory must stay under the PoC directory and defaults to `build/`; `software/poc1-ch585-threadx/.gitignore` excludes `/build/` and `/build-*/`. The script records tool versions, repository and ThreadX revisions, build output, ELF size, and ELF header summary in `build-evidence.log` inside the build directory. This raw log is a locally generated artifact and is not version-controlled; controlled documents retain reproduction commands, key versions, and formal verification results.

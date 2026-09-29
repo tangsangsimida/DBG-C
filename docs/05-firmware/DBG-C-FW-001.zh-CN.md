@@ -35,7 +35,7 @@ PoC 沿用 ThreadX 上游 RISC-V32/GNU 的线程上下文保存/恢复、系统�
 
 ### 3.1 工具要求
 
-需要 Git、CMake 3.20 或更新版本、GNU Make、MounRiver Linux x64 RISC-V Embedded GCC 12，以及本机 C99 编译器（默认命令为 `cc`；可通过环境变量 `CC` 指定）。当前验证环境记录为 Git 2.43.0、CMake 3.28.3、GNU Make 4.3、GCC 12.2.0、GNU assembler/linker 2.38 和 Ubuntu cc 13.3.0。Ninja 非必需。
+需要 Python 3.9 或更新版本、Git、CMake 3.20 或更新版本、可用的 CMake 构建器、MounRiver RISC-V Embedded GCC 12，以及本机 C99 编译器（默认命令为 `cc`；可通过 `CC` 或 `--host-cc` 指定）。当前已记录的构建环境为 Linux x64：Git 2.43.0、CMake 3.28.3、GNU Make 4.3、GCC 12.2.0、GNU assembler/linker 2.38 和 Ubuntu cc 13.3.0。Python 构建编排已按 Windows/POSIX 路径实现，但本项目尚未验证 Windows 工具链和完整构建流程。
 
 ### 3.2 安装 MounRiver 工具链
 
@@ -72,12 +72,23 @@ git submodule update --init --recursive
 software/poc1-ch585-threadx/build.sh
 ```
 
+跨平台构建入口为 Python 脚本：`python3 software/poc1-ch585-threadx/build.py`。`build.sh` 保留为 POSIX 兼容转发脚本。
+
 自定义工具链与构建目录：
 
 ```bash
 DBGC_WCH_TOOLCHAIN_ROOT="/实际路径/RISC-V Embedded GCC12/bin" \
 DBGC_BUILD_DIR="build-local" \
 software/poc1-ch585-threadx/build.sh
+```
+
+也可以直接使用跨平台参数，不需要 shell 环境变量赋值语法：
+
+```sh
+python3 software/poc1-ch585-threadx/build.py \
+  --toolchain-root "/实际路径/RISC-V Embedded GCC12/bin" \
+  --build-dir build-local \
+  --host-cc cc
 ```
 
 构建目录必须位于 PoC 子目录中，默认目录为 `build/`；`software/poc1-ch585-threadx/.gitignore` 排除 `/build/` 和 `/build-*/`。脚本把工具版本、仓库与 ThreadX 修订、构建输出、ELF 大小和 ELF 头摘要写入构建目录内的 `build-evidence.log`。该原始日志是本地生成产物，不纳入版本控制；文档保留复现命令、关键版本和正式验证结论。
