@@ -13,12 +13,9 @@ import sys
 from pathlib import Path
 
 
-PROJECT_DIR = Path(__file__).resolve().parent
-REPO_DIR = PROJECT_DIR.parents[1]
-DEFAULT_TOOLCHAIN = (
-    Path.home()
-    / ".local/share/DBG-C/toolchains/MRS-2.4.0/RISC-V Embedded GCC12/bin"
-)
+SOFTWARE_ROOT = Path(__file__).resolve().parents[2]
+PROJECT_DIR = SOFTWARE_ROOT / "poc1-ch585-threadx"
+REPO_DIR = SOFTWARE_ROOT.parent
 HOST_FLAGS = ["-std=c99", "-Wall", "-Wextra", "-Werror", "-pedantic"]
 TARGET_FLAGS = [
     "-std=gnu99",
@@ -38,8 +35,8 @@ class BuildFailure(Exception):
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--build-dir", type=Path, help="构建目录，必须位于当前 PoC 目录内")
-    parser.add_argument("--toolchain-root", type=Path, help="WCH RISC-V 工具链 bin 目录")
-    parser.add_argument("--host-cc", help="主机 C 编译器可执行文件；也可设置 CC")
+    parser.add_argument("--toolchain-root", type=Path, help="WCH 工具链目录；也可设置 DBGC_WCH_TOOLCHAIN_ROOT 或将工具加入 PATH")
+    parser.add_argument("--host-cc", help="主机 C 编译器；也可设置 CC")
     parser.add_argument("--generator", help="可选的 CMake generator 名称")
     return parser.parse_args()
 
@@ -117,7 +114,7 @@ def select_host_compiler(requested: str | None) -> list[str]:
     if compiler:
         parts = shlex.split(compiler, posix=os.name != "nt")
         if len(parts) != 1:
-            raise BuildFailure("--host-cc 或 CC 必须是单个编译器可执行文件路径")
+            raise BuildFailure("--host-cc 或 CC 必须是单个编译器命令，不接受附加参数")
         executable = parts[0].strip('"')
         if not shutil.which(executable) and not Path(executable).is_file():
             raise BuildFailure(f"找不到主机 C 编译器：{executable}")
@@ -203,6 +200,7 @@ def run_host_checks(log, host_cc: list[str], upstream_dir: Path) -> None:
         ("test_cmsis_dap_bounds", [common / "cmsis_dap_bounds/src/dbgc_cmsis_dap_bounds.c", common / "cmsis_dap_bounds/tests/test_cmsis_dap_bounds.c"], [bounds_inc, cmsis_inc, upstream_dir / "include"], ("DBGC_CMSIS_DAP_TEST_C_LOOP",), ()),
         ("test_cmsis_dap_commands", [common / "cmsis_dap_bounds/src/dbgc_cmsis_dap_bounds.c", dap_src, common / "cmsis_dap_host_test/test_dap_commands.c"], [bounds_inc, cmsis_inc, upstream_dir / "include"], ("DBGC_CMSIS_DAP_TEST_C_LOOP",), ("-Wno-unused-parameter", "-Wno-unused-variable")),
         ("test_cmsis_dap_swd_engine", [platform / "dbgc_ch585_swd_gpio.c", dap_src, REPO_DIR / "software/third_party/cmsis-dap/Firmware/Source/SW_DP.c", common / "cmsis_dap_host_test/test_swd_engine.c"], [common / "ch585_swd_gpio_host_test", cmsis_inc, platform, upstream_dir / "include"], ("DBGC_CMSIS_DAP_TEST_C_LOOP", "DBGC_CMSIS_DAP_SWD_ENGINE_TEST", "DBGC_CH585_SWD_GPIO_HOST_TEST"), ("-Wno-unused-parameter", "-Wno-unused-variable")),
+        ("test_cmsis_dap_jtag_engine", [platform / "dbgc_ch585_jtag_gpio.c", dap_src, REPO_DIR / "software/third_party/cmsis-dap/Firmware/Source/SW_DP.c", REPO_DIR / "software/third_party/cmsis-dap/Firmware/Source/JTAG_DP.c", common / "cmsis_dap_host_test/test_jtag_engine.c"], [common / "ch585_jtag_gpio_host_test", cmsis_inc, platform, upstream_dir / "include"], ("DBGC_CMSIS_DAP_TEST_C_LOOP", "DBGC_CMSIS_DAP_JTAG_ENGINE_TEST", "DBGC_CH585_JTAG_GPIO_HOST_TEST"), ("-Wno-unused-parameter", "-Wno-unused-variable")),
     ]
     (BUILD_DIR / "host-tests").mkdir(parents=True, exist_ok=True)
     for name, sources, includes, defines, extra_flags in tests:
@@ -272,12 +270,13 @@ def run_build(args: argparse.Namespace) -> None:
     evidence_log = resolve_inside_project(BUILD_DIR / "build-evidence.log", "Evidence log")
 
     requested_toolchain = args.toolchain_root or os.environ.get("DBGC_WCH_TOOLCHAIN_ROOT")
-    if os.name == "nt" and not requested_toolchain:
-        raise BuildFailure(
-            "Windows 主机必须通过 --toolchain-root 或 DBGC_WCH_TOOLCHAIN_ROOT 指定 WCH 工具链目录"
-        )
-    toolchain_root = Path(requested_toolchain).expanduser() if requested_toolchain else DEFAULT_TOOLCHAIN
-    toolchain_root = toolchain_root.resolve()
+    if requested_toolchain:
+        toolchain_root = Path(requested_toolchain).expanduser().resolve()
+    else:
+        gcc = shutil.which("riscv-wch-elf-gcc")
+        if not gcc:
+            raise BuildFailure("未找到 WCH RISC-V GCC；请将工具链加入 PATH 或设置 DBGC_WCH_TOOLCHAIN_ROOT")
+        toolchain_root = Path(gcc).resolve().parent
     host_cc = select_host_compiler(args.host_cc)
 
     with evidence_log.open("a", encoding="utf-8", newline="") as log:
@@ -287,13 +286,14 @@ def run_build(args: argparse.Namespace) -> None:
         run(["git", "-C", str(threadx), "rev-parse", "HEAD"], log, first_line=True)
         run(["git", "-C", str(threadx), "describe", "--tags", "--exact-match", "HEAD"], log, first_line=True)
         run(["git", "-C", str(cmsis), "rev-parse", "HEAD"], log, first_line=True)
-        run(["cmake", "--version"], log, first_line=True)
+        cmake = os.environ.get("CMAKE", "cmake")
+        run([cmake, "--version"], log, first_line=True)
         for name in ("gcc", "as", "ld"):
             run([tool_path(toolchain_root, name), "--version"], log, first_line=True)
         run(host_cc + ["--version"], log, first_line=True)
 
         configure = [
-            "cmake", "-S", str(PROJECT_DIR), "-B", str(BUILD_DIR),
+            cmake, "-S", str(PROJECT_DIR), "-B", str(BUILD_DIR),
             f"-DCMAKE_TOOLCHAIN_FILE={PROJECT_DIR / 'cmake/wch-riscv32.cmake'}",
             f"-DDBGC_WCH_TOOLCHAIN_ROOT={toolchain_root}",
             "-DCMAKE_BUILD_TYPE=Debug",
@@ -308,7 +308,7 @@ def run_build(args: argparse.Namespace) -> None:
         run(
             [
                 sys.executable,
-                str(REPO_DIR / "software/common/cmsis_dap_host_test/prepare_upstream.py"),
+                str(SOFTWARE_ROOT / "tools/python/prepare_cmsis_dap_upstream.py"),
                 str(cmsis),
                 str(upstream_dir),
             ],

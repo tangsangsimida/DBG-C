@@ -18,7 +18,7 @@ def copy_verified(source: pathlib.Path, destination: pathlib.Path) -> bytes:
 
 def main() -> int:
     if len(sys.argv) != 3:
-        print("usage: prepare_upstream.py CMSIS_DAP_ROOT OUTPUT_DIR", file=sys.stderr)
+        print("usage: prepare_cmsis_dap_upstream.py CMSIS_DAP_ROOT OUTPUT_DIR", file=sys.stderr)
         return 2
 
     source_root = pathlib.Path(sys.argv[1])
