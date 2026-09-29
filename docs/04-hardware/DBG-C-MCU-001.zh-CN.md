@@ -1,12 +1,12 @@
 # DBG-C MCU 选型与资源评估
 
-**文档编号：** DBG-C-MCU-001　**版本：** V0.10　**状态：** CH585M V1 原理图资源分配草案；PoC tick 目标 1000 tick/s；1000 tick/s 配置已完成两次固定路径干净构建复核；实板验证未执行
+**文档编号：** DBG-C-MCU-001　**版本：** V0.11　**状态：** CH585M V1 原理图资源分配草案；PoC tick 目标 1000 tick/s；1000 tick/s 配置已完成两次固定路径干净构建复核；实板验证未执行
 
 ## 1. 证据来源
 
 `docs/09-references/CH585-CH584_Datasheet_V1.6.pdf` 是项目指定的 CH585M IC 手册；PDF 内文标题为《CH585/CH584 数据手册》V1.6，共 160 页。本文件作为当前芯片参数、引脚功能复用与寄存器能力判断的首要项目依据。SDK API、具体工程配置、射频并发性能及板级行为仍须用 SDK/实测核验。不得把 CH584/其他 CH 系列资料外推到 CH585M。
 
-仓库还保留了 `docs/09-references/CH585EVT/CH585EVT.ZIP` 官方 EVT 压缩包，并仅将 ThreadX PoC 实际使用的启动、链接文件及 WCH 头文件副本放入 `software/poc1-ch585-threadx/platform/ch585/`。归档索引 `EVT/CH585_List_EN.txt` 标注日期 2026.08；资料未声明独立 WCH SDK 语义版本。PoC 的 EVT 来源、散列、ThreadX 固定版本和 MounRiver 工具链版本见 DBG-C-FW-001。PoC 主机交叉构建不证明板上运行或产品级外设并发。
+仓库保留 `docs/09-references/CH585EVT/CH585EVT.ZIP` 官方 EVT 压缩包，未整体解压。用于本次分配核对的归档文件包括 `EVT/EXAM/SRC/StdPeriphDriver/inc/CH58x_gpio.h`（SHA-256 `c7f450ceaa501e4c5a912bc0429bca1540fa3c3f26e3fd55dfd908fad9b06183`）、`EVT/EXAM/IAP/USBHS_IAP/src/Main.c`（SHA-256 `5f6edcee35151480161a032c2995b495e70b9ecd352c57c4a99ee351cb40476f`）和 `EVT/PUB/CH585SCH.pdf`（SHA-256 `70391feaa719a7c5ffc1b738b927ba166bf2402692ec42f7042366839c1fb7bb`）。EVT GPIO 头文件声明 UART3 `RB_PIN_UART3` 映射 PA4/PA5 至 PB20/PB21；USBHS IAP Main 初始化 USBHS Device 控制器；官方参考原理图显示 PB22 接 BOOT 下载开关。归档索引 `EVT/CH585_List_EN.txt` 标注日期 2026.08，未声明独立 SDK 语义版本。上述示例不证明 DBG-C 固件实现或板级验证。
 
 ## 2. 资源表
 
@@ -15,23 +15,23 @@
 | CPU | 青稞 RISC-V3C，RV32IMBC 与自扩展；最高 78 MHz | 具体时钟档、SDK配置待核实 |
 | FlashROM | 512 KB：448 KB CodeFlash、32 KB DataFlash、24 KB BootLoader、8 KB InfoFlash | 分区、升级双镜像/回滚、可用空间待 SDK/Boot 验证 |
 | SRAM | 128 KB：96 KB RAM96K、32 KB RAM32K | RF/USB 并发缓冲峰值待测 |
-| USBFS | 1 组 FS USB2.0 控制器/PHY；15 endpoints；64 B packet；DMA；支持 Host/Device | Endpoint 分配与 SDK API 待查 |
-| USBHS | 1 组 480 Mbps USB2.0 HS 控制器/PHY；1024 B packet；DMA；支持 HS/FS Host/Device | V1 暂不作性能优化目标；实际 USB Device 栈和 FS/HS 选择待查 |
-| UART | 4 组；8 级 FIFO；数据手册称通信波特率可达 9 Mbps | 可用引脚/时钟精度及目标电平待核实 |
-| SPI | 2 组，Master/Slave，DMA | RF 是否需外部收发器目前没有证据；内部 RF 路径待 SDK |
-| ADC | 12 位；14 外部+3 内部通道（概述） | V1 非强制，具体可用通道需封装/复用核对 |
+| USBFS | 1 组 FS USB2.0 控制器/PHY；15 endpoints；64 B packet；DMA；支持 Host/Device | PB10/PB11 保留作恢复、生产和调试通道；V1 主 USB 使用 USBHS。USBFS Device 栈与恢复流程待实现和验证 |
+| USBHS | 1 组 480 Mbps USB2.0 HS 控制器/PHY；1024 B packet；DMA；支持 HS/FS Host/Device | V1 主机侧 USB Device 目标；PB12=U2D−、PB13=U2D+。EVT 有 USBHS Device 与 USBHS IAP 示例；复合设备、ThreadX 集成及板级高速信号仍待实现/验证 |
+| UART | 4 组；8 级 FIFO；数据手册称通信波特率可达 9 Mbps | UART0 PB4/PB7 用于 Target UART；UART3 RX/TX 通过 EVT `RB_PIN_UART3` 从 PA4/PA5 映射到 PB20/PB21，PB20 接收 SWO。复用配置和波特率待固件验证 |
+| SPI | 2 组，Master/Slave，DMA | PA0/PA1/PA2 的 SCK1/MOSI1/MISO1 复用来自手册；PA3 作为 GPIO 片选，组成外部 SPI NOR 接口。驱动、频率、Flash 型号与容量待实现/选型 |
+| ADC | 12 位；14 外部+3 内部通道（概述） | PA4 的 A0 复用由手册确认，分配为 Target_VTREF_ADC；分压、输入保护、量程和阈值待电气设计与测量 |
 | GPIO | 手册概述列出 40 个 GPIO，其中 2 个支持 5V 输入、32 个支持中断/唤醒输入 | 表 1-1 的 CH585M 列列出 PA0–PA15 与 PB0–PB23，共 40 个带封装脚号的 GPIO 标识，与概述计数一致；这不代表 40 个脚均可自由分配或均具备中断/唤醒能力。5VT 不代表可输出 5V |
-| BLE/RF | BLE 5.4；集成 2.4 GHz RF；1/2 Mbps；描述有 2.4G 模式及最高 8 kHz 上报率 | 手册概述中的 2.4G 模式语义、私有协议模式/PHY/API、RF DMA 能力与 API、BLE 共存限制及性能均待 SDK/参考手册核验。当前本地手册摘录未证实 RF DMA；不得写成已确认事实 |
+| BLE/RF | BLE 5.4；集成 2.4 GHz RF；1/2 Mbps；手册描述 2.4G 模式及最高 8 kHz 上报率 | EVT 含 `RF_Basic`、`RF_PHY`、`RF_PHY_Hop` 示例；私有 RF 协议、RF DMA、BLE 与私有 RF 共存及性能仍待库接口审查和板测 |
 | 定时器/PWM | 4 组 26 位定时器；4 路 capture；PWM 资源见手册 | SWD 时序实现适用性需 SDK/波形验证 |
 | UID/安全 | AES-128 与芯片唯一 ID | EVT `ISP585.h` 声明底层 ROM 命令与 0 成功/非 0 失败；WCH `GET_UNIQUE_ID()` 说明输出 64 位、缓冲区需 4 字节对齐，但其 void 包装会忽略命令状态。DBG-C 适配层直接检查底层状态并复用官方 UID 字节构造；唯一性/稳定性承诺与密钥边界仍需安全审查，硅片读取未验证 |
 | Boot/OTA | 手册称支持 ICP/ISP/IAP、OTA 无线升级 | BootLoader 协议、OTA API、回滚/签名/断电恢复均待官方资料验证 |
 | 封装 | CH585M：QFN48 | 焊盘、尺寸与 Pin 表需按正式封装资料复核 |
 | 时钟 | 手册引脚表给出 32 MHz HSE 晶体端 X32MO/X32MI，并列出 PA10/PA11 的 32 kHz 晶体功能 | 32 MHz 晶体网络分配到 QFN48 脚 31/32；32 kHz 是否需外接晶体由 WCH BLE/低功耗 SDK 配置确认 |
-| Debug | 单/双线仿真接口；手册指出启用后 PB15/PB14 占用 | 生产调试口、复用冲突和量产锁定策略待决策 |
+| Debug | 单/双线仿真接口；手册指出启用后 PB15/PB14 占用 | 生产启用后 PB14/PB15 专用；生产调试口和量产锁定策略待决策 |
 
 ## 3. CH585M QFN48 引脚分配矩阵
 
-下表封装脚号按手册表 1-1（手册印刷页 5–8）的 **CH585M 列**读取。MCU 侧资源已分配为原理图输入，但不冻结 DBG-C Interface 连接器上的 Type-C 触点映射。引脚复用初始化须用 WCH SDK 核验；目标电压、上拉/下拉、驱动方式和保护电路须由接口电气规范确定。
+下表封装脚号按手册表 1-1（手册印刷页 5–8）的 **CH585M 列**读取。MCU 侧资源按用户提出的 V1 基线更新为原理图输入；焊盘号和表列复用依据 CH585M 数据手册表 1-1，UART3 重映射依据 EVT GPIO 头文件，BOOT 网络依据 EVT CH585M 参考原理图。此表不冻结 DBG-C Interface 的 Type-C 触点映射；目标电压、驱动、保护及各外设运行仍需设计和验证。
 
 | QFN48 脚号 | GPIO/引脚 | V1 网络分配 | 复用冲突/约束 |
 |---:|---|---|---|
@@ -39,46 +39,46 @@
 | 2 | VSW | 按手册电源电路连接 | DC-DC 电感/旁路连接按手册核验 |
 | 3 | VDD33 / VIO33 | 电源与 I/O 电源网络 | 去耦及 USB 供电关系按参考设计核验 |
 | 4 | PA7 | 未分配，保留 | 不启用 TXD2、PWM5、LED6 或 ADC A11 |
-| 5 | PA8 | 未分配，保留 | 不启用 RXD1、LED7 或 ADC A12 |
-| 6 | PA9 | 可选配对/功能按键 GPIO 预留 | 是否装配按键待 PRD 确认；不启用 TMR0、TXD1、ADC A13 复用 |
-| 7 | PB9 | 未分配，保留 | GPIO/NFCI；V1 不启用 NFC |
-| 8 | PB8 | 未分配，保留 | GPIO/NFCM；V1 不启用 NFC |
-| 9 | PB17 | 未分配，保留 | GPIO/NFC+；V1 不启用 NFC |
-| 10 | PB16 | 未分配，保留 | GPIO/NFC−；V1 不启用 NFC |
-| 11 | PB15 / TCK | Probe 芯片仿真调试时钟 | 启用仿真调试接口时专用于 TCK；不得分配给 Target SWD |
-| 12 | PB14 / TIO | Probe 芯片仿真调试数据 | 启用仿真调试接口时专用于 TIO；不得分配给 Target SWD |
-| 13 | PB13 / U2D+ | 保留，USBHS V1 不启用 | 不与 USBFS D+ 混接 |
-| 14 | PB12 / U2D− | 保留，USBHS V1 不启用 | 不与 USBFS D− 混接 |
-| 15 | PB11 / UD+ | USBFS D+ | 不用作普通 GPIO |
-| 16 | PB10 / UD− | USBFS D− | 不用作普通 GPIO |
-| 17 | PB7 / TXD0 | Probe UART TX，连接方向为 Target RX | UART0 TXD0；MODEM 信号不使用 |
-| 18 | PB6 | Target SWCLK | GPIO 驱动；不启用 RTS/PWM8 复用 |
-| 19 | PB5 | Target SWDIO | GPIO 双向驱动；不启用 UART0 DTR 复用 |
-| 20 | PB4 / RXD0 | Probe UART RX，连接方向为 Target TX | UART0 RXD0 |
-| 21 | PB3 | 未分配，保留 | 不启用 DCD 或 PWM9_ |
-| 22 | PB2 | 未分配，保留 | 不启用 PWM8_ |
-| 23 | PB1 | 未分配，保留 | 不启用 DSR 或 PWM7_ |
-| 24 | PB0 | 未分配，保留 | 不启用 CTS 或 PWM6 |
-| 25 | PB23 / RST | Probe 芯片自身低有效复位输入 | 复用功能还包括 TMR0_、TXD2_、PWM11；按手册保留，不能连接为 Target_nRESET 输出 |
-| 26 | PB22 | 未分配，保留 | 不启用 TMR3 或 RXD2_；不是芯片 RST 引脚 |
-| 27 | PB21 | 未分配，保留 | 不启用 SCL_ 或 TXD3_ |
-| 28 | PB20 | 未分配，保留 | 不启用 SDA_ 或 RXD3_ |
-| 29 | PB19 | 未分配，保留 | 通用 GPIO，V1 不分配 |
-| 30 | PB18 | 未分配，保留 | 通用 GPIO，V1 不分配 |
+| 5 | PA8 | 官方 ISP UART 资源预留 | 手册复用为 RXD1；具体 ISP 通道/进入方式待官方下载资料确认 |
+| 6 | PA9 | 官方 ISP UART 资源预留 | 手册复用为 TMR0、TXD1、ADC A13；下载功能用途待官方资料确认 |
+| 7 | PB9 | LED_TARGET | GPIO/NFCI；V1 不启用 NFC；LED 电气极性和限流待定 |
+| 8 | PB8 | KEY_MODE | GPIO/NFCM；V1 不启用 NFC；按键上拉、去抖与唤醒策略待定 |
+| 9 | PB17 | EXT_RESET_N | GPIO；EVT 还列有 RF antenna switch 控制复用，确认天线网络不启用该 GPIO 输出功能 |
+| 10 | PB16 | EXT_IRQ | GPIO；EVT 还列有 RF antenna switch 控制复用，确认天线网络不启用该 GPIO 输出功能 |
+| 11 | PB15 / TCK | CH585 自身仿真调试时钟 | 启用仿真调试接口后专用于 TCK；不分配给 Target JTAG |
+| 12 | PB14 / TIO | CH585 自身仿真调试数据 | 启用仿真调试接口后专用于 TIO；不分配给 Target JTAG |
+| 13 | PB13 / U2D+ | PC USBHS D+ | USBHS Device 数据线；不得与 USBFS D+ 混接 |
+| 14 | PB12 / U2D− | PC USBHS D− | USBHS Device 数据线；不得与 USBFS D− 混接 |
+| 15 | PB11 / UD+ | USBFS D+ 恢复通道预留 | 恢复/生产接口是否装配待硬件设计确认；不与 USBHS 混接 |
+| 16 | PB10 / UD− | USBFS D− 恢复通道预留 | 恢复/生产接口是否装配待硬件设计确认；不与 USBHS 混接 |
+| 17 | PB7 / TXD0 | TARGET_UART_TX | UART0 TXD0；连接 Target RX |
+| 18 | PB6 | TARGET_PWR_EN | GPIO 控制信号；目标供电开关、电平和默认状态待电源设计 |
+| 19 | PB5 | TARGET_nRESET | GPIO 控制信号；极性、驱动级、默认状态和脉宽待 IF/电气设计 |
+| 20 | PB4 / RXD0 | TARGET_UART_RX | UART0 RXD0；连接 Target TX |
+| 21 | PB3 | TARGET_TDO | GPIO 输入；JTAG 模式使用，电气约束待 IF 设计 |
+| 22 | PB2 | TARGET_TDI | GPIO 输出；JTAG 模式使用，电气约束待 IF 设计 |
+| 23 | PB1 | TARGET_SWDIO_TMS | GPIO 双向；SWD 使用 SWDIO，JTAG 使用 TMS |
+| 24 | PB0 | TARGET_SWCLK_TCK | GPIO 输出；SWD 使用 SWCLK，JTAG 使用 TCK |
+| 25 | PB23 / RST | CH585 自身低有效复位 | 手册表 1-1 标为外部复位输入，内置上拉；不可接 Target_nRESET 输出 |
+| 26 | PB22 | CH585_BOOT 板级控制网络 | EVT CH585M 参考原理图将 PB22 接至 BOOT 下载开关；芯片表内无专用 BOOT 复用，进入条件/时序待官方下载说明确认 |
+| 27 | PB21 | 保留 | GPIO/UART3 TXD3 重映射目标；保留作扩展，不与 PB20 SWO 接收混淆 |
+| 28 | PB20 / RXD3_ | TARGET_SWO | UART3 RXD3 重映射目标；EVT `RB_PIN_UART3` 将 UART3 从 PA4/PA5 映射到 PB20/PB21 |
+| 29 | PB19 | LED_RF | GPIO；EVT 还列有 RF antenna switch 控制复用，需确认不启用该输出 |
+| 30 | PB18 | LED_USB | GPIO；EVT 还列有 RF antenna switch 控制复用，需确认不启用该输出 |
 | 31 | X32MO | 32 MHz 外部晶体网络一端 | 手册标注为 HSE 晶体端；晶体参数及负载按 WCH 参考设计核验 |
 | 32 | X32MI | 32 MHz 外部晶体网络另一端 | 手册标注为 HSE 晶体端；晶体参数及负载按 WCH 参考设计核验 |
 | 33 | VINTA | 按手册连接去耦电容 | 容值和走线按手册/参考设计核验 |
 | 34 | ANT | RF 射频网络/天线连接 | 手册标注 RF 输入输出并建议直连天线；具体网络必须依据 WCH CH585M 射频参考设计核验，当前仓库未包含该设计 |
 | 35 | VDCIA | 按手册连接去耦电容 | 与 VDCID 的连接按手册核验 |
-| 36 | PA4 | Target_nRESET 控制输出 | GPIO；不启用 UART3 RXD3、LEDC 或 ADC A0；输出级/默认态待电气设计 |
-| 37 | PA5 | 可选状态 LED GPIO 预留 | 是否装配 LED 待 PRD/硬件评审确认；不启用 UART3 TXD3、LED4 或 ADC A1 |
+| 36 | PA4 / A0 | TARGET_VTREF_ADC | ADC A0 复用；同时是 UART3 RX 默认引脚，启用 UART3 RX 重映射至 PB20 后避免冲突；前端量程/保护待设计 |
+| 37 | PA5 | 保留 | UART3 TX 默认引脚；若使用 PB20/PB21 重映射，需确认复用配置；保留 |
 | 38 | PA6 | 未分配，保留 | 不启用 RXD2、PWM4_、LED5 或 ADC A10 |
-| 39 | PA0 | 未分配，保留 | 不启用 SCK1、LED0 或 ADC A9 |
-| 40 | PA1 | 未分配，保留 | 不启用 MOSI1、LED1 或 ADC A8 |
-| 41 | PA2 | 未分配，保留 | 不启用 TMR3_、MISO1、RI、LED2 或 ADC A7 |
-| 42 | PA3 | 未分配，保留 | 不启用 LED3 或 ADC A6 |
-| 43 | PA15 | 未分配，保留 | 不启用 SPI0 MISO 或 UART0 RXD0 重映射 |
-| 44 | PA14 | 未分配，保留 | 不启用 SPI0 MOSI 或 UART0 TXD0 重映射 |
+| 39 | PA0 / SCK1 | EXT_FLASH_SCK | SPI1 SCK1 复用；总线模式/时钟待驱动设计 |
+| 40 | PA1 / MOSI1 | EXT_FLASH_MOSI | SPI1 MOSI1 复用 |
+| 41 | PA2 / MISO1 | EXT_FLASH_MISO | SPI1 MISO1 复用 |
+| 42 | PA3 | EXT_FLASH_CS | GPIO 片选；手册不列 SPI1 专用 CS 复用 |
+| 43 | PA15 | 官方 ISP UART 资源预留 | 手册列 UART0 RXD0_ 重映射；是否为 ISP 通道待官方下载资料确认 |
+| 44 | PA14 | 官方 ISP UART 资源预留 | 手册列 UART0 TXD0_ 重映射；是否为 ISP 通道待官方下载资料确认 |
 | 45 | PA13 | 未分配，保留 | 不启用 SPI0 SCK 或 PWM5 |
 | 46 | PA12 | 未分配，保留 | 不启用 SPI0 SCS 或 PWM4 |
 | 47 | PA11 / X32KO | 保留给 32 kHz 时钟评估，不接外部信号 | 低频振荡器输出；是否需要 32 kHz 晶体由 WCH BLE/低功耗 SDK 配置确认 |
@@ -90,55 +90,59 @@
 
 | 功能 | 计划需求 | MCU 资源/引脚分配 | 状态 |
 |---|---|---|---|
-| USB Device | CMSIS-DAP v2 + CDC | USBFS；PB10 QFN48-16=UD−，PB11 QFN48-15=UD+；USBHS 暂不启用 | SDK/描述符待验证 |
-| SWD Engine | SWDIO/SWCLK 时序 | PB5 QFN48-19=SWDIO；PB6 QFN48-18=SWCLK；GPIO bit-bang | GPIO 时序与速率待验证 |
-| Target Reset | 硬件复位 | PA4 QFN48-36=Target_nRESET | 输出级、默认态和电平待电气设计 |
-| Target UART | CDC 桥接 | UART0；PB4 QFN48-20=Probe RX/Target TX，PB7 QFN48-17=Probe TX/Target RX | SDK/并发待验证 |
-| RF/BLE | 私有 2.4G、BLE 管理共存 | 集成 Radio 共享资源 | SDK 共存待验证 |
-| LED/Button | 状态及配对交互 GPIO 预留 | PA5 QFN48-37=LED 预留；PA9 QFN48-6=可选按键预留 | 是否装配由 PRD/硬件评审确认；电气极性、限流、上拉与中断配置待定 |
-| HSE 时钟 | 32 MHz 外部晶体 | X32MO QFN48-31；X32MI QFN48-32 | 晶体参数与布局按 WCH 参考设计核验 |
-| LSE 时钟 | 可选 32 kHz 晶体 | PA10 QFN48-48、PA11 QFN48-47 保留 | 是否需要外部晶体由 WCH BLE/低功耗 SDK 配置确认 |
-| RF | BLE/私有 2.4G | ANT QFN48-34 接 RF 射频网络/天线 | 手册建议直连天线；最终网络按 WCH CH585M 射频参考设计核验，该资料尚未取得 |
-| DBG-C Interface | Basic/Full 信号 | MCU 侧 SWD/UART/Reset 已分配；Type-C 触点映射未冻结 | IF-001 冻结连接器映射和电气参数 |
-| Probe Debug/Reset | 生产与恢复 | PB15 QFN48-11=TCK；PB14 QFN48-12=TIO；PB23 QFN48-25=芯片 RST | 保留芯片自身编程/复位功能 |
+| PC USB Device | USBHS CMSIS-DAP v2 Bulk、CDC ACM 与管理通道 | USBHS；PB12 QFN48-14=U2D−，PB13 QFN48-13=U2D+ | EVT 有 USBHS Device/IAP 示例；复合描述符、ThreadX 集成和 HS 实板枚举待实现/验证 |
+| USBFS 恢复 | 生产/恢复 USB 通道 | PB10 QFN48-16=UD−，PB11 QFN48-15=UD+ | 保留；是否接入连接器、与官方 ISP 的完整流程待核实 |
+| Target SWD/JTAG | 共用 GPIO 引擎 | PB0 QFN48-24=SWCLK/TCK；PB1 QFN48-23=SWDIO/TMS；PB2 QFN48-22=TDI；PB3 QFN48-21=TDO | 引脚复用表对应关系已核；波形、速率和 DAP JTAG 能力待软件/板测 |
+| Target Reset/Power | 复位、目标电源使能 | PB5 QFN48-19=TARGET_nRESET；PB6 QFN48-18=TARGET_PWR_EN | GPIO 焊盘已核；电平转换、默认态、供电保护与控制逻辑待设计 |
+| Target UART/CDC | 全双工 UART 桥 | UART0；PB4 QFN48-20=RXD0，PB7 QFN48-17=TXD0 | EVT UART0 引脚和接口已核；CDC 桥接、速率和并发待实现/验证 |
+| SWO | NRZ SWO 接收 | PB20 QFN48-28=RXD3_；UART3 RX 由 EVT `RB_PIN_UART3` 重映射至 PB20 | 头文件声明映射；SWO 采样、波特率和 CMSIS-DAP SWO 输出路径待实现/验证 |
+| Target VTref | 目标电压检测 | PA4 QFN48-36=ADC A0 | 仅确认 ADC 复用名；分压、钳位、量程、校准和判定阈值待电气设计/测量 |
+| 外部 SPI NOR | 升级缓存、回滚、日志及离线镜像候选存储 | SPI1：PA0= SCK1、PA1=MOSI1、PA2=MISO1；PA3=GPIO CS | 引脚复用已核；Flash 型号/容量、协议、时钟与分区待选型/实现；不能据此冻结 Flash 布局 |
+| 私有 RF/BLE | 私有 2.4 GHz 与 BLE 管理 | 芯片集成 Radio；ANT QFN48-34 | EVT 有 RF 示例；协议、DMA、RF 与 BLE 同时运行能力待源码/库接口分析及板测 |
+| Probe 自身调试/复位 | 生产调试和恢复 | PB15 QFN48-11=TCK；PB14 QFN48-12=TIO；PB23 QFN48-25=RST | 依数据手册保留；是否持续开放由生产策略确定 |
+| BOOT 控制 | 官方下载/恢复入口 | PB22 QFN48-26 接板级 BOOT 控制网络 | EVT 参考原理图确认网络；芯片复用表没有专用 BOOT 功能，启动条件待官方文档确认 |
+| UI | 模式键和状态指示 | PB8=KEY_MODE；PB9=LED_TARGET；PB18=LED_USB；PB19=LED_RF | 引脚为 GPIO；PB18/PB19 兼有 RF antenna switch 控制复用，相关复用配置须关闭/核查 |
+| 扩展控制 | 扩展器件中断/复位 | PB16=EXT_IRQ；PB17=EXT_RESET_N | GPIO 焊盘已核；PB16/PB17 兼有 RF antenna switch 控制复用 |
 
 ## 5. V1 外设需求与原理图预分配
 
-目标是给原理图设计提供明确的 MCU 资源基线。此分配是 **V1 原理图输入基线**，不是芯片性能通过验证，也不冻结 DBG-C Interface 的 Type-C Pin 映射。
+下表将用户提出的引脚基线与官方资料交叉核对后作为原理图输入。焊盘号/复用依据 CH585/CH584 数据手册 V1.6 表 1-1 的 CH585M 列；GPIO 重映射和 UART3 映射依据归档 `EVT/EXAM/SRC/StdPeriphDriver/inc/CH58x_gpio.h`；PB22 BOOT 网络依据 `EVT/PUB/CH585SCH.pdf`。这不代表外设驱动、组合工作或板级电气行为已经验证，也不冻结 DBG-C Interface 的 Type-C 触点。
 
-| 功能 | 分配的 MCU 资源 | 原理图分配 | 说明与验证边界 |
+| 功能 | MCU 资源 | 原理图分配 | 当前证据与待办 |
 |---|---|---|---|
-| PC USB Device | USBFS 控制器/PHY + USB DMA | PB10 QFN48-16=UD−，PB11 QFN48-15=UD+；上行 USB-C | V1 使用 USBFS；CMSIS-DAP v2 Bulk + CDC。USBHS 暂不启用；端点描述符和 SDK Device 栈待固件核验 |
-| Target UART/CDC | UART0 + USB CDC 虚拟串口 | PB4 QFN48-20=Probe RX/Target TX，PB7 QFN48-17=Probe TX/Target RX；连接器侧 Pin 待 IF-001 冻结 | UART0 MODEM 信号不使用；CDC 经 USBFS 枚举并桥接 UART0 |
-| Target SWD | 共享 SWD Engine 控制的两个 GPIO | PB5 QFN48-19=SWDIO，PB6 QFN48-18=SWCLK；连接器侧 Pin 待 IF-001 冻结 | GPIO 驱动 SWD；不占 SPI。SWD 时序和频率待固件波形验证 |
-| Target Reset | 一个 GPIO 控制输出 | PA4 QFN48-36=Target_nRESET；连接器侧 Pin 待 IF-001 冻结 | 不连接 CH585M 自身 PB23/RST（QFN48 脚 25）；输出级、默认态和目标电压兼容性待电气设计 |
-| BLE + 私有 2.4G | 芯片集成 Radio/Baseband 与 ANT | ANT QFN48-34 接 RF 射频网络/天线 | 手册建议直连天线；最终网络按 WCH CH585M 射频参考设计核验，该资料尚未取得；共存须 SDK 确认 |
-| 状态/配对交互 | GPIO 预留 | PA5 QFN48-37=LED 预留；PA9 QFN48-6=可选按键预留 | 是否装配待 PRD/硬件评审；LED 极性/限流、按键上拉/去抖/唤醒策略待定 |
-| HSE 时钟 | 外部 32 MHz 晶体网络 | X32MO QFN48-31，X32MI QFN48-32 | 手册标注 HSE 外接 32 MHz 晶体；具体器件参数按 WCH 参考设计核验 |
-| LSE 时钟 | 可选 32 kHz 晶体网络 | PA10 QFN48-48、PA11 QFN48-47 保留 | 是否需要外部晶体由 WCH BLE/低功耗 SDK 配置确认 |
-| USB/连接状态检测 | GPIO（仅当选定的电路需要） | 预留 VBUS/连接检测网络位置，暂不定 Pin | 不推断 USBFS 自动提供 VBUS 检测；按 SDK 和供电/连接器方案决定 |
-| 唯一身份/配对设置 | 芯片 UID + DataFlash | 适配层经 `FLASH_EEPROM_CMD(CMD_GET_ROM_INFO, ROM_CFG_MAC_ADDR, ..., 0)` 读取 6 字节 MAC 并按 WCH `GET_UNIQUE_ID()` 源码算法生成 8 字节 UID；DataFlash 暂不分配 | 适配层 31 项主机 mock、WCH RISC-V 目标编译及与 `libISP585.a` 的可重定位链接检查通过；不代表硅片读取通过。产品 Device ID 编码、认证绑定和配对存储规则待定 |
-| OTA 与固件 | CodeFlash + BootLoader | 按官方烧录/升级参考设计接入调试/恢复所需电路 | 448 KB CodeFlash 不预设双镜像；升级签名、回滚、断电安全尚待证实 |
-| SWD 时序/系统时基 | Timer（按需）+ GPIO | 暂不选定 Timer 实例 | 先实现/测量 GPIO SWD；若精度或 CPU 占用不达目标，再根据 SDK 分配 Timer |
-| DMA | USBFS DMA；Radio DMA 待确认 | 不做固定 DMA 通道连接 | 数据手册列明 USBFS DMA；DMA 通道数及 USB/RF 仲裁需 SDK/参考手册确认 |
+| PC USB | USBHS Device | PB12=USBHS D−、PB13=USBHS D+ | 数据手册引脚表及 EVT `USBHS_IAP`、USBHS Device 示例可确认外设/示例存在；DAP Bulk+CDC 复合描述符、端点规划、ThreadX 集成与 HS 信号实测待完成 |
+| USB 恢复 | USBFS Device 保留 | PB10=USBFS D−、PB11=USBFS D+，预留生产/恢复接入 | 数据手册确认引脚；恢复模式进入和产品是否引出待确认 |
+| Target SWD/JTAG | 共用 SWD/JTAG GPIO backend | PB0=SWCLK/TCK、PB1=SWDIO/TMS、PB2=TDI、PB3=TDO | GPIO 复用有效；IO 电压、输出结构、转换器和时序待 IF-001/验证板确定 |
+| Target nRESET | GPIO | PB5=TARGET_nRESET | 不与芯片自身 PB23/RST 混网；驱动级、默认态、脉宽待定 |
+| Target 电源控制 | GPIO | PB6=TARGET_PWR_EN | 外部负载开关、限流、反灌、故障检测和默认状态需电源设计 |
+| Target UART/CDC | UART0 + USB CDC ACM | PB4=Probe RX/Target TX；PB7=Probe TX/Target RX | EVT remap 文档与 datasheet 对应；波特率、CDC interface/endpoint 和并发待实现 |
+| SWO | UART3 RX | PB20=RXD3_；启用 EVT `RB_PIN_UART3` 映射 | PA4/PA5 默认 UART3 路径与 PA4 ADC 分配冲突；使用重映射后 PA4 可保留 ADC，需用实际初始化验证 |
+| VTref | ADC A0 | PA4=TARGET_VTREF_ADC | PA4 同时具有 UART3 RX 默认复用，必须启用 UART3 重映射；前端不能把任意目标电压直接送入 MCU，量程和保护待计算 |
+| 外部 Flash | SPI1 + GPIO CS | PA0=SCK1、PA1=MOSI1、PA2=MISO1、PA3=CS | 手册给出 SPI1 信号复用；SPI CS 为 GPIO；型号、容量、兼容性和离线镜像需求待选型 |
+| CH585 自身调试/复位 | 仿真调试接口与 RST | PB14=TIO、PB15=TCK、PB23=RST | 与 Target SWD/JTAG 独立；复位脚保持可访问 |
+| BOOT | 板级下载控制 | PB22 接 BOOT 开关/电路 | EVT `CH585SCH.pdf` 可确认参考板的网络连接；不要把 PB22 描述为片内专用 BOOT 复用，启动门限和顺序待官方下载资料确认 |
+| ISP UART 资源 | 保留可能的下载串口路由 | PA8、PA9、PA14、PA15 保留 | 手册确认其 UART 复用，但当前证据尚不能确认四脚都用于官方 ISP；查验下载文档/SDK后再决定占用 |
+| UI | GPIO | PB8=KEY_MODE；PB9=LED_TARGET；PB18=LED_USB；PB19=LED_RF | PB8/PB9/ PB18/PB19 为 GPIO；PB18/PB19 同属 EVT RF antenna switch 控制复用范围，确认初始化不启用该功能 |
+| 扩展 | GPIO | PB16=EXT_IRQ；PB17=EXT_RESET_N；PB21 保留 | EVT 将 RF antenna switch 控制输出列为 PB16–PB21；须确认 RF 配置未占用这些 GPIO 输出 |
+| RF | 芯片集成 2.4 GHz/BLE Radio | ANT QFN48-34 按 WCH 射频参考设计连接 | EVT RF 示例存在；匹配网络、天线、净空及 USB 共存布局必须从官方板级资料提取；不能按通用经验定值 |
 
-### GPIO/引脚保留约束
+### GPIO/引脚约束
 
-1. MCU 侧分配为 PB10 QFN48-16=USBFS UD−、PB11 QFN48-15=USBFS UD+、PB4 QFN48-20=Probe RX/Target TX、PB7 QFN48-17=Probe TX/Target RX；布局发布前核对 WCH SDK 复用初始化。
-2. MCU 侧分配为 PB5 QFN48-19=SWDIO、PB6 QFN48-18=SWCLK、PA4 QFN48-36=Target_nRESET；PA5 QFN48-37 预留 LED，PA9 QFN48-6 预留可选按键。DBG-C Interface 的 Type-C 触点映射仍未冻结。
-3. CH585M QFN48 脚 11/12 为 PB15/TCK、PB14/TIO。保留给 Probe 仿真调试，不得分配给 Target SWD。
-4. PB12 QFN48-14/PB13 QFN48-13 为 USBHS U2D−/U2D+；V1 不启用 USBHS，不要与 USBFS PB10/PB11 混接。
-5. CH585M 自身低有效复位输入是 PB23 的 RST 复用功能，QFN48 脚 25；PB22 QFN48 脚 26 的手册复用功能为 TMR3/RXD2_。Target_nRESET 使用 PA4，三者必须分网。
-6. PB5/PB6 同时列有 UART0 DTR/RTS 及 PWM8 复用功能，V1 不启用这些功能；PA4/PA5/PA9 的 UART/LED/ADC 复用功能也不启用。
-7. 本分配引脚未在手册中标为 5VT。未完成 DBG-C Interface 电平和保护设计前，不得把目标板信号直接接入这些 GPIO。
+1. PB12/PB13 是 USBHS U2D−/U2D+；PB10/PB11 是 USBFS UD−/UD+，两组不得混接。
+2. Target SWD/JTAG 使用 PB0–PB3，Target UART 使用 PB4/PB7，Target nRESET/PWR_EN 使用 PB5/PB6。该组合符合数据手册 CH585M 引脚表；电气兼容和时序仍待验证。
+3. PB14/PB15 是 CH585 自身 TIO/TCK；PB23 的 RST 是 CH585 自身低有效外部复位；均与 Target 接口分开。
+4. PB20 可通过 EVT 声明的 UART3 重映射作为 RXD3；PA4/A0 因而可用于 VTref ADC。若未应用重映射，UART3 RX 会与 PA4 资源冲突。
+5. PB22 仅称为板级 BOOT 控制网络：参考原理图显示开关连至该脚，芯片引脚表未列专用 BOOT 复用。进入条件须以官方 ISP/下载说明确认。
+6. PB16–PB21 的 EVT GPIO 重映射说明包含 RF 天线开关控制输出。EXT_IRQ、EXT_RESET_N、LED、SWO 等分配能否同时成立，取决于 RF 初始化是否启用此输出；检查源码/库配置并在硬件测试前关闭冲突配置。
+7. Target 可能使用 1.8 V 或 3.3 V。数据手册 GPIO 复用并不能证明任意电压容忍；VTref 前端、Target 信号转换、保护及掉电隔离须单独设计。
 
-### V1 不启用的外设
+### V1 外设范围
 
-SPI、I2C、ADC、NFC、TouchKey、LCD/LED Matrix、USBHS、SWO/JTAG、Target Power/VTREF 暂不分配。Target 电压检测属于后续功能；不得为了预留而消耗当前必需 GPIO。后续若增项，重新做 Pin Matrix 与资源冲突评审。
+V1 基线包含 USBHS、USBFS 恢复预留、CMSIS-DAP v2 Bulk、SWD、JTAG、SWO、Target UART/CDC、BLE、私有 2.4 GHz、USB 自升级和无线自升级架构，以及 VTref 检测、Target 电源控制和外部 SPI NOR 资源。实现顺序及验收仍以 PRD/FW/TEST 文档为准。JTAG/SWO 和升级传输在资料分析/实现阶段，不代表已有产品代码或实测能力。
 
 ### 结论
 
-外设资源计数支持将该方案推进到 **原理图草案**：USBFS、UART0、2 个 SWD GPIO、1 个 Target Reset GPIO、无线 Radio、状态 GPIO及存储/Boot。此结论只表示所需外设资源存在；不能据此宣称 CH585M 已经证明能以目标性能同时运行 USB、BLE、私有 2.4G、CDC 与 SWD。实际性能及无线共存由 SDK 审查和板级验证闭环。
+按数据手册焊盘表和 EVT 映射资料，当前资源分配可作为原理图设计输入继续评审。以下事项仍是设计门槛：PB16–PB21 与 RF 天线开关复用的影响、BOOT 入口条件、USBHS 复合端点与 ThreadX 集成、Target 电平转换和电源保护、RF/BLE 共存，以及外部 Flash 型号与容量。上述事项不得在文档中标为已实现或实测通过。
 
 ### 存储资源预算方式
 
@@ -163,7 +167,7 @@ SPI、I2C、ADC、NFC、TouchKey、LCD/LED Matrix、USBHS、SWO/JTAG、Target Po
 | CPU | 调度、中断和协议处理时间 | 以 USB/RF 并发负载验证最坏响应时间 | 手册最高 78 MHz 不能单独证明符合性能目标 |
 | Compiler/Port | 与 CH585M 工具链、ABI、启动代码兼容的 ThreadX 端口 | ThreadX `v6.5.1.202602a_rel`，commit `b91b03b9e75fa523b17127f9e0eca09dca916459`；MounRiver GCC 12.2.0；WCH EVT GCC12 配置 | 主机交叉构建通过；EVT 工具链补丁版本未标注，板级端口兼容性未验证 |
 
-ThreadX 不增加外部连接器信号，不改变已分配的 USBFS、UART0、SWD GPIO、Target Reset GPIO 和集成 Radio。硬件侧须保留 Probe 编程/恢复路径。当前资源基线将 SysTick 指定为 ThreadX kernel tick 来源，TMR0 至 TMR3 保留；端口接入验证失败时，须记录并评审资源变更。
+ThreadX 不增加外部连接器信号；当前分配为 USBHS 主 Device、USBFS 恢复预留、UART0、PB0–PB3 Target SWD/JTAG、PB5/PB6 Target reset/power、集成 Radio。硬件侧须保留 Probe 编程/恢复路径。当前资源基线将 SysTick 指定为 ThreadX kernel tick 来源，TMR0 至 TMR3 保留；端口接入验证失败时，须记录并评审资源变更。
 
 ### ThreadX 上游依赖来源
 
@@ -175,4 +179,4 @@ ThreadX 上游该版本包含 `ports/risc-v32/gnu`，PoC 使用通用上下文�
 
 ## 7. 必须补齐的资料
 
-匹配的 WCH SDK/例程版本、官方封装图、芯片修订/勘误、USBFS Device 栈例程、CH585M 射频天线参考设计、RF/BLE 共存说明、OTA/ISP/IAP 示例及接口、电气时钟要求。取得后更新此文并记录文件版本/哈希与审阅日期。
+匹配的 WCH SDK/例程版本、官方封装图、芯片修订/勘误、USBHS Device 与 USBFS recovery 示例和恢复说明、CH585M 射频天线参考设计、RF/BLE 共存说明、OTA/ISP/IAP 入口与接口、Target 信号电气规格及系统时钟要求。取得后更新此文并记录文件版本/哈希与审阅日期。

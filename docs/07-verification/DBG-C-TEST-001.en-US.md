@@ -1,6 +1,6 @@
 # DBG-C Verification Specification
 
-**Document ID:** DBG-C-TEST-001　**Version:** V0.47　**Status:** Test-plan draft; SWD-engine host line model now runs through the CH585 GPIO BSP modeled-register path with 2759 assertions; the generic Target Reset sequence service passes 24 callback host checks and the PA4 BSP integration passes 37 modeled-register host checks; fixed-slot packet queue (54 host checks), FIFO, single/duplex byte-stream bridges, CMSIS-DAP command-core, upstream SWD-engine host model, bounded dispatch, bounds preflight, CMSIS compiler mapping, and CH585 SWD GPIO, Target Reset GPIO, UART0 and UID-read adapter host and target relocatable-link checks executed; PoC ThreadX creation-status/tick-observation code is included in the target cross-build; the CH585 BSP/adapter static library is included in the PoC cross-build; product UART/command bounds, silicon UID, and ThreadX board tests have not run
+**Document ID:** DBG-C-TEST-001　**Version:** V0.48　**Status:** Test-plan draft; SWD-engine host line model now runs through the CH585 GPIO BSP modeled-register path with 2759 assertions; the generic Target Reset sequence service passes 24 callback host checks and the PA4 BSP integration passes 37 modeled-register host checks; fixed-slot packet queue (54 host checks), FIFO, single/duplex byte-stream bridges, CMSIS-DAP command-core, upstream SWD-engine host model, bounded dispatch, bounds preflight, CMSIS compiler mapping, and CH585 SWD GPIO, Target Reset GPIO, UART0 and UID-read adapter host and target relocatable-link checks executed; PoC ThreadX creation-status/tick-observation code is included in the target cross-build; the CH585 BSP/adapter static library is included in the PoC cross-build; product UART/command bounds, silicon UID, and ThreadX board tests have not run
 
 ## 1. Pass Criteria
 
@@ -11,6 +11,8 @@ Record DUT hardware/firmware version, Host OS/tool version, Target board/MCU, wi
 Verify enumeration, descriptors, CMSIS-DAP v2 transport, CDC Control/Data, hot-plug/reconnect, and identification of multiple connected DBG-C units. Cover Windows/WinUSB/CDC, Linux/udev, and macOS. VID/PID, endpoint layout, packet sizes, and descriptors remain for USB specification/implementation freeze.
 
 ## 3. SWD and Target
+
+MCU-001 V0.11 changes Target SWD/JTAG to PB0–PB3 and Target_nRESET to PB5. Current PoC SWD/Reset BSP host checks cover the former PB5/PB6 and PA4 mapping and do not count as passing evidence for the new pin assignment. After BSP migration, add/update modeled-register mapping cases and verify actual pins, waveforms, voltage, and reset effect on the validation board; no board is available and board testing has not run.
 
 Cover Connect, ID read, memory read/write, erase, Program/Verify, Reset, breakpoints, single-step, registers, and memory access. Select at least one concrete STM32 and GD32 part/board; exact parts remain to be fixed with test fixtures. Check SWD frequency range, signal quality, target power loss/removal, and error reporting.
 

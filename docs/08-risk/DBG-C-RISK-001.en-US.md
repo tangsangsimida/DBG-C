@@ -1,6 +1,6 @@
 # DBG-C Risk Register
 
-**Document ID:** DBG-C-RISK-001　**Version:** V0.8　**Status:** Risk register
+**Document ID:** DBG-C-RISK-001　**Version:** V0.9　**Status:** Risk register
 
 Ratings use qualitative High/Medium/Low and await an agreed project scoring method.
 
@@ -24,3 +24,4 @@ Ratings use qualitative High/Medium/Low and await an agreed project scoring meth
 | R16 | SWD timing/target voltage tolerance is unverified | Instability or damage on some targets | High | Define target compatibility and SWD frequency range | Oscilloscope measurements and multi-target regression | Open |
 | R17 | Upstream RISC-V32 ThreadX assumptions conflict with QingKe V3C hardware stack push, WCH VTF/HPE, or exception return | Startup failure, stack corruption, tick/scheduling faults, or runtime reset | High | Keep CH585M adaptation separate from upstream context routines; do not treat a host build as board evidence | After the software gate, permit verification-board design only; verify startup, SysTick, sleep/wakeup, context restore, and sustained runtime on board | The 1000 ticks/s configuration passed two fixed-path clean builds, ELF/link, and source static review; the verification-board software gate is re-reviewed and passed. ThreadX board runtime verification and product-hardware freeze have not passed; measured frequency remains unverified |
 | R18 | UID ROM read failure, uniqueness/stability, or authentication semantics are unverified | Incorrect device identity, wrong pairing, or ineffective security policy | High | Check ROM-command status directly; freeze Device ID/authentication rules; do not treat UID as a key | Repeated CH585M board reads/fault injection, protocol security review, and multi-device identity tests | API/algorithm have source evidence and host mock/target-link checks pass; silicon read and security guarantees remain unverified |
+| R19 | After the MCU-001 pin-baseline change, PoC SWD/Reset BSP still uses the former PB5/PB6 and PA4 mapping; PB16–PB21 RF antenna-switch mux and PB22 BOOT entry conditions remain unresolved | Schematic and firmware diverge, causing Target debug/reset failure or RF/control-pin contention | High | Migrate BSP and tests to MCU-001 V0.11; verify RF antenna-switch setup and official BOOT entry requirements; do not claim firmware adaptation until closed | Modeled-register mapping checks, target cross-build, then validation-board pin/reset/RF measurements | Recorded; code migration and board verification not run |

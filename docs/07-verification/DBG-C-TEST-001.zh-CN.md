@@ -1,6 +1,6 @@
 # DBG-C Verification Specification
 
-**文档编号：** DBG-C-TEST-001　**版本：** V0.47　**状态：** 测试计划草案；SWD 引擎线模型已接入 CH585 GPIO BSP 模拟寄存器路径，2759 项断言通过；通用 Target Reset 序列服务 24 项主机回调检查及 PA4 BSP 集成 37 项主机模拟寄存器检查通过；定长包队列（54 项主机检查）、FIFO、单向/双向字节流桥接、CMSIS-DAP 命令层、有界 dispatch、SWD 引擎主机模型、边界预检器、CMSIS 编译器映射及 CH585 SWD GPIO、Target Reset GPIO 与 UART0、UID 读取适配器主机/目标静态链接检查已执行；PoC ThreadX 创建状态/tick 观测代码已加入并随目标交叉构建；CH585 BSP/适配器静态库纳入 PoC 交叉构建；产品 UART/命令边界、硅片 UID 与 ThreadX 实板测试未执行
+**文档编号：** DBG-C-TEST-001　**版本：** V0.48　**状态：** 测试计划草案；SWD 引擎线模型已接入 CH585 GPIO BSP 模拟寄存器路径，2759 项断言通过；通用 Target Reset 序列服务 24 项主机回调检查及 PA4 BSP 集成 37 项主机模拟寄存器检查通过；定长包队列（54 项主机检查）、FIFO、单向/双向字节流桥接、CMSIS-DAP 命令层、有界 dispatch、SWD 引擎主机模型、边界预检器、CMSIS 编译器映射及 CH585 SWD GPIO、Target Reset GPIO 与 UART0、UID 读取适配器主机/目标静态链接检查已执行；PoC ThreadX 创建状态/tick 观测代码已加入并随目标交叉构建；CH585 BSP/适配器静态库纳入 PoC 交叉构建；产品 UART/命令边界、硅片 UID 与 ThreadX 实板测试未执行
 
 ## 1. 通过规则
 
@@ -11,6 +11,8 @@
 验证枚举、描述符、CMSIS-DAP v2 传输、CDC Control/Data、热插拔/重连、多个 DBG-C 同连与实例区分；覆盖 Windows/WinUSB/CDC、Linux/udev、macOS。VID/PID、端点、包长和描述符待 USB 规范/实现冻结。
 
 ## 3. SWD 与 Target
+
+MCU-001 V0.11 已将 Target SWD/JTAG 改为 PB0–PB3、Target_nRESET 改为 PB5。当前 PoC SWD/Reset BSP 主机检查覆盖旧 PB5/PB6 与 PA4 映射，不得计作新引脚分配的通过证据。迁移 BSP 后必须新增/更新模拟寄存器映射用例，并在验证板检查实际管脚、波形、电平与复位效果；目前无板卡，板测未执行。
 
 覆盖 Connect、ID 读取、内存读写、擦除、Program/Verify、Reset、断点、单步、寄存器和内存访问。至少 STM32、GD32 各选定具体型号和板卡；型号待测试夹具冻结。检查 SWD 频率范围、信号质量、目标掉电/插拔与错误返回。
 
