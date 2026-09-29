@@ -1,6 +1,6 @@
 # DBG-C Verification Specification
 
-**文档编号：** DBG-C-TEST-001　**版本：** V0.52　**状态：** 测试计划草案；SWD 引擎线模型已接入 CH585 GPIO BSP 模拟寄存器路径，2759 项断言通过；通用 Target Reset 序列服务 24 项主机回调检查及 PB5 BSP 集成 37 项主机模拟寄存器检查通过；CH585 JTAG GPIO BSP 四信号映射 116 项及上游 CMSIS-DAP JTAG Sequence 经 GPIO BSP 的 88 项模拟寄存器主机检查通过；定长包队列（54 项主机检查）、FIFO、单向/双向字节流桥接、CMSIS-DAP 命令层、有界 dispatch、SWD 引擎主机模型、边界预检器、CMSIS 编译器映射及 CH585 SWD GPIO、Target Reset GPIO 与 UART0、UID 读取适配器主机/目标静态链接检查已执行；PoC ThreadX 创建状态/tick 观测代码已加入并随目标交叉构建；CH585 BSP/适配器静态库纳入 PoC 交叉构建；产品 UART/命令边界、硅片 UID 与 ThreadX 实板测试未执行
+**文档编号：** DBG-C-TEST-001　**版本：** V0.53　**状态：** 测试计划草案；SWD 引擎线模型已接入 CH585 GPIO BSP 模拟寄存器路径，2759 项断言通过；通用 Target Reset 序列服务 24 项主机回调检查及 PB5 BSP 集成 37 项主机模拟寄存器检查通过；CH585 JTAG GPIO BSP 四信号映射 116 项及上游 CMSIS-DAP JTAG Sequence 经 GPIO BSP 的 88 项模拟寄存器主机检查通过；定长包队列（54 项主机检查）、FIFO、单向/双向字节流桥接、CMSIS-DAP 命令层、有界 dispatch、SWD 引擎主机模型、边界预检器、CMSIS 编译器映射及 CH585 SWD GPIO、Target Reset GPIO 与 UART0、UID 读取适配器主机/目标静态链接检查已执行；PoC ThreadX 创建状态/tick 观测代码已加入并随目标交叉构建；CH585 BSP/适配器静态库纳入 PoC 交叉构建；产品 UART/命令边界、硅片 UID 与 ThreadX 实板测试未执行
 
 ## 1. 通过规则
 
@@ -138,7 +138,7 @@ Discovery、设备信息、Pair/Unpair、配置、状态、OTA、中断恢复、
 |---|---|---|---|
 | JTAG-ENG-01 | 一条 8 位 TMS 高、TDO 捕获的 `ID_DAP_JTAG_Sequence`，TDI 请求为 `0xA5`，脚本化 TDO 为 `0x96` | CMSIS-DAP 响应长度/状态/捕获数据、TDI 位序、PB0–PB3 掩码及 8 个时钟上升沿/下降沿均符合夹具预期 | 通过（88 项主机检查） |
 
-该检查只验证上游 Sequence 命令到 JTAG 位级函数、GPIO BSP API 及模拟寄存器的主机调用路径，不验证 JTAG Transfer、DP/AP 访问、TAP 链路、物理焊盘、目标电气行为、波形/时序、USB Transport 或 CH585M 实板运行。重现命令：`python3 software/tools/python/build_poc1.py --build-dir build/cmsis-dap-jtag-sequence`。
+WCH RISC-V GCC 另将启用 JTAG 测试配置的上游 `DAP.c` 与 `JTAG_DP.c` 编译为 ELF32 RISC-V 对象；对象未链接至产品固件。该检查只验证上游 Sequence 命令到 JTAG 位级函数、GPIO BSP API 及模拟寄存器的主机调用路径，并验证测试配置可目标编译；不验证 JTAG Transfer、DP/AP 访问、TAP 链路、物理焊盘、目标电气行为、波形/时序、USB Transport 或 CH585M 实板运行。重现命令：`python3 software/tools/python/build_poc1.py --build-dir build/cmsis-dap-jtag-sequence`。
 
 ## 10. 当前执行状态
 

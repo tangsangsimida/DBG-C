@@ -11,9 +11,18 @@
 
 #define CPU_CLOCK 4U
 #define IO_PORT_WRITE_CYCLES 1U
+#if defined(DBGC_CMSIS_DAP_JTAG_ENGINE_TEST)
+#define DAP_SWD 0
+#define DAP_JTAG 1
+#else
 #define DAP_SWD 1
 #define DAP_JTAG 0
+#endif
+#if defined(DBGC_CMSIS_DAP_JTAG_ENGINE_TEST)
+#define DAP_JTAG_DEV_CNT 1U
+#else
 #define DAP_JTAG_DEV_CNT 0U
+#endif
 #define DAP_DEFAULT_PORT 0U
 #define DAP_DEFAULT_SWJ_CLOCK 1U
 #define DELAY_FAST_CYCLES 1U
@@ -81,17 +90,34 @@ static inline uint8_t DAP_GetProductFirmwareVersionString(char *str)
 #define DAP_SETUP() ((void)0)
 #define PORT_OFF() ((void)0)
 #define PORT_SWD_SETUP() ((void)0)
+#define PORT_JTAG_SETUP() ((void)0)
 #define RESET_TARGET() 0U
 #define LED_CONNECTED_OUT(value) ((void)(value))
 #define LED_RUNNING_OUT(value) ((void)(value))
-#define PIN_TDI_OUT(value) ((void)(value))
 #define PIN_TDI_IN() 0U
-#define PIN_TDO_IN() 0U
 #define PIN_nTRST_OUT(value) ((void)(value))
 #define PIN_nTRST_IN() 0U
 #define PIN_nRESET_OUT(value) ((void)(value))
 #define PIN_nRESET_IN() 0U
 #define TIMESTAMP_GET() 0U
+#if defined(DBGC_CMSIS_DAP_JTAG_ENGINE_TEST)
+void dbgc_test_jtag_tck_set(void);
+void dbgc_test_jtag_tck_clear(void);
+void dbgc_test_jtag_tms_write(uint32_t bit);
+void dbgc_test_jtag_tdi_write(uint32_t bit);
+uint32_t dbgc_test_jtag_tdo_read(void);
+
+#define PIN_TDI_OUT(value) dbgc_test_jtag_tdi_write(value)
+#define PIN_TDO_IN() dbgc_test_jtag_tdo_read()
+#define PIN_SWCLK_TCK_SET() dbgc_test_jtag_tck_set()
+#define PIN_SWCLK_TCK_CLR() dbgc_test_jtag_tck_clear()
+#define PIN_SWDIO_TMS_SET() dbgc_test_jtag_tms_write(1U)
+#define PIN_SWDIO_TMS_CLR() dbgc_test_jtag_tms_write(0U)
+#define PIN_SWCLK_TCK_IN() 0U
+#define PIN_SWDIO_TMS_IN() 0U
+#else
+#define PIN_TDI_OUT(value) ((void)(value))
+#define PIN_TDO_IN() 0U
 
 #if defined(DBGC_CMSIS_DAP_SWD_ENGINE_TEST)
 void dbgc_test_swclk_set(void);
@@ -122,5 +148,6 @@ void dbgc_test_swdio_output_disable(void);
 #define PIN_SWDIO_IN() 0U
 #define PIN_SWDIO_OUT_ENABLE() ((void)0)
 #define PIN_SWDIO_OUT_DISABLE() ((void)0)
+#endif
 #endif
 #endif

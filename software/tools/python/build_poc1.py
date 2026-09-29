@@ -230,6 +230,8 @@ def run_target_checks(log, toolchain_root: Path, upstream_dir: Path) -> None:
         ("dbgc_ch585_uart0.o", platform / "dbgc_ch585_uart0.c", [platform, platform / "wch"], (), ()),
         ("cmsis_dap_command_core.o", upstream_dir / "src/DAP.c", [platform, platform / "wch", common / "cmsis_dap_host_test", upstream_dir / "include"], ("DBGC_CMSIS_DAP_TEST_C_LOOP",), ("-Wno-unused-parameter", "-Wno-unused-variable")),
         ("cmsis_dap_swd_engine.o", REPO_DIR / "software/third_party/cmsis-dap/Firmware/Source/SW_DP.c", [platform, platform / "wch", common / "cmsis_dap_host_test", upstream_dir / "include"], ("DBGC_CMSIS_DAP_TEST_C_LOOP", "DBGC_CMSIS_DAP_SWD_ENGINE_TEST"), ("-Wno-unused-parameter", "-Wno-unused-variable")),
+        ("cmsis_dap_jtag_command_core.o", upstream_dir / "src/DAP.c", [platform, platform / "wch", common / "cmsis_dap_host_test", upstream_dir / "include"], ("DBGC_CMSIS_DAP_TEST_C_LOOP", "DBGC_CMSIS_DAP_JTAG_ENGINE_TEST"), ("-Wno-unused-parameter", "-Wno-unused-variable")),
+        ("cmsis_dap_jtag_engine.o", REPO_DIR / "software/third_party/cmsis-dap/Firmware/Source/JTAG_DP.c", [platform, platform / "wch", common / "cmsis_dap_host_test", upstream_dir / "include"], ("DBGC_CMSIS_DAP_TEST_C_LOOP", "DBGC_CMSIS_DAP_JTAG_ENGINE_TEST"), ("-Wno-unused-parameter", "-Wno-unused-variable")),
     ]
     for name, source, includes, defines, extra_flags in checks:
         run(target_compile_command(gcc, name, source, includes, defines, extra_flags), log)
@@ -250,6 +252,8 @@ def run_target_checks(log, toolchain_root: Path, upstream_dir: Path) -> None:
         "dbgc_ch585_swd_gpio.o",
         "cmsis_dap_command_core.o",
         "cmsis_dap_swd_engine.o",
+        "cmsis_dap_jtag_command_core.o",
+        "cmsis_dap_jtag_engine.o",
     ):
         run([readelf, "-h", str(BUILD_DIR / "target-tests" / name)], log, match=r"Class:|Machine:")
     run([readelf, "-Ws", str(BUILD_DIR / "target-tests/dbgc_cmsis_compiler_check.o")], log, match=r"WEAK.*dbgc_cmsis_compiler_weak_check")

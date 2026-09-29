@@ -6,13 +6,13 @@
 
 格式化所有项目自有 C/C++ 文件（默认写入）：
 
-```sh
+```fish
 python3 software/tools/python/format_code.py --all
 ```
 
 只检查、不修改：
 
-```sh
+```fish
 python3 software/tools/python/format_code.py --check --all
 ```
 
@@ -20,7 +20,7 @@ python3 software/tools/python/format_code.py --check --all
 
 ## Doxygen 注释覆盖率
 
-```sh
+```fish
 python3 software/tools/python/check_comment_coverage.py software/common/packet_queue/src/dbgc_packet_queue.c
 ```
 
@@ -30,7 +30,7 @@ python3 software/tools/python/check_comment_coverage.py software/common/packet_q
 
 先预览已确认编码的单个文件：
 
-```sh
+```fish
 python3 software/tools/python/convert_to_utf8.py path/to/source.c --from-encoding gb18030 --dry-run
 ```
 
@@ -38,13 +38,13 @@ python3 software/tools/python/convert_to_utf8.py path/to/source.c --from-encodin
 
 ## PoC 构建
 
-```sh
+```fish
 python3 software/tools/python/build_poc1.py
 ```
 
-构建工具通过 `PATH` 查找 `python3`、`git`、`cmake`、所选 CMake 构建器（如 GNU Make 或 Ninja）、主机 C 编译器及 `riscv-wch-elf-*` 工具。开发者需将实际使用的程序目录加入环境变量 `PATH`；主机编译器可通过 `CC` 指定，CMake 命令可通过 `CMAKE` 指定，WCH 工具链也可通过 `DBGC_WCH_TOOLCHAIN_ROOT` 指定其 `bin` 目录。构建目录可用 `--build-dir` 选择，仍须位于 PoC 目录内。示例：
+构建工具通过 `PATH` 查找 `python3`、`git`、`cmake`、所选 CMake 构建器（如 GNU Make 或 Ninja）、主机 C 编译器及 `riscv-wch-elf-*` 工具。fish 用户可用 `fish_add_path /实际工具目录` 将程序目录加入 `PATH`；也可用 `set -gx DBGC_WCH_TOOLCHAIN_ROOT /实际工具链bin目录` 设置工具链目录。主机编译器可通过 `CC` 指定，CMake 命令可通过 `CMAKE` 指定，WCH 工具链也可通过 `DBGC_WCH_TOOLCHAIN_ROOT` 指定其 `bin` 目录。构建目录可用 `--build-dir` 选择，仍须位于 PoC 目录内。示例：
 
-```sh
+```fish
 python3 software/tools/python/build_poc1.py --build-dir build/host-review --host-cc cc
 ```
 

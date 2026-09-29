@@ -1,6 +1,6 @@
 # DBG-C Firmware Architecture 与 PoC-1 记录
 
-**文档编号：** DBG-C-FW-001　**版本：** V0.56　**状态：** 实验草案；通用定长包队列（54 项主机检查）、字节 FIFO、单向/双向无调度字节流桥接、队列化 CMSIS-DAP 服务（40 项主机检查）、CMSIS-DAP 命令层、上游 SWD 引擎、请求/响应边界预检及有界 dispatch 主机检查已通过；CH585 JTAG GPIO BSP 的 116 项检查和 CMSIS-DAP 上游 JTAG Sequence 经该 BSP 的 88 项模拟寄存器主机检查已通过；CMSIS 编译器宏映射、SWD GPIO、Target Reset GPIO、UART0、UID 读取适配器、桥接适配器与 WCH ROM 命令库目标编译/链接检查通过；迁移至 PB1/PB0 的 SWD GPIO（57 项）、PB5 Target Reset GPIO（33 项）、UART0、UID 读取适配器、单向/双向桥接主机检查分别为 57 项、33 项、94 项、31 项、15 项和 15 项；CMSIS-DAP SWD 引擎的 9 个主机线模型用例经 CH585 SWD GPIO BSP 源码和模拟 GPIOB 寄存器执行，共 2759 项断言；通用 Target Reset 序列服务通过 24 项主机回调检查；CH585 PB5 复位序列适配器通过 37 项模拟寄存器集成检查并纳入 PoC 静态库构建图；PoC 新增两线程创建状态及独立最近 tick 观测符号，固定路径两次 clean rebuild 的 ELF/map 散列一致；CH585 BSP/适配器纳入 PoC CMake 的 `dbgc_ch585_platform` 静态库目标；产品 DAP/USB 接入、GPIO/UART/JTAG 电气行为及时序未验证；芯片 UID 实际读取、产品命令配置与边界契约仍待验证/定义；1000 tick/s 配置及 PB5 复位序列适配器经固定路径干净构建复核；ThreadX 实板运行验证未执行；产品硬件冻结未放行
+**文档编号：** DBG-C-FW-001　**版本：** V0.57　**状态：** 实验草案；通用定长包队列（54 项主机检查）、字节 FIFO、单向/双向无调度字节流桥接、队列化 CMSIS-DAP 服务（40 项主机检查）、CMSIS-DAP 命令层、上游 SWD 引擎、请求/响应边界预检及有界 dispatch 主机检查已通过；CH585 JTAG GPIO BSP 的 116 项检查和 CMSIS-DAP 上游 JTAG Sequence 经该 BSP 的 88 项模拟寄存器主机检查已通过；CMSIS 编译器宏映射、SWD GPIO、Target Reset GPIO、UART0、UID 读取适配器、桥接适配器与 WCH ROM 命令库目标编译/链接检查通过；迁移至 PB1/PB0 的 SWD GPIO（57 项）、PB5 Target Reset GPIO（33 项）、UART0、UID 读取适配器、单向/双向桥接主机检查分别为 57 项、33 项、94 项、31 项、15 项和 15 项；CMSIS-DAP SWD 引擎的 9 个主机线模型用例经 CH585 SWD GPIO BSP 源码和模拟 GPIOB 寄存器执行，共 2759 项断言；通用 Target Reset 序列服务通过 24 项主机回调检查；CH585 PB5 复位序列适配器通过 37 项模拟寄存器集成检查并纳入 PoC 静态库构建图；PoC 新增两线程创建状态及独立最近 tick 观测符号，固定路径两次 clean rebuild 的 ELF/map 散列一致；CH585 BSP/适配器纳入 PoC CMake 的 `dbgc_ch585_platform` 静态库目标；产品 DAP/USB 接入、GPIO/UART/JTAG 电气行为及时序未验证；芯片 UID 实际读取、产品命令配置与边界契约仍待验证/定义；1000 tick/s 配置及 PB5 复位序列适配器经固定路径干净构建复核；ThreadX 实板运行验证未执行；产品硬件冻结未放行
 
 ## 1. 范围与状态
 
@@ -45,7 +45,7 @@ PoC 沿用 ThreadX 上游 RISC-V32/GNU 的线程上下文保存/恢复、系统�
 1fae593d27e24466f17c2df0fd00f746143f587fe33e912a78e35142fef82a6d
 ```
 
-将归档中的 `Toolchain/RISC-V Embedded GCC12/bin` 解压到开发者自行管理的位置，并将该 `bin` 目录加入 `PATH`。构建脚本通过 `PATH` 查找 `riscv-wch-elf-gcc` 及配套工具，不依赖特定安装目录。也可设置 `DBGC_WCH_TOOLCHAIN_ROOT` 指向该 `bin` 目录。下载后应先按官方或项目记录核对归档 SHA-256：
+将归档中的 `Toolchain/RISC-V Embedded GCC12/bin` 解压到开发者自行管理的位置，并将该 `bin` 目录加入 `PATH`。构建脚本通过 `PATH` 查找 `riscv-wch-elf-gcc` 及配套工具，不依赖特定安装目录。fish 用户可运行 `fish_add_path /实际安装路径/Toolchain/RISC-V Embedded GCC12/bin` 将其加入 PATH；也可用 `set -gx DBGC_WCH_TOOLCHAIN_ROOT /实际安装路径/Toolchain/RISC-V Embedded GCC12/bin` 设置当前 shell 环境。下载后应先按官方或项目记录核对归档 SHA-256：
 
 ```text
 1fae593d27e24466f17c2df0fd00f746143f587fe33e912a78e35142fef82a6d
@@ -53,14 +53,14 @@ PoC 沿用 ThreadX 上游 RISC-V32/GNU 的线程上下文保存/恢复、系统�
 
 ### 3.3 获取与构建
 
-```bash
+```fish
 git clone --recurse-submodules <DBG-C 仓库地址>
 cd DBG-C
 git submodule update --init --recursive
 python3 software/tools/python/build_poc1.py
 ```
 
-构建入口集中在 `software/tools/python/build_poc1.py`。脚本从 `PATH` 查找 `git`、`cmake`、本机 C 编译器及 `riscv-wch-elf-*` 工具；可设置 `CC`、`CMAKE`、`DBGC_WCH_TOOLCHAIN_ROOT`，或将相应程序目录加入 `PATH`。不需要在项目文件中配置个人安装目录。构建目录默认位于 PoC 的 `build/`；可通过 `--build-dir build-local` 改为 PoC 目录下的其他位置。脚本将工具版本、仓库与 ThreadX 修订、构建输出、ELF 大小和 ELF 头摘要写入 `build-evidence.log`。日志是本地构建产物，不纳入版本控制。构建和主机检查不验证 CH585M 实板运行。
+构建入口集中在 `software/tools/python/build_poc1.py`。以上命令可直接在 fish 中执行。脚本从 `PATH` 查找 `git`、`cmake`、本机 C 编译器及 `riscv-wch-elf-*` 工具；可设置 `CC`、`CMAKE`、`DBGC_WCH_TOOLCHAIN_ROOT`，或将相应程序目录加入 `PATH`。不需要在项目文件中配置个人安装目录。构建目录默认位于 PoC 的 `build/`；可通过 `--build-dir build-local` 改为 PoC 目录下的其他位置。脚本将工具版本、仓库与 ThreadX 修订、构建输出、ELF 大小和 ELF 头摘要写入 `build-evidence.log`。日志是本地构建产物，不纳入版本控制。构建和主机检查不验证 CH585M 实板运行。
 
 ## 4. WCH 来源与文件清单
 
@@ -225,7 +225,7 @@ DBG-C 适配器直接调用底层命令以保留错误状态，且仅在命令�
 
 依据 MCU-001 V0.11 与数据手册表 1-1，Target JTAG 的 TCK/TMS/TDI/TDO 分别分配到 PB0/PB1/PB2/PB3。WCH EVT `CH58x_gpio.h/.c` 声明并实现 GPIOB 的输入浮空、上拉、下拉及 5 mA/20 mA 输出模式；本 BSP 限定访问这些已核对的 GPIOB 方向、上下拉、驱动和读写寄存器。调用方必须为每根信号显式选择 GPIO 模式；代码不决定目标电平、驱动能力、保护、TMS/TDO 电气策略或 JTAG 时序。
 
-`software/common/ch585_jtag_gpio_host_test/` 以普通变量模拟 GPIOB 寄存器，对四个映射分别检查五种模式、读写掩码及无效参数，共 116 项检查。另一个测试配置启用固定 CMSIS-DAP 上游 `DAP.c` 与 `JTAG_DP.c` 的 JTAG Sequence 路径，经同一 GPIO BSP 和模拟寄存器完成 88 项主机检查。该配置仅用于测试，显式选择各 GPIO 模式，不代表产品电气策略；PoC CMake 将 BSP 编译进 `dbgc_ch585_platform` 静态库。证据只覆盖命令处理、位序和 BSP API 的主机模型路径；不能证明实际焊盘、复用后 GPIO 行为、目标电气兼容、JTAG 波形/时序或 CH585M 实板运行。JTAG Transfer/DP/AP 目标访问与 USB 产品接入仍未验证。
+`software/common/ch585_jtag_gpio_host_test/` 以普通变量模拟 GPIOB 寄存器，对四个映射分别检查五种模式、读写掩码及无效参数，共 116 项检查。另一个测试配置启用固定 CMSIS-DAP 上游 `DAP.c` 与 `JTAG_DP.c` 的 JTAG Sequence 路径，经同一 GPIO BSP 和模拟寄存器完成 88 项主机检查。该配置仅用于测试，显式选择各 GPIO 模式，不代表产品电气策略；PoC CMake 将 BSP 编译进 `dbgc_ch585_platform` 静态库。构建入口还用 WCH RISC-V GCC 将启用测试配置的上游 `DAP.c` 与 `JTAG_DP.c` 分别编译为 ELF32 RISC-V 对象；这些对象未链接到产品固件。证据只覆盖命令处理、位序、BSP API 的主机模型路径及目标编译；不能证明实际焊盘、复用后 GPIO 行为、目标电气兼容、JTAG 波形/时序或 CH585M 实板运行。JTAG Transfer/DP/AP 目标访问与 USB 产品接入仍未验证。
 
 ### 8.6 软件模块实施依据与停项边界
 

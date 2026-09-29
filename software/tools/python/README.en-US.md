@@ -6,13 +6,13 @@ This directory contains Python tools for software development, checks, and build
 
 Format all project-owned C/C++ files (write mode is the default):
 
-```sh
+```fish
 python3 software/tools/python/format_code.py --all
 ```
 
 Check without modifying files:
 
-```sh
+```fish
 python3 software/tools/python/format_code.py --check --all
 ```
 
@@ -20,7 +20,7 @@ Use `--c`, `--cpp`, or `--all` to select file types. `--dirs` narrows scanning t
 
 ## Doxygen Comment Coverage
 
-```sh
+```fish
 python3 software/tools/python/check_comment_coverage.py software/common/packet_queue/src/dbgc_packet_queue.c
 ```
 
@@ -30,7 +30,7 @@ The default threshold is 100%. The checker heuristically recognizes single-line 
 
 Preview one file whose source encoding has been confirmed:
 
-```sh
+```fish
 python3 software/tools/python/convert_to_utf8.py path/to/source.c --from-encoding gb18030 --dry-run
 ```
 
@@ -38,13 +38,13 @@ After confirming the preview, add `--write` to modify the file. The converter ne
 
 ## PoC Build
 
-```sh
+```fish
 python3 software/tools/python/build_poc1.py
 ```
 
-The build tool resolves `python3`, `git`, `cmake`, the selected CMake generator (such as GNU Make or Ninja), the host C compiler, and `riscv-wch-elf-*` tools through `PATH`. Add the executable directories actually used to `PATH`; set `CC` to select the host compiler, `CMAKE` to select the CMake command, or `DBGC_WCH_TOOLCHAIN_ROOT` to identify the WCH toolchain `bin` directory. Select a build directory with `--build-dir`; it must remain under the PoC directory. For example:
+The build tool resolves `python3`, `git`, `cmake`, the selected CMake generator (such as GNU Make or Ninja), the host C compiler, and `riscv-wch-elf-*` tools through `PATH`. In fish, use `fish_add_path /path/to/tool-directory` to add executable directories to `PATH`, or `set -gx DBGC_WCH_TOOLCHAIN_ROOT /path/to/toolchain/bin` to select the toolchain directory. Set `CC` to select the host compiler, `CMAKE` to select the CMake command, or `DBGC_WCH_TOOLCHAIN_ROOT` to identify the WCH toolchain `bin` directory. Select a build directory with `--build-dir`; it must remain under the PoC directory. For example:
 
-```sh
+```fish
 python3 software/tools/python/build_poc1.py --build-dir build/host-review --host-cc cc
 ```
 
