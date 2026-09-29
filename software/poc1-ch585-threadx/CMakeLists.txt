@@ -14,7 +14,8 @@ add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../common/byte_duplex_bridge" byte
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../common/target_reset_sequence" target_reset_sequence)
 
 add_library(dbgc_ch585_platform STATIC
-    platform/ch585/dbgc_ch585_swd_gpio.c
+	platform/ch585/dbgc_ch585_jtag_gpio.c
+	platform/ch585/dbgc_ch585_swd_gpio.c
     platform/ch585/dbgc_ch585_target_reset_gpio.c
     platform/ch585/dbgc_ch585_target_reset_sequence.c
     platform/ch585/dbgc_ch585_uart0.c

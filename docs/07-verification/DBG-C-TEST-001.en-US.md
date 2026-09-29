@@ -1,6 +1,6 @@
 # DBG-C Verification Specification
 
-**Document ID:** DBG-C-TEST-001　**Version:** V0.50　**Status:** Test-plan draft; SWD-engine host line model now runs through the CH585 GPIO BSP modeled-register path with 2759 assertions; the generic Target Reset sequence service passes 24 callback host checks and the PB5 BSP integration passes 37 modeled-register host checks; fixed-slot packet queue (54 host checks), FIFO, single/duplex byte-stream bridges, CMSIS-DAP command-core, upstream SWD-engine host model, bounded dispatch, bounds preflight, CMSIS compiler mapping, and CH585 SWD GPIO, Target Reset GPIO, UART0 and UID-read adapter host and target relocatable-link checks executed; PoC ThreadX creation-status/tick-observation code is included in the target cross-build; the CH585 BSP/adapter static library is included in the PoC cross-build; product UART/command bounds, silicon UID, and ThreadX board tests have not run
+**Document ID:** DBG-C-TEST-001　**Version:** V0.51　**Status:** Test-plan draft; SWD-engine host line model now runs through the CH585 GPIO BSP modeled-register path with 2759 assertions; the generic Target Reset sequence service passes 24 callback host checks and the PB5 BSP integration passes 37 modeled-register host checks; the CH585 JTAG GPIO BSP passes 116 modeled-register host checks for four signal mappings and is not connected to the CMSIS-DAP JTAG engine; fixed-slot packet queue (54 host checks), FIFO, single/duplex byte-stream bridges, CMSIS-DAP command-core, upstream SWD-engine host model, bounded dispatch, bounds preflight, CMSIS compiler mapping, and CH585 SWD GPIO, Target Reset GPIO, UART0 and UID-read adapter host and target relocatable-link checks executed; PoC ThreadX creation-status/tick-observation code is included in the target cross-build; the CH585 BSP/adapter static library is included in the PoC cross-build; product UART/command bounds, silicon UID, and ThreadX board tests have not run
 
 ## 1. Pass Criteria
 
@@ -232,3 +232,14 @@ The test covers `software/poc1-ch585-threadx/platform/ch585/dbgc_ch585_target_re
 | Configuration validation | Null configuration, missing hold callback, or raw level outside 0/1 returns an error without GPIO access | Pass |
 
 All 37 integration checks pass. They verify source call ordering and modeled-register operations only, not the physical PB5 pin, drive behavior, Target_nRESET polarity, pulse width, or CH585M board behavior. Before calling, the caller must place PB5 in the released output state under an approved electrical policy. The host test does not verify GPIO initialization transitions or target reset behavior. The caller supplies hold policy and scheduling context. Reproduction command: `DBGC_BUILD_DIR=build/reset-sequence-pb5-repro software/poc1-ch585-threadx/build.sh`.
+
+
+### 10.6 CH585 Target JTAG GPIO BSP Host Checks
+
+The test covers `software/poc1-ch585-threadx/platform/ch585/dbgc_ch585_jtag_gpio.c`. PB0/TCK, PB1/TMS, PB2/TDI, and PB3/TDO mappings come from MCU-001 V0.11 and CH585M datasheet Table 1-1; register operations follow the WCH EVT GPIOB implementation. Ordinary variables model GPIOB registers.
+
+| Check | Coverage | Status |
+|---|---|---|
+| JTAG-GPIO-HOST-01 | Five input/output modes per signal, PB bit-mask reads/writes, and invalid signal/mode/null-output arguments | 116 modeled-register host checks pass |
+
+This test does not select product electrical modes or verify physical pins, target voltage, electrical protection, JTAG waveform/timing, or CH585M board runtime. The BSP is not connected to the CMSIS-DAP JTAG command engine. Reproduce with `DBGC_BUILD_DIR=build/goal-jtag-gpio software/poc1-ch585-threadx/build.sh`.
