@@ -34,6 +34,7 @@ This directory is organized by engineering domain. Each controlled document has 
 - [系统架构 SYS-001 中文](02-system/DBG-C-SYS-001.zh-CN.md) · [English](02-system/DBG-C-SYS-001.en-US.md)
 - [DBG-C Interface IF-001 中文](03-interfaces/DBG-C-IF-001.zh-CN.md) · [English](03-interfaces/DBG-C-IF-001.en-US.md)
 - [MCU 评估 MCU-001 中文](04-hardware/DBG-C-MCU-001.zh-CN.md) · [English](04-hardware/DBG-C-MCU-001.en-US.md)
+- [代码规范 CODE-001 中文](05-firmware/DBG-C-CODE-001.zh-CN.md) · [Coding Standard](05-firmware/DBG-C-CODE-001.en-US.md)
 - [RF 协议 RF-001 中文](06-protocols/DBG-C-RF-001.zh-CN.md) · [English](06-protocols/DBG-C-RF-001.en-US.md)
 - [验证规范 TEST-001 中文](07-verification/DBG-C-TEST-001.zh-CN.md) · [English](07-verification/DBG-C-TEST-001.en-US.md)
 - [风险登记册 RISK-001 中文](08-risk/DBG-C-RISK-001.zh-CN.md) · [English](08-risk/DBG-C-RISK-001.en-US.md)

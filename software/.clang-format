@@ -1,0 +1,406 @@
+---
+# ==============================================================================
+# Embedded C/C++ Project clang-format
+#
+# Coding style:
+#   Linux Kernel Coding Style + Embedded C/C++ Project Extensions
+#
+# Minimum clang-format version:
+#   clang-format >= 11
+#
+# Principles:
+#   - Linux kernel style indentation
+#   - 8-column tabs
+#   - Prefer 100 columns
+#   - K&R control-statement braces
+#   - Function opening brace on a new line
+#   - C++ class opening brace on a new line
+#   - No visual table-style alignment
+#   - No automatic include sorting
+#   - Preserve manually written comments / Doxygen
+# ==============================================================================
+
+BasedOnStyle: LLVM
+Language: Cpp
+Standard: Auto
+
+# ==============================================================================
+# 1. Indentation
+# ==============================================================================
+
+# Linux kernel style:
+#   one indentation level = one tab = 8 columns
+UseTab: Always
+TabWidth: 8
+IndentWidth: 8
+ContinuationIndentWidth: 8
+
+# switch and case are aligned:
+#
+# switch (state) {
+# case STATE_IDLE:
+#         ...
+#         break;
+# }
+IndentCaseLabels: false
+
+# goto/error-cleanup labels are not indented as normal statements.
+IndentGotoLabels: false
+
+# Preprocessor directives remain at the beginning of the line.
+IndentPPDirectives: None
+
+# Do not indent wrapped function names.
+IndentWrappedFunctionNames: false
+
+# namespace contents do not receive an additional indentation level.
+NamespaceIndentation: None
+
+# C++ access specifiers:
+#
+# class foo
+# {
+# public:
+#         void run();
+#
+# private:
+#         int value_;
+# };
+#
+# Members are indented by 8 columns, access specifiers are aligned
+# with the class body boundary.
+AccessModifierOffset: -8
+
+# ==============================================================================
+# 2. Line Width
+# ==============================================================================
+
+# Linux kernel preferred line width.
+# This is a formatting target, not a semantic hard limit.
+ColumnLimit: 100
+
+# ==============================================================================
+# 3. Brace Style
+# ==============================================================================
+
+BreakBeforeBraces: Custom
+
+BraceWrapping:
+  # Project C++ extension:
+  #
+  # class motor_controller
+  # {
+  # ...
+  # };
+  AfterClass: true
+
+  # Linux/K&R control statements:
+  #
+  # if (condition) {
+  #         ...
+  # }
+  AfterControlStatement: false
+
+  # enum motor_state {
+  # ...
+  # };
+  AfterEnum: false
+
+  # Linux function style:
+  #
+  # int motor_start(void)
+  # {
+  #         ...
+  # }
+  AfterFunction: true
+
+  # namespace foo
+  # {
+  # ...
+  # }
+  AfterNamespace: true
+
+  # struct motor {
+  # ...
+  # };
+  AfterStruct: false
+
+  # union value {
+  # ...
+  # };
+  AfterUnion: false
+
+  # extern "C" {
+  # ...
+  # }
+  AfterExternBlock: false
+
+  # } catch (...) {
+  BeforeCatch: false
+
+  # } else {
+  BeforeElse: false
+
+  # Braces themselves do not receive another indentation level.
+  IndentBraces: false
+
+  # Even empty functions/classes/namespaces follow the normal
+  # multiline brace policy.
+  SplitEmptyFunction: true
+  SplitEmptyRecord: true
+  SplitEmptyNamespace: true
+
+# ==============================================================================
+# 4. Short Statements
+# ==============================================================================
+
+# Do not compress blocks:
+#
+# while (condition) {
+#         work();
+# }
+#
+# instead of:
+#
+# while (condition) { work(); }
+AllowShortBlocksOnASingleLine: Never
+
+# enum values stay vertically structured when clang-format decides
+# formatting is necessary.
+AllowShortEnumsOnASingleLine: false
+
+# Never collapse functions:
+#
+# int foo(void)
+# {
+#         return 0;
+# }
+AllowShortFunctionsOnASingleLine: None
+
+# Keep short if statements vertically structured:
+#
+# if (error)
+#         return error;
+#
+# instead of:
+#
+# if (error) return error;
+AllowShortIfStatementsOnASingleLine: Never
+
+# Do not collapse loops.
+AllowShortLoopsOnASingleLine: false
+
+# Do not collapse case statements.
+AllowShortCaseLabelsOnASingleLine: false
+
+# Do not collapse C++ lambdas.
+AllowShortLambdasOnASingleLine: None
+
+# ==============================================================================
+# 5. Alignment
+# ==============================================================================
+
+# Do not build visual tables.
+#
+# Preferred:
+#
+# uint32_t speed = 0;
+# uint32_t target_speed = 0;
+# bool enabled = false;
+#
+# Avoid:
+#
+# uint32_t speed        = 0;
+# uint32_t target_speed = 0;
+# bool     enabled      = false;
+AlignConsecutiveAssignments: false
+AlignConsecutiveDeclarations: false
+AlignConsecutiveMacros: false
+AlignTrailingComments: false
+
+# Align continuation expressions in a readable form.
+AlignAfterOpenBracket: Align
+AlignOperands: true
+
+# Backslashes in multiline macros are aligned to the left.
+AlignEscapedNewlines: Left
+
+# ==============================================================================
+# 6. Function Arguments and Parameters
+# ==============================================================================
+
+# Arguments and parameters may share a line while they fit inside
+# ColumnLimit. clang-format will wrap them when necessary.
+BinPackArguments: true
+BinPackParameters: true
+
+# Do not move all declaration parameters together onto a second line
+# simply because the declaration overflowed.
+AllowAllParametersOfDeclarationOnNextLine: false
+
+# ==============================================================================
+# 7. Operators and Expressions
+# ==============================================================================
+
+# Prefer breaking after binary operators.
+#
+# result = first +
+#          second +
+#          third;
+BreakBeforeBinaryOperators: None
+
+# Prefer breaking after ? and : rather than before them.
+BreakBeforeTernaryOperators: false
+
+# ==============================================================================
+# 8. Pointers and References
+# ==============================================================================
+
+# Explicit project convention:
+#
+# char *buffer;
+# const uint8_t *data;
+# struct motor *motor;
+DerivePointerAlignment: false
+PointerAlignment: Right
+
+# ==============================================================================
+# 9. C++ Constructors and Inheritance
+# ==============================================================================
+
+# Long constructor initializer lists:
+#
+# motor_controller::motor_controller()
+#         : target_rpm_(0),
+#           is_enabled_(false)
+# {
+# }
+BreakConstructorInitializers: BeforeColon
+ConstructorInitializerIndentWidth: 8
+
+# Long inheritance lists use the same colon/comma layout.
+BreakInheritanceList: BeforeColon
+
+# ==============================================================================
+# 10. Empty Lines
+# ==============================================================================
+
+# Do not preserve empty lines immediately after an opening brace.
+KeepEmptyLinesAtTheStartOfBlocks: false
+
+# At most one consecutive empty line.
+MaxEmptyLinesToKeep: 1
+
+# ==============================================================================
+# 11. Includes
+# ==============================================================================
+
+# Do not automatically reorder includes.
+#
+# Project include order is maintained deliberately:
+#
+#   1. current module header
+#   2. C/C++ standard library
+#   3. vendor / RTOS / third-party headers
+#   4. project headers
+#
+# We intentionally do not define IncludeCategories here because actual
+# vendor/project paths are project-specific.
+SortIncludes: false
+IncludeBlocks: Preserve
+
+# Do not reorder C++ using declarations either.
+SortUsingDeclarations: false
+
+# ==============================================================================
+# 12. Comments and Doxygen
+# ==============================================================================
+
+# Preserve manually maintained comments and Doxygen structure.
+#
+# clang-format should not rewrite paragraphs merely to satisfy
+# ColumnLimit.
+ReflowComments: false
+
+# Do not split string literals automatically.
+BreakStringLiterals: false
+
+# One space before a trailing comment when one exists.
+SpacesBeforeTrailingComments: 1
+
+# ==============================================================================
+# 13. Spaces
+# ==============================================================================
+
+# if (...), for (...), while (...), switch (...)
+# function(...)
+SpaceBeforeParens: ControlStatements
+
+# int value = 1;
+SpaceBeforeAssignmentOperators: true
+
+# (uint32_t)value
+SpaceAfterCStyleCast: false
+SpacesInCStyleCastParentheses: false
+
+# foo()
+SpaceInEmptyParentheses: false
+
+# foo(value)
+SpacesInParentheses: false
+
+# array[index]
+SpacesInSquareBrackets: false
+
+# vector<int>
+SpacesInAngles: false
+
+# Constructor:
+# foo::foo() : value_(0)
+SpaceBeforeCtorInitializerColon: true
+
+# Inheritance:
+# class foo : public bar
+SpaceBeforeInheritanceColon: true
+
+# Range-based for:
+# for (const auto &item : items)
+SpaceBeforeRangeBasedForLoopColon: true
+
+# ==============================================================================
+# 14. C++ Braced Initializers
+# ==============================================================================
+
+# Keep Linux-style spacing/formatting characteristics for braced lists.
+Cpp11BracedListStyle: false
+
+# ==============================================================================
+# 15. Namespace
+# ==============================================================================
+
+# Do not let clang-format automatically create/update:
+#
+# } // namespace foo
+#
+# Namespace closing comments are maintained manually where required.
+FixNamespaceComments: false
+
+CompactNamespaces: false
+
+# ==============================================================================
+# 16. Macros
+# ==============================================================================
+
+# No project-specific block-like macros are assumed here.
+# Add MacroBlockBegin/MacroBlockEnd only when exact project macros
+# have been defined.
+MacroBlockBegin: ''
+MacroBlockEnd: ''
+
+# ==============================================================================
+# 17. Formatter Behaviour
+# ==============================================================================
+
+DisableFormat: false
+ExperimentalAutoDetectBinPacking: false
+...
