@@ -1,6 +1,6 @@
 # DBG-C Verification Specification
 
-**文档编号：** DBG-C-TEST-001　**版本：** V0.46　**状态：** 测试计划草案；SWD 引擎线模型已接入 CH585 GPIO BSP 模拟寄存器路径，2759 项断言通过；通用 Target Reset 序列服务 24 项主机回调检查及 PA4 BSP 集成 37 项主机模拟寄存器检查通过；FIFO、单向/双向字节流桥接、CMSIS-DAP 命令层、有界 dispatch、SWD 引擎主机模型、边界预检器、CMSIS 编译器映射及 CH585 SWD GPIO、Target Reset GPIO 与 UART0、UID 读取适配器主机/目标静态链接检查已执行；PoC ThreadX 创建状态/tick 观测代码已加入并随目标交叉构建；CH585 BSP/适配器静态库纳入 PoC 交叉构建；产品 UART/命令边界、硅片 UID 与 ThreadX 实板测试未执行
+**文档编号：** DBG-C-TEST-001　**版本：** V0.47　**状态：** 测试计划草案；SWD 引擎线模型已接入 CH585 GPIO BSP 模拟寄存器路径，2759 项断言通过；通用 Target Reset 序列服务 24 项主机回调检查及 PA4 BSP 集成 37 项主机模拟寄存器检查通过；定长包队列（54 项主机检查）、FIFO、单向/双向字节流桥接、CMSIS-DAP 命令层、有界 dispatch、SWD 引擎主机模型、边界预检器、CMSIS 编译器映射及 CH585 SWD GPIO、Target Reset GPIO 与 UART0、UID 读取适配器主机/目标静态链接检查已执行；PoC ThreadX 创建状态/tick 观测代码已加入并随目标交叉构建；CH585 BSP/适配器静态库纳入 PoC 交叉构建；产品 UART/命令边界、硅片 UID 与 ThreadX 实板测试未执行
 
 ## 1. 通过规则
 
@@ -58,7 +58,7 @@ Discovery、设备信息、Pair/Unpair、配置、状态、OTA、中断恢复、
 | FIFO-06 清空与查询 | 清空非空/已空 FIFO；查询容量、占用和剩余空间；零长度读写 | 查询与实际状态一致；清空丢弃占用但保留容量；零长度操作不改变状态 | 通过 |
 | FIFO-07 确定性状态序列 | 7 字节容量下执行 512 轮确定性写入、读取、查询与周期性清空 | 每步读写量、顺序、占用/剩余空间均与参考队列一致；存储区保护字节不变 | 通过 |
 
-本 FIFO 不具备并发安全保证，因此不定义多线程/ISR 并发通过项。七组主机用例已接入既有 `software/poc1-ch585-threadx/build.sh`；运行结果为 `PASS: 3683 byte FIFO checks`，命令与工具链信息记录在 `software/poc1-ch585-threadx/build-evidence.log`。测试只证明当前主机上的纯 C FIFO 数据行为，不证明 ThreadX 并发、ISR 安全、CH585M SRAM 或实板行为。
+本 FIFO 不具备并发安全保证，因此不定义多线程/ISR 并发通过项。七组主机用例已接入既有 `software/poc1-ch585-threadx/build.sh`；运行结果为 `PASS: 3683 byte FIFO checks`，构建命令和工具链信息写入本地构建目录日志，该日志不纳入版本控制。测试只证明当前主机上的纯 C FIFO 数据行为，不证明 ThreadX 并发、ISR 安全、CH585M SRAM 或实板行为。
 
 ## 8.1 无调度字节流桥接主机检查
 
@@ -82,6 +82,16 @@ Discovery、设备信息、Pair/Unpair、配置、状态、OTA、中断恢复、
 
 复现命令（仓库根目录执行）：`DBGC_BUILD_DIR=build/duplex-bridge software/poc1-ch585-threadx/build.sh`。该命令也交叉构建 ThreadX PoC，但 PoC 应用不调用双向桥接服务；构建和主机模型均不证明 CH585M 中断、调度、USB CDC、UART、电气或实板行为。
 
+
+## 8.3 通用定长包队列主机检查
+
+测试对象为 `software/common/packet_queue/`。槽位大小、数量及所有存储均由调用方提供；本模块不选择任何产品传输包长或队列深度。测试只覆盖纯 C 队列语义，不覆盖并发、ISR、USB/RF/BLE 或 MCU SRAM。
+
+| 用例 | 检查内容 | 通过条件 | 状态 |
+|---|---|---|---|
+| PACKET-QUEUE-HOST-01 | 初始化边界、乘法溢出、空队列、FIFO 顺序、回绕、满队列、超长记录、输出缓冲不足时保留记录、零长度记录及清空 | 54 项主机检查通过 | 通过（仅主机 C99） |
+
+队列不是线程安全对象；调用方须串行化所有访问。复现命令：`DBGC_BUILD_DIR=build/packet-queue-final software/poc1-ch585-threadx/build.sh`。主机测试不证明产品容量选择、Transport 集成、ThreadX/ISR 行为或板级表现。
 
 ## 9. CMSIS-DAP 命令核心主机检查
 
@@ -120,7 +130,7 @@ Discovery、设备信息、Pair/Unpair、配置、状态、OTA、中断恢复、
 
 ## 10. 当前执行状态
 
-当前仓库包含 CH585M 数据手册、CH585EVT 压缩包及 ThreadX PoC-1。PoC 已有主机交叉构建日志，详见 FW-001；用户确认目前没有可用硬件，故无 CH585M 下载/调试及运行证据。DBG-C 产品固件、线缆样品或抓包也未提供。本文列出的产品级验证用例均未执行；FIFO 七组主机用例、八项 CMSIS-DAP 命令核心检查、五项 CMSIS-DAP 边界预检/dispatch 主机用例、九项 CMSIS-DAP 命令到 SWD 引擎主机线模型检查（现接入 CH585 GPIO BSP 模拟寄存器）、两项 CMSIS 编译器宏目标对象检查、SWD GPIO BSP 模拟寄存器 57 项、Target Reset GPIO BSP 模拟寄存器 33 项、UART0 BSP/双向桥接适配器模拟寄存器与回调 94 项、UID 读取适配器 mock 31 项、单向/双向字节流桥接各 15 项主机检查、通用 Target Reset 序列 24 项回调检查及 UID ROM 底层库可重定位链接、其余 BSP/适配器目标对象编译及 `dbgc_ch585_platform` 静态库构建检查已通过，但均不计为板级或产品功能测试，PoC 交叉构建也不计为实板运行证据。此前 100 tick/s 基线的构建、ELF/链接检查和源码静态审查已完成；1000 tick/s 配置及 PA4 复位序列适配器已完成固定构建路径下的两次干净构建，ELF/map 散列一致；验证板设计软件门复核通过。该门要求可复现的干净构建、ELF/链接/资源检查，以及对启动、上下文和中断路径的静态审查；仅允许设计验证板，不放行产品原理图或 PCB 冻结。实板运行仍未执行，产品硬件冻结未放行。ThreadX 启动、中断进入/退出、SysTick 频率与 tick 投递、线程切换/睡眠/唤醒、栈完整性、复位恢复和持续运行项目均保持未执行，须在具体测试方案中预先定义时长、重复次数、负载和通过门限。软件放行与实板门见 OPEN-001 O18/O19。本文件定义覆盖面，不构成实板验证报告。
+当前仓库包含 CH585M 数据手册、CH585EVT 压缩包及 ThreadX PoC-1。PoC 主机交叉构建与工具链摘要记录在 FW-001；构建原始日志仅保存在本地构建目录，不进入版本控制；用户确认目前没有可用硬件，故无 CH585M 下载/调试及运行证据。DBG-C 产品固件、线缆样品或抓包也未提供。本文列出的产品级验证用例均未执行；定长包队列 54 项主机检查通过；FIFO 七组主机用例、八项 CMSIS-DAP 命令核心检查、五项 CMSIS-DAP 边界预检/dispatch 主机用例、九项 CMSIS-DAP 命令到 SWD 引擎主机线模型检查（现接入 CH585 GPIO BSP 模拟寄存器）、两项 CMSIS 编译器宏目标对象检查、SWD GPIO BSP 模拟寄存器 57 项、Target Reset GPIO BSP 模拟寄存器 33 项、UART0 BSP/双向桥接适配器模拟寄存器与回调 94 项、UID 读取适配器 mock 31 项、单向/双向字节流桥接各 15 项主机检查、通用 Target Reset 序列 24 项回调检查及 UID ROM 底层库可重定位链接、其余 BSP/适配器目标对象编译及 `dbgc_ch585_platform` 静态库构建检查已通过，但均不计为板级或产品功能测试，PoC 交叉构建也不计为实板运行证据。此前 100 tick/s 基线的构建、ELF/链接检查和源码静态审查已完成；1000 tick/s 配置及 PA4 复位序列适配器已完成固定构建路径下的两次干净构建，ELF/map 散列一致；验证板设计软件门复核通过。该门要求可复现的干净构建、ELF/链接/资源检查，以及对启动、上下文和中断路径的静态审查；仅允许设计验证板，不放行产品原理图或 PCB 冻结。实板运行仍未执行，产品硬件冻结未放行。ThreadX 启动、中断进入/退出、SysTick 频率与 tick 投递、线程切换/睡眠/唤醒、栈完整性、复位恢复和持续运行项目均保持未执行，须在具体测试方案中预先定义时长、重复次数、负载和通过门限。软件放行与实板门见 OPEN-001 O18/O19。本文件定义覆盖面，不构成实板验证报告。
 
 ### 10.1 CMSIS 与 CH585 GPIO 主机/目标检查
 

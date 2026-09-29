@@ -17,6 +17,19 @@ case "${build_dir}" in
         exit 2
         ;;
 esac
+evidence_log="${build_dir}/build-evidence.log"
+if [[ "${evidence_log}" != /* ]]; then
+    evidence_log="${project_dir}/${evidence_log}"
+fi
+evidence_log="$(realpath -m -- "${evidence_log}")"
+case "${evidence_log}" in
+    "${project_dir}"/*) ;;
+    *)
+        printf 'Evidence log must remain under %s\n' "${project_dir}" >&2
+        exit 2
+        ;;
+esac
+mkdir -p -- "$(dirname -- "${evidence_log}")"
 
 {
     printf 'Repository HEAD: '
@@ -45,6 +58,12 @@ esac
         "${repo_dir}/software/common/byte_fifo/tests/test_dbgc_byte_fifo.c" \
         -o "${build_dir}/host-tests/test_dbgc_byte_fifo"
     "${build_dir}/host-tests/test_dbgc_byte_fifo"
+    "${host_cc}" -std=c99 -Wall -Wextra -Werror -pedantic \
+        -I"${repo_dir}/software/common/packet_queue/include" \
+        "${repo_dir}/software/common/packet_queue/src/dbgc_packet_queue.c" \
+        "${repo_dir}/software/common/packet_queue/tests/test_dbgc_packet_queue.c" \
+        -o "${build_dir}/host-tests/test_dbgc_packet_queue"
+    "${build_dir}/host-tests/test_dbgc_packet_queue"
     "${host_cc}" -std=c99 -Wall -Wextra -Werror -pedantic \
         -I"${repo_dir}/software/common/byte_fifo/include" \
         -I"${repo_dir}/software/common/byte_stream_bridge/include" \
@@ -273,4 +292,4 @@ esac
     "${toolchain_bin}/riscv-wch-elf-size" "${build_dir}/dbgc_poc1.elf"
     "${toolchain_bin}/riscv-wch-elf-readelf" -h "${build_dir}/dbgc_poc1.elf" | \
         rg 'Class:|Machine:|Entry point address:'
-} 2>&1 | tee -a "${project_dir}/build-evidence.log"
+} 2>&1 | tee -a "${evidence_log}"

@@ -7,6 +7,7 @@ set(THREADX_CUSTOM_PORT "${CMAKE_CURRENT_SOURCE_DIR}/platform/ch585/threadx_port
 set(TX_USER_FILE "${CMAKE_CURRENT_SOURCE_DIR}/platform/ch585/tx_user.h")
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../third_party/threadx" threadx)
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../common/byte_fifo" byte_fifo)
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../common/packet_queue" packet_queue)
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../common/byte_stream_bridge" byte_stream_bridge)
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../common/byte_duplex_bridge" byte_duplex_bridge)
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../common/target_reset_sequence" target_reset_sequence)
@@ -31,6 +32,7 @@ target_include_directories(dbgc_ch585_platform PRIVATE
 )
 target_link_libraries(dbgc_ch585_platform PUBLIC
     dbgc_byte_duplex_bridge
+    dbgc_packet_queue
     dbgc_target_reset_sequence
     "${CMAKE_CURRENT_SOURCE_DIR}/../third_party/wch/ch585/libISP585.a"
 )

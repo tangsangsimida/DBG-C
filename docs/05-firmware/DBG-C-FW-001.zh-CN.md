@@ -1,6 +1,6 @@
 # DBG-C Firmware Architecture 与 PoC-1 记录
 
-**文档编号：** DBG-C-FW-001　**版本：** V0.50　**状态：** 实验草案；通用 FIFO、单向/双向无调度字节流桥接、CMSIS-DAP 命令层、上游 SWD 引擎、请求/响应边界预检及有界 dispatch 主机检查已通过；CMSIS 编译器宏映射、SWD GPIO、Target Reset GPIO、UART0、UID 读取适配器、桥接适配器与 WCH ROM 命令库目标编译/链接检查通过；PB5/PB6、PA4、UART0、UID 读取适配器、单向/双向桥接主机检查分别为 57 项、33 项、94 项、31 项、15 项和 15 项；CMSIS-DAP SWD 引擎的 9 个主机线模型用例现经 CH585 SWD GPIO BSP 源码和模拟 GPIOB 寄存器执行，共 2759 项断言；通用 Target Reset 序列服务通过 24 项主机回调检查；CH585 PA4 复位序列适配器通过 37 项模拟寄存器集成检查并纳入 PoC 静态库构建图；PoC 新增两线程创建状态及独立最近 tick 观测符号，固定路径两次 clean rebuild 的 ELF/map 散列一致；CH585 BSP/适配器纳入 PoC CMake 的 `dbgc_ch585_platform` 静态库目标；产品 DAP/USB 接入、GPIO/UART 电气行为及时序未验证；芯片 UID 实际读取、产品命令配置与边界契约仍待验证/定义；1000 tick/s 配置及 PA4 复位序列适配器经两次固定路径干净构建复核；ThreadX 实板运行验证未执行；产品硬件冻结未放行
+**文档编号：** DBG-C-FW-001　**版本：** V0.51　**状态：** 实验草案；通用定长包队列（54 项主机检查）、字节 FIFO、单向/双向无调度字节流桥接、CMSIS-DAP 命令层、上游 SWD 引擎、请求/响应边界预检及有界 dispatch 主机检查已通过；CMSIS 编译器宏映射、SWD GPIO、Target Reset GPIO、UART0、UID 读取适配器、桥接适配器与 WCH ROM 命令库目标编译/链接检查通过；PB5/PB6、PA4、UART0、UID 读取适配器、单向/双向桥接主机检查分别为 57 项、33 项、94 项、31 项、15 项和 15 项；CMSIS-DAP SWD 引擎的 9 个主机线模型用例现经 CH585 SWD GPIO BSP 源码和模拟 GPIOB 寄存器执行，共 2759 项断言；通用 Target Reset 序列服务通过 24 项主机回调检查；CH585 PA4 复位序列适配器通过 37 项模拟寄存器集成检查并纳入 PoC 静态库构建图；PoC 新增两线程创建状态及独立最近 tick 观测符号，固定路径两次 clean rebuild 的 ELF/map 散列一致；CH585 BSP/适配器纳入 PoC CMake 的 `dbgc_ch585_platform` 静态库目标；产品 DAP/USB 接入、GPIO/UART 电气行为及时序未验证；芯片 UID 实际读取、产品命令配置与边界契约仍待验证/定义；1000 tick/s 配置及 PA4 复位序列适配器经两次固定路径干净构建复核；ThreadX 实板运行验证未执行；产品硬件冻结未放行
 
 ## 1. 范围与状态
 
@@ -16,7 +16,7 @@
 | ThreadX low-level | 设置 `_tx_initialize_unused_memory` 到链接符号 `_end` 对齐后的位置；配置 WCH VTF SysTick 入口、PFIC 优先级和 SysTick | 主机编译/链接通过；内存边界及中断行为未板测 |
 | ThreadX tick | PoC 在本地 `tx_user.h` 显式设置 `TX_TIMER_TICKS_PER_SECOND=1000UL`；以源码声明的 62.4 MHz 计算，`SysTick_Config` 输入为 62400，比较值为 62399 | 这是软件配置计算，不是实测时钟/tick；V1/PoC 目标为 1000 tick/s，实际 SysTick 频率与 tick 投递仍待 CH585M 实板测量；HPE/VTF、异常返回和调度语义尚未验证 |
 | PoC 线程 | 两个同优先级线程递增独立计数器，记录 `tx_time_get()` 并执行 `tx_thread_sleep(1U)` | 仅是待板测的可观测量设计 |
-| ELF 构建 | `text=8916`、`data=8`、`bss=5580` 字节；ELF32 little-endian RISC-V，入口 `_start=0x0`；`.highcode_init`/`.highcode` 位于链接 RAM，代码/数据装载地址位于链接 Flash | 固定构建路径两次 clean rebuild 的 ELF SHA-256 均为 `00f0e40b217d61df475f721607a6dd88b2e9f1450b511863b2984899e97e32f8`，map SHA-256 均为 `823322fcfe0849eefa6b88e4df478ac28e6bdc094a11173faaba1e85697fdfa5`；详见 `software/poc1-ch585-threadx/build-evidence.log`。仅证明固定环境下产物可重复且符合当前 linker script，不证明芯片运行 |
+| ELF 构建 | `text=8916`、`data=8`、`bss=5580` 字节；ELF32 little-endian RISC-V，入口 `_start=0x0`；`.highcode_init`/`.highcode` 位于链接 RAM，代码/数据装载地址位于链接 Flash | 固定构建路径两次 clean rebuild 的 ELF SHA-256 均为 `00f0e40b217d61df475f721607a6dd88b2e9f1450b511863b2984899e97e32f8`，map SHA-256 均为 `823322fcfe0849eefa6b88e4df478ac28e6bdc094a11173faaba1e85697fdfa5`；散列和构建环境摘要由本文受控记录。仅证明固定环境下产物可重复且符合当前 linker script，不证明芯片运行 |
 | CH585M 板级运行 | 未执行，待验证 | 用户确认目前没有可用板卡；暂无下载/调试和运行证据 |
 
 ## 2. 软件层和目录
@@ -80,7 +80,7 @@ DBGC_BUILD_DIR="build-local" \
 software/poc1-ch585-threadx/build.sh
 ```
 
-构建目录必须位于 PoC 子目录中，默认目录为 `build/`；`software/poc1-ch585-threadx/.gitignore` 仅排除 `/build/`。脚本把工具版本、仓库与 ThreadX 修订、构建输出、ELF 大小和 ELF 头摘要写入 `build-evidence.log`。根目录 `.gitignore` 无需为构建产物修改。
+构建目录必须位于 PoC 子目录中，默认目录为 `build/`；`software/poc1-ch585-threadx/.gitignore` 排除 `/build/` 和 `/build-*/`。脚本把工具版本、仓库与 ThreadX 修订、构建输出、ELF 大小和 ELF 头摘要写入构建目录内的 `build-evidence.log`。该原始日志是本地生成产物，不纳入版本控制；文档保留复现命令、关键版本和正式验证结论。
 
 ## 4. WCH 来源与文件清单
 
@@ -108,7 +108,7 @@ WCH 示例的 `highcode_init()` 初始化 HSI PLL 到 62.4 MHz，并配置相关
 
 ## 6. 构建结果、验收和剩余工作
 
-本轮 ThreadX 可观测性变更完成后，在固定构建路径 `software/poc1-ch585-threadx/build/threadx-observability/` 执行两次 clean rebuild，产物一致：ELF SHA-256 `00f0e40b217d61df475f721607a6dd88b2e9f1450b511863b2984899e97e32f8`，map SHA-256 `823322fcfe0849eefa6b88e4df478ac28e6bdc094a11173faaba1e85697fdfa5`。不同构建路径产生不同的 ELF/map SHA-256，不作为同路径可复现性比较。ELF header、section、program header、符号地址及 map 已与 PoC 启动代码和 `ch585.ld` 静态核对；`_start` 为 ELF 入口，应用 `.highcode` 段位于链接 RAM，链接段在当前脚本声明的 Flash/RAM 范围内。构建记录含 ThreadX 精确修订 `b91b03b9e75fa523b17127f9e0eca09dca916459`、MounRiver GCC 12.2.0、GNU assembler/linker 2.38、ELF32 RISC-V、入口 `0x0`，text 8916、data 8、bss 5580 字节。没有执行烧录、板上中断/调度、时钟测量或长时间运行测试。
+本轮 ThreadX 可观测性变更完成后，在固定构建路径 `software/poc1-ch585-threadx/build/threadx-observability/` 执行两次 clean rebuild，产物一致：ELF SHA-256 `00f0e40b217d61df475f721607a6dd88b2e9f1450b511863b2984899e97e32f8`，map SHA-256 `823322fcfe0849eefa6b88e4df478ac28e6bdc094a11173faaba1e85697fdfa5`。不同构建路径产生不同的 ELF/map SHA-256，不作为同路径可复现性比较。ELF header、section、program header、符号地址及 map 已与 PoC 启动代码和 `ch585.ld` 静态核对；`_start` 为 ELF 入口，应用 `.highcode` 段位于链接 RAM，链接段在当前脚本声明的 Flash/RAM 范围内。当次构建记录含 ThreadX 精确修订 `b91b03b9e75fa523b17127f9e0eca09dca916459`、MounRiver GCC 12.2.0、GNU assembler/linker 2.38、ELF32 RISC-V、入口 `0x0`，text 8916、data 8、bss 5580 字节；原始日志仅作为本地构建目录产物，不提交仓库。没有执行烧录、板上中断/调度、时钟测量或长时间运行测试。
 
 ### 6.1 软件验证与硬件设计顺序
 
@@ -144,6 +144,7 @@ WCH 示例的 `highcode_init()` 初始化 HSI PLL 到 62.4 MHz，并配置相关
 
 | 模块 | 软件位置/资源依据 | 当前实现边界 | 状态/验证 |
 |---|---|---|---|
+| 通用定长包队列 | `software/common/packet_queue/`；为上层传输提供固定槽位记录缓存，不定义 USB、RF、BLE 或 CMSIS-DAP 包长 | 调用方提供槽位大小、槽位数、存储区和长度数组；支持 FIFO 顺序、零长度记录、满/超长/输出缓冲不足状态；不动态分配、不提供并发保护，调用方必须串行化访问 | 纳入 PoC CMake 静态库并由主机 C99 检查验证；不是已选定的产品队列容量或传输配置，未接入产品 Transport，未做实板测试 |
 | 通用字节 FIFO | `software/common/byte_fifo/`；对应 MCU-001 规划的 USB CDC、UART 与 RF 收发缓冲 | 调用方提供固定存储；支持任意非零容量、部分读写、不覆盖未读数据、清空与容量查询；无动态分配、无芯片寄存器/中断/ThreadX API；不保证并发安全，调用方必须串行化访问 | 已加入现有 CMake 构建并通过 CH585 交叉编译；既有构建脚本中的主机验证运行通过 3683 项断言；当前未接入 USB/UART/RF，未做实板测试；不是冻结的产品 ABI |
 | 无调度字节流桥接通道 | `software/common/byte_stream_bridge`；PRD-001 CDC UART 双向数据要求、MCU-001 UART0 PB4/PB7 与 USB CDC、通用 FIFO 及轮询 UART0 原语 | 单执行上下文轮询；端点使用显式单字节非阻塞回调；固定 FIFO 加每次服务限额；FIFO 满时停止读源，写端背压或错误时保留待发字节；不含 ThreadX、ISR、USB 栈 API、产品波特率/流控或并发保证 | 15 项回调主机检查通过；静态库在 PoC 构建中编译，但应用未调用，尚未形成 USB CDC/UART 产品桥接；实板 UART/USB、电气、并发和产品流控未验证 |
 | 双向无调度字节流桥接服务 | `software/common/byte_duplex_bridge/`；复用两路通用字节流桥接通道，适用于 MCU-001 的 UART0 PB4/PB7 与待实现的 USB CDC 端点之间的数据双向传输 | 调用方分别提供两路 FIFO、读写回调和每次服务预算；按固定先后顺序服务两个方向；单方向回压不阻止另一方向服务；不分配内存、不选定 USB/UART API、不含 ThreadX/ISR/并发保证，也不定义缓冲容量或调度频率 | 15 项回调模型主机检查通过；PoC CMake 构建编译静态库，但 PoC 应用未调用；尚未接入 USB CDC/UART 产品路径，不证明端点公平性、吞吐、电气或实板行为 |
