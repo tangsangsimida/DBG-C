@@ -337,6 +337,46 @@ static void test_dap_transfer_through_swd_engine(void)
 	CHECK(input_bit_index == input_bit_count);
 }
 
+/**
+ * @brief 经 CMSIS-DAP Transfer 命令验证 CH585 SWD GPIO BSP 上的 DP 写入。
+ */
+static void test_dap_write_through_swd_engine(void)
+{
+	static const uint8_t connect_request[] = { ID_DAP_Connect, DAP_PORT_SWD };
+	static const uint8_t transfer_request[] = { ID_DAP_Transfer, 0U,    1U,	   DP_ABORT,
+						    0xEFU,	     0xCDU, 0xABU, 0x89U };
+	const uint32_t expected_value = 0x89ABCDEFU;
+	uint8_t response[DAP_PACKET_SIZE] = { 0U };
+	uint32_t result;
+	unsigned int bit;
+
+	DAP_Setup();
+	DAP_Data.fast_clock = 1U;
+	result = DAP_ExecuteCommand(connect_request, response);
+	CHECK((result & 0xFFFFU) == 2U);
+	CHECK(response[0] == ID_DAP_Connect);
+	CHECK(response[1] == DAP_PORT_SWD);
+
+	reset_line_model();
+	append_ack(DAP_TRANSFER_OK);
+	append_read_response(DAP_TRANSFER_OK, 0U, word_parity(0U));
+	result = DAP_ExecuteCommand(transfer_request, response);
+
+	CHECK(result == ((8U << 16) | 3U));
+	CHECK(response[0] == ID_DAP_Transfer);
+	CHECK(response[1] == 1U);
+	CHECK(response[2] == DAP_TRANSFER_OK);
+	CHECK(input_bit_index == input_bit_count);
+	CHECK(input_bit_count == 39U);
+	CHECK(output_bit_count == 51U);
+	for (bit = 0U; bit < 32U; ++bit) {
+		CHECK(output_bits[8U + bit] == ((expected_value >> bit) & 1U));
+	}
+	CHECK(output_bits[40] == word_parity(expected_value));
+	CHECK(output_disable_count == 2U);
+	CHECK(output_enable_count == 2U);
+}
+
 static void test_dap_ap_read_through_swd_engine(void)
 {
 	const uint32_t posted_value = 0xA5A55A5AU;
@@ -458,6 +498,7 @@ int main(void)
 	test_swd_wait_and_fault_acknowledgements();
 	test_swd_sequence_output_and_input();
 	test_dap_transfer_through_swd_engine();
+	test_dap_write_through_swd_engine();
 	test_dap_ap_read_through_swd_engine();
 	test_dap_transfer_block_ap_reads_through_swd_engine();
 	test_dap_swd_sequence_command();
@@ -467,6 +508,6 @@ int main(void)
 		return 1;
 	}
 
-	printf("CMSIS-DAP SWD engine checks passed: %u assertions, 9 cases\n", checks);
+	printf("CMSIS-DAP SWD engine checks passed: %u assertions, 10 cases\n", checks);
 	return 0;
 }

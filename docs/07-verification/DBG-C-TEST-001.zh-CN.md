@@ -1,6 +1,6 @@
 # DBG-C Verification Specification
 
-**文档编号：** DBG-C-TEST-001　**版本：** V0.53　**状态：** 测试计划草案；SWD 引擎线模型已接入 CH585 GPIO BSP 模拟寄存器路径，2759 项断言通过；通用 Target Reset 序列服务 24 项主机回调检查及 PB5 BSP 集成 37 项主机模拟寄存器检查通过；CH585 JTAG GPIO BSP 四信号映射 116 项及上游 CMSIS-DAP JTAG Sequence 经 GPIO BSP 的 88 项模拟寄存器主机检查通过；定长包队列（54 项主机检查）、FIFO、单向/双向字节流桥接、CMSIS-DAP 命令层、有界 dispatch、SWD 引擎主机模型、边界预检器、CMSIS 编译器映射及 CH585 SWD GPIO、Target Reset GPIO 与 UART0、UID 读取适配器主机/目标静态链接检查已执行；PoC ThreadX 创建状态/tick 观测代码已加入并随目标交叉构建；CH585 BSP/适配器静态库纳入 PoC 交叉构建；产品 UART/命令边界、硅片 UID 与 ThreadX 实板测试未执行
+**文档编号：** DBG-C-TEST-001　**版本：** V0.56　**状态：** 测试计划草案；SWD 引擎线模型已接入 CH585 GPIO BSP 模拟寄存器路径，3321 项断言通过；通用 Target Reset 序列服务 24 项主机回调检查及 PB5 BSP 集成 37 项主机模拟寄存器检查通过；CH585 JTAG GPIO BSP 四信号映射 116 项及上游 CMSIS-DAP JTAG Sequence、IDCODE 与 DP Transfer 写入/posted-read 经 GPIO BSP 累计 1610 项模拟寄存器主机检查通过；定长包队列（54 项主机检查）、FIFO、单向/双向字节流桥接、CMSIS-DAP 命令层、有界 dispatch、SWD 引擎主机模型、边界预检器、CMSIS 编译器映射及 CH585 SWD GPIO、Target Reset GPIO 与 UART0、UID 读取适配器主机/目标静态链接检查已执行；PoC ThreadX 创建状态/tick 观测代码已加入并随目标交叉构建；CH585 BSP/适配器静态库纳入 PoC 交叉构建；产品 UART/命令边界、硅片 UID 与 ThreadX 实板测试未执行
 
 ## 1. 通过规则
 
@@ -127,8 +127,9 @@ Discovery、设备信息、Pair/Unpair、配置、状态、OTA、中断恢复、
 | SWD-ENG-07 | 经 `DAP_Connect` 建立 SWD 端口后，发送单次 AP `DAP_Transfer` 读，分别模拟 AP posted 数据与后续 RDBUFF 数据 | 两次 SWD 事务均被模型消费；DAP 响应返回 RDBUFF 阶段的数据，长度、状态和小端序正确 | 通过 |
 | SWD-ENG-08 | 经 `DAP_Connect` 建立 SWD 端口后，执行两项 AP `DAP_TransferBlock` 读 | 模型消费初始 posted read、后续 AP 读和末项 RDBUFF 三个 SWD 事务；DAP 按小端序返回两项数据及正确计数/状态 | 通过 |
 | SWD-ENG-09 | 执行包含 10 位 SWD 输出及 10 位输入序列的 `DAP_SWD_Sequence` 命令 | 返回命令长度与成功状态；输出位序、输入字节打包、模型时钟次数及方向切换调用符合预期 | 通过 |
+| SWD-ENG-10 | 经 `DAP_Connect` 建立 SWD 端口后，发送 DP `DAP_Transfer` 写入 `0x89ABCDEF`；脚本提供写 ACK 和收尾 RDBUFF 响应 | DAP 响应成功；SWD 写数据低位优先、奇偶校验、请求长度及总线方向回调符合夹具预期 | 通过（主机模型） |
 
-另由 WCH RISC-V GCC 将测试配置下的上游 `SW_DP.c` 编译为 ELF32 RISC-V 对象。九项主机用例共 2759 项断言，并调用 CH585 SWD GPIO BSP 源码；寄存器由普通主机变量模拟。对象未链接至产品固件。测试验证固定上游位级算法经 BSP API 的软件调用路径及模拟寄存器映射，不验证芯片 GPIO、电平、波形、SWD 频率、建立/保持时间或 Target 电气行为，也不涉及 USB、ThreadX 或 CH585M 实板运行。复现命令：`python3 software/tools/python/build_poc1.py --build-dir build/ch585-gpio-swd-integration`。
+另由 WCH RISC-V GCC 将测试配置下的上游 `SW_DP.c` 编译为 ELF32 RISC-V 对象。十项主机用例共 3321 项断言，并调用 CH585 SWD GPIO BSP 源码；寄存器由普通主机变量模拟。对象未链接至产品固件。测试验证固定上游位级算法经 BSP API 的软件调用路径及模拟寄存器映射，不验证芯片 GPIO、电平、波形、SWD 频率、建立/保持时间或 Target 电气行为，也不涉及 USB、ThreadX 或 CH585M 实板运行。复现命令：`python3 software/tools/python/build_poc1.py --build-dir build/ch585-gpio-swd-integration`。
 
 ## 9.2 CMSIS-DAP 上游 JTAG Sequence 主机寄存器模型
 
@@ -137,12 +138,14 @@ Discovery、设备信息、Pair/Unpair、配置、状态、OTA、中断恢复、
 | 用例 | 检查内容 | 通过条件 | 状态 |
 |---|---|---|---|
 | JTAG-ENG-01 | 一条 8 位 TMS 高、TDO 捕获的 `ID_DAP_JTAG_Sequence`，TDI 请求为 `0xA5`，脚本化 TDO 为 `0x96` | CMSIS-DAP 响应长度/状态/捕获数据、TDI 位序、PB0–PB3 掩码及 8 个时钟上升沿/下降沿均符合夹具预期 | 通过（88 项主机检查） |
+| JTAG-ENG-02 | `DAP_Connect` 选择 JTAG、配置单器件 4 位 IR，并发送 `ID_DAP_JTAG_IDCODE`；TDO 队列提供脚本值 `0x2BA01477` | 返回 IDCODE 命令成功状态及小端序脚本值，TDO 恰读取 32 位；Sequence/IDCODE 子集为 385 项检查 | 通过（主机模型） |
+| JTAG-ENG-03 | 经 `ID_DAP_Transfer` 执行一个 DP 写入和一个读请求；TDO 队列提供 ACK、posted data 与 RDBUFF 数据 | 响应状态与小端序数据符合脚本；写入数据 TDI 位序符合预期，读路径完成 posted-read/RDBUFF；整套 JTAG 主机模型累计 1610 项检查 | 通过（主机模型） |
 
-WCH RISC-V GCC 另将启用 JTAG 测试配置的上游 `DAP.c` 与 `JTAG_DP.c` 编译为 ELF32 RISC-V 对象；对象未链接至产品固件。该检查只验证上游 Sequence 命令到 JTAG 位级函数、GPIO BSP API 及模拟寄存器的主机调用路径，并验证测试配置可目标编译；不验证 JTAG Transfer、DP/AP 访问、TAP 链路、物理焊盘、目标电气行为、波形/时序、USB Transport 或 CH585M 实板运行。重现命令：`python3 software/tools/python/build_poc1.py --build-dir build/cmsis-dap-jtag-sequence`。
+WCH RISC-V GCC 另将启用 JTAG 测试配置的上游 `DAP.c` 与 `JTAG_DP.c` 编译为 ELF32 RISC-V 对象；对象未链接至产品固件。IDCODE 与 DP 响应均由脚本队列提供，不是实际器件读数。该主机模型检查 DP 写入 TDI 位序、posted-read 与 RDBUFF 的命令响应路径；不能证明 DP/AP 实际访问、实体 TAP 链、物理焊盘、目标电气行为、波形/时序、USB Transport 或 CH585M 实板运行。固定源码、工具链和本地构建路径下的完整主机/交叉编译检查累计通过 1610 项 JTAG 主机断言。fish 复现命令：`set -gx DBGC_WCH_TOOLCHAIN_ROOT /path/to/RISC-V-Embedded-GCC12/bin; python3 software/tools/python/build_poc1.py --toolchain-root "$DBGC_WCH_TOOLCHAIN_ROOT" --build-dir build/jtag-transfer-host-model`。
 
 ## 10. 当前执行状态
 
-当前仓库包含 CH585M 数据手册、CH585EVT 压缩包及 ThreadX PoC-1。PoC 主机交叉构建与工具链摘要记录在 FW-001；构建原始日志仅保存在本地构建目录，不进入版本控制；用户确认目前没有可用硬件，故无 CH585M 下载/调试及运行证据。DBG-C 产品固件、线缆样品或抓包也未提供。本文列出的产品级验证用例均未执行；定长包队列 54 项主机检查通过；FIFO 七组主机用例、八项 CMSIS-DAP 命令核心检查、五项 CMSIS-DAP 边界预检/dispatch 主机用例、九项 CMSIS-DAP 命令到 SWD 引擎主机线模型检查（现接入 CH585 GPIO BSP 模拟寄存器）、两项 CMSIS 编译器宏目标对象检查、SWD GPIO BSP 模拟寄存器 57 项、Target Reset GPIO BSP 模拟寄存器 33 项、UART0 BSP/双向桥接适配器模拟寄存器与回调 94 项、UID 读取适配器 mock 31 项、单向/双向字节流桥接各 15 项主机检查、通用 Target Reset 序列 24 项回调检查及 UID ROM 底层库可重定位链接、其余 BSP/适配器目标对象编译及 `dbgc_ch585_platform` 静态库构建检查已通过，但均不计为板级或产品功能测试，PoC 交叉构建也不计为实板运行证据。此前 100 tick/s 基线的构建、ELF/链接检查和源码静态审查已完成；1000 tick/s 配置及 PB5 复位序列适配器已完成固定构建路径下的两次干净构建，ELF/map 散列一致；验证板设计软件门复核通过。该门要求可复现的干净构建、ELF/链接/资源检查，以及对启动、上下文和中断路径的静态审查；仅允许设计验证板，不放行产品原理图或 PCB 冻结。实板运行仍未执行，产品硬件冻结未放行。ThreadX 启动、中断进入/退出、SysTick 频率与 tick 投递、线程切换/睡眠/唤醒、栈完整性、复位恢复和持续运行项目均保持未执行，须在具体测试方案中预先定义时长、重复次数、负载和通过门限。软件放行与实板门见 OPEN-001 O18/O19。本文件定义覆盖面，不构成实板验证报告。
+当前仓库包含 CH585M 数据手册、CH585EVT 压缩包及 ThreadX PoC-1。PoC 主机交叉构建与工具链摘要记录在 FW-001；构建原始日志仅保存在本地构建目录，不进入版本控制；用户确认目前没有可用硬件，故无 CH585M 下载/调试及运行证据。DBG-C 产品固件、线缆样品或抓包也未提供。本文列出的产品级验证用例均未执行；定长包队列 54 项主机检查通过；FIFO 七组主机用例、八项 CMSIS-DAP 命令核心检查、五项 CMSIS-DAP 边界预检/dispatch 主机用例、十项 CMSIS-DAP 命令到 SWD 引擎主机线模型检查（含 DP 写入，接入 CH585 GPIO BSP 模拟寄存器）、两项 CMSIS 编译器宏目标对象检查、SWD GPIO BSP 模拟寄存器 57 项、Target Reset GPIO BSP 模拟寄存器 33 项、UART0 BSP/双向桥接适配器模拟寄存器与回调 94 项、UID 读取适配器 mock 31 项、单向/双向字节流桥接各 15 项主机检查、通用 Target Reset 序列 24 项回调检查及 UID ROM 底层库可重定位链接、其余 BSP/适配器目标对象编译及 `dbgc_ch585_platform` 静态库构建检查已通过，但均不计为板级或产品功能测试，PoC 交叉构建也不计为实板运行证据。此前 100 tick/s 基线的构建、ELF/链接检查和源码静态审查已完成；1000 tick/s 配置及 PB5 复位序列适配器已完成固定构建路径下的两次干净构建，ELF/map 散列一致；验证板设计软件门复核通过。该门要求可复现的干净构建、ELF/链接/资源检查，以及对启动、上下文和中断路径的静态审查；仅允许设计验证板，不放行产品原理图或 PCB 冻结。实板运行仍未执行，产品硬件冻结未放行。ThreadX 启动、中断进入/退出、SysTick 频率与 tick 投递、线程切换/睡眠/唤醒、栈完整性、复位恢复和持续运行项目均保持未执行，须在具体测试方案中预先定义时长、重复次数、负载和通过门限。软件放行与实板门见 OPEN-001 O18/O19。本文件定义覆盖面，不构成实板验证报告。
 
 ### 10.1 CMSIS 与 CH585 GPIO 主机/目标检查
 
