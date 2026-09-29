@@ -1,5 +1,5 @@
 # 通信协议文档 | Communication Protocol Documents
 
-本目录包含已建立的 DBG-C-RF-001 双语框架。后续阶段再建立 DBG-C-USB-001 与 DBG-C-BLE-001 双语规范；在对应规范冻结前，不要猜测 USB 描述符、BLE GATT、RF 帧字段或传输参数。
+本目录包含 DBG-C-RF-001 双语框架和 DBG-C-USB-001 双语架构草案。USB 描述符/端点、BLE GATT、RF 帧字段及传输参数必须以官方资料、实际实现和验证结果为依据；未确认项标记为待验证。
 
-This directory contains the bilingual framework for DBG-C-RF-001. Bilingual DBG-C-USB-001 and DBG-C-BLE-001 specifications belong to later phases. Do not guess USB descriptors, BLE GATT, RF frame fields, or transport parameters before their specifications are frozen.
+This directory contains the bilingual DBG-C-RF-001 framework and DBG-C-USB-001 architecture draft. USB descriptors/endpoints, BLE GATT, RF frame fields, and transport parameters must be grounded in official material, implementation, and verification; unresolved items are marked To verify.

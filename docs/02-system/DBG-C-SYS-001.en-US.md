@@ -1,6 +1,6 @@
 # DBG-C System Architecture
 
-**Document ID:** DBG-C-SYS-001　**Version:** V0.2　**Status:** For review
+**Document ID:** DBG-C-SYS-001　**Version:** V0.3　**Status:** For review
 
 ## 1. System Boundary
 
@@ -16,8 +16,8 @@ BLE is not described as a direct replacement for native USB CMSIS-DAP. BLE debug
 
 ```text
 Application / Role & Pair Manager / OTA
-    USB / BLE / RF Transport
-    Command & DAP Layer (CMSIS-DAP v2 endpoint on USB host-facing role)
+    USBHS / BLE / RF Transport
+    DAPLink firmware components / CMSIS-DAP v2 DAP Command Core
     Service (UART Bridge, Reset, Update, Device Management)
     Target Manager
     SWD Engine
@@ -27,7 +27,7 @@ Application / Role & Pair Manager / OTA
 
 Transports feed shared command and target-control paths. USB, BLE, and RF shall not have separate SWD Engine and Target Manager implementations. HAL/BSP isolate CH585M registers and SDK dependencies. DAP command semantics over RF, batching, and replay safety must be frozen in the RF specification.
 
-The PC debug protocol target is **CMSIS-DAP v2**. DAPLink is an optional open-source firmware system/implementation source, not a “DAPLink v2” protocol version. V1 may reuse portable protocol and algorithm layers from CMSIS-DAP/DAPLink, while CH585M USB, GPIO, clocks, and wireless functions must be adapted to the WCH SDK/HAL/BSP. Porting the full DAPLink firmware requires separate architecture, license, and toolchain review.
+Firmware follows the DAPLink firmware system; the PC debug target is **CMSIS-DAP v2 over USB Bulk**; CMSIS-DAP v1 HID is not the primary debug interface. DAPLink is a firmware system/open-source implementation source, not a “DAPLink v2” protocol. The DAP Command Core is decoupled from USBHS, BLE, and RF Transports; wireless payloads enter the same core, while RF handles transport reliability and fragmentation. Upstream CMSIS-DAP currently has separate host-model and target-object checks but is not connected to a product USBHS receive path. CH585M USB, GPIO, clocks, radio, and ThreadX adaptation must be isolated through WCH SDK/HAL/BSP. The exact scope, licensing, and build integration for a complete DAPLink port are not settled.
 
 ## 3. Device Roles and States
 
@@ -41,12 +41,12 @@ Draft state set: `Standalone`; pairing-management; `Host`/`Target` role establis
 - **UART:** Target UART service ↔ USB CDC (standalone wired/Host side). In wireless mode, UART data uses a separate logical RF channel with QoS scheduling.
 - **BLE management:** BLE Transport → application management commands; it must not bypass identity, authorization, or OTA state machines.
 - **BLE target download (planned):** DBG-C Tool initiates this over BLE Application Protocol. It carries defined download/management commands and is not transparent BLE CMSIS-DAP. Target types, algorithms/image format, resume behavior, and PC compatibility remain for DBG-C-BLE-001.
-- **USB allocation:** V1 uses USBFS; USBHS is not enabled. Check USBFS endpoint/buffer requirements and WCH SDK Device support for CMSIS-DAP v2 Bulk + CDC against SDK examples.
+- **USB allocation:** The PC connection uses USBHS PB12/PB13, targeting CMSIS-DAP v2 Bulk on USBHS Device and UART CDC ACM; whether management is a separate interface is for the USB specification. USBFS PB10/PB11 is reserved for recovery/production evaluation. Do not assume simultaneous USBHS/USBFS operation. EVT has USBHS CDC, dual-HID composite, and IAP examples, but no evidence for a DAP+CDC combination; these examples do not prove DBG-C integration, ThreadX synchronization, endpoint allocation, or host compatibility.
 - **OTA:** Image reception, validation, installation, boot confirmation, and failure recovery depend on SDK/Boot evidence and remain unverified.
 
 ## 5. Hardware Layers
 
-CH585M Probe controller, USB Device connection, 2.4 GHz antenna/RF, power and clocks, buttons/status indicators, and DBG-C Interface. VTREF/Target Power/BOOT/Target Detect are future extensions, not mandatory V1 functions. Interface electrical design/pinout, Type-C CC/VBUS, protection, and power path are not frozen; do not start PCB design from this draft.
+CH585M Probe controller, USBHS Device connected to the PC Host, USBFS recovery resources, 2.4 GHz antenna/RF, power and clocks, buttons/status indicators, DBG-C Interface, Target SWD/JTAG/SWO/UART, VTref ADC, target power control, and external SPI NOR. Pin baseline is in MCU-001; this is not an electrical schematic. Target voltage translation, VBUS/target-power isolation, Type-C CC/VBUS, protection, BOOT conditions, RF antenna-switch muxing, external Flash selection, and power path remain unfrozen; do not freeze product hardware from this draft.
 
 ## 6. Resource-Conflict Topics
 
@@ -54,4 +54,4 @@ USB FS/HS choice, RF/BLE coexistence, DMA, endpoint buffers, clocks, RAM, timers
 
 ## 7. Related Specifications
 
-Requirements: DBG-C-PRD-001; physical interface: DBG-C-IF-001; MCU resources: DBG-C-MCU-001; RF/BLE/USB details belong in their respective specifications. This V0.1 does not freeze PHY, USB descriptors, pins, or role decisions.
+Requirements: DBG-C-PRD-001; physical interface: DBG-C-IF-001; MCU resources: DBG-C-MCU-001; RF/BLE/USB details belong in their respective specifications. This architecture does not freeze PHY, USB descriptors, endpoints, roles, OTA partitions, or electrical design.

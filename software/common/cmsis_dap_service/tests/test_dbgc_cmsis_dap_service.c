@@ -84,6 +84,7 @@ int main(void)
 	CHECK(output[1] == DAP_OK);
 
 	CHECK(dbgc_packet_queue_push(&response_queue, output, 1U) == DBGC_PACKET_QUEUE_OK);
+	CHECK(dbgc_packet_queue_push(&response_queue, output, 1U) == DBGC_PACKET_QUEUE_OK);
 	CHECK(dbgc_packet_queue_push(&request_queue, disconnect, sizeof(disconnect)) ==
 	      DBGC_PACKET_QUEUE_OK);
 	CHECK(dbgc_cmsis_dap_service_process_one(

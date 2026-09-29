@@ -1,6 +1,6 @@
 # DBG-C Verification Specification
 
-**文档编号：** DBG-C-TEST-001　**版本：** V0.48　**状态：** 测试计划草案；SWD 引擎线模型已接入 CH585 GPIO BSP 模拟寄存器路径，2759 项断言通过；通用 Target Reset 序列服务 24 项主机回调检查及 PA4 BSP 集成 37 项主机模拟寄存器检查通过；定长包队列（54 项主机检查）、FIFO、单向/双向字节流桥接、CMSIS-DAP 命令层、有界 dispatch、SWD 引擎主机模型、边界预检器、CMSIS 编译器映射及 CH585 SWD GPIO、Target Reset GPIO 与 UART0、UID 读取适配器主机/目标静态链接检查已执行；PoC ThreadX 创建状态/tick 观测代码已加入并随目标交叉构建；CH585 BSP/适配器静态库纳入 PoC 交叉构建；产品 UART/命令边界、硅片 UID 与 ThreadX 实板测试未执行
+**文档编号：** DBG-C-TEST-001　**版本：** V0.50　**状态：** 测试计划草案；SWD 引擎线模型已接入 CH585 GPIO BSP 模拟寄存器路径，2759 项断言通过；通用 Target Reset 序列服务 24 项主机回调检查及 PB5 BSP 集成 37 项主机模拟寄存器检查通过；定长包队列（54 项主机检查）、FIFO、单向/双向字节流桥接、CMSIS-DAP 命令层、有界 dispatch、SWD 引擎主机模型、边界预检器、CMSIS 编译器映射及 CH585 SWD GPIO、Target Reset GPIO 与 UART0、UID 读取适配器主机/目标静态链接检查已执行；PoC ThreadX 创建状态/tick 观测代码已加入并随目标交叉构建；CH585 BSP/适配器静态库纳入 PoC 交叉构建；产品 UART/命令边界、硅片 UID 与 ThreadX 实板测试未执行
 
 ## 1. 通过规则
 
@@ -12,7 +12,7 @@
 
 ## 3. SWD 与 Target
 
-MCU-001 V0.11 已将 Target SWD/JTAG 改为 PB0–PB3、Target_nRESET 改为 PB5。当前 PoC SWD/Reset BSP 主机检查覆盖旧 PB5/PB6 与 PA4 映射，不得计作新引脚分配的通过证据。迁移 BSP 后必须新增/更新模拟寄存器映射用例，并在验证板检查实际管脚、波形、电平与复位效果；目前无板卡，板测未执行。
+MCU-001 V0.11 将 Target SWD/JTAG 分配为 PB0–PB3、Target_nRESET 分配为 PB5。PoC BSP 和模拟寄存器检查现将 SWDIO/SWCLK 映射至 PB1/PB0，并将 Target_nRESET 映射至 PB5。这些检查不验证物理焊盘、波形、电平或复位效果；目前无板卡，板测未执行。
 
 覆盖 Connect、ID 读取、内存读写、擦除、Program/Verify、Reset、断点、单步、寄存器和内存访问。至少 STM32、GD32 各选定具体型号和板卡；型号待测试夹具冻结。检查 SWD 频率范围、信号质量、目标掉电/插拔与错误返回。
 
@@ -114,7 +114,7 @@ Discovery、设备信息、Pair/Unpair、配置、状态、OTA、中断恢复、
 
 ## 9.1 CMSIS-DAP 上游 SWD 引擎主机线模型
 
-测试对象为固定上游 `Firmware/Source/SW_DP.c` 和配套 `DAP.c`。测试 pin 宏调用回调；回调调用实际 `dbgc_ch585_swd_gpio.c` BSP API，再通过模拟 GPIOB 寄存器提供 PB5 输入并检查 PB5/PB6 写掩码。位流模型提供 ACK、数据和奇偶校验输入，并记录输出位、时钟置高调用及方向切换。夹具显式选用 `DBGC_CH585_GPIO_OUTPUT_PP_5MA` 和 `DBGC_CH585_GPIO_INPUT_FLOATING`，仅用于主机测试，不代表产品电气策略。模型 fast 延时为空操作，调用计数不是时钟频率或时序测量。
+测试对象为固定上游 `Firmware/Source/SW_DP.c` 和配套 `DAP.c`。测试 pin 宏调用回调；回调调用实际 `dbgc_ch585_swd_gpio.c` BSP API，再通过模拟 GPIOB 寄存器提供 PB1 输入并检查 PB1/PB0 写掩码。位流模型提供 ACK、数据和奇偶校验输入，并记录输出位、时钟置高调用及方向切换。夹具显式选用 `DBGC_CH585_GPIO_OUTPUT_PP_5MA` 和 `DBGC_CH585_GPIO_INPUT_FLOATING`，仅用于主机测试，不代表产品电气策略。模型 fast 延时为空操作，调用计数不是时钟频率或时序测量。
 
 | 用例 | 检查内容 | 通过条件 | 状态 |
 |---|---|---|---|
@@ -132,7 +132,7 @@ Discovery、设备信息、Pair/Unpair、配置、状态、OTA、中断恢复、
 
 ## 10. 当前执行状态
 
-当前仓库包含 CH585M 数据手册、CH585EVT 压缩包及 ThreadX PoC-1。PoC 主机交叉构建与工具链摘要记录在 FW-001；构建原始日志仅保存在本地构建目录，不进入版本控制；用户确认目前没有可用硬件，故无 CH585M 下载/调试及运行证据。DBG-C 产品固件、线缆样品或抓包也未提供。本文列出的产品级验证用例均未执行；定长包队列 54 项主机检查通过；FIFO 七组主机用例、八项 CMSIS-DAP 命令核心检查、五项 CMSIS-DAP 边界预检/dispatch 主机用例、九项 CMSIS-DAP 命令到 SWD 引擎主机线模型检查（现接入 CH585 GPIO BSP 模拟寄存器）、两项 CMSIS 编译器宏目标对象检查、SWD GPIO BSP 模拟寄存器 57 项、Target Reset GPIO BSP 模拟寄存器 33 项、UART0 BSP/双向桥接适配器模拟寄存器与回调 94 项、UID 读取适配器 mock 31 项、单向/双向字节流桥接各 15 项主机检查、通用 Target Reset 序列 24 项回调检查及 UID ROM 底层库可重定位链接、其余 BSP/适配器目标对象编译及 `dbgc_ch585_platform` 静态库构建检查已通过，但均不计为板级或产品功能测试，PoC 交叉构建也不计为实板运行证据。此前 100 tick/s 基线的构建、ELF/链接检查和源码静态审查已完成；1000 tick/s 配置及 PA4 复位序列适配器已完成固定构建路径下的两次干净构建，ELF/map 散列一致；验证板设计软件门复核通过。该门要求可复现的干净构建、ELF/链接/资源检查，以及对启动、上下文和中断路径的静态审查；仅允许设计验证板，不放行产品原理图或 PCB 冻结。实板运行仍未执行，产品硬件冻结未放行。ThreadX 启动、中断进入/退出、SysTick 频率与 tick 投递、线程切换/睡眠/唤醒、栈完整性、复位恢复和持续运行项目均保持未执行，须在具体测试方案中预先定义时长、重复次数、负载和通过门限。软件放行与实板门见 OPEN-001 O18/O19。本文件定义覆盖面，不构成实板验证报告。
+当前仓库包含 CH585M 数据手册、CH585EVT 压缩包及 ThreadX PoC-1。PoC 主机交叉构建与工具链摘要记录在 FW-001；构建原始日志仅保存在本地构建目录，不进入版本控制；用户确认目前没有可用硬件，故无 CH585M 下载/调试及运行证据。DBG-C 产品固件、线缆样品或抓包也未提供。本文列出的产品级验证用例均未执行；定长包队列 54 项主机检查通过；FIFO 七组主机用例、八项 CMSIS-DAP 命令核心检查、五项 CMSIS-DAP 边界预检/dispatch 主机用例、九项 CMSIS-DAP 命令到 SWD 引擎主机线模型检查（现接入 CH585 GPIO BSP 模拟寄存器）、两项 CMSIS 编译器宏目标对象检查、SWD GPIO BSP 模拟寄存器 57 项、Target Reset GPIO BSP 模拟寄存器 33 项、UART0 BSP/双向桥接适配器模拟寄存器与回调 94 项、UID 读取适配器 mock 31 项、单向/双向字节流桥接各 15 项主机检查、通用 Target Reset 序列 24 项回调检查及 UID ROM 底层库可重定位链接、其余 BSP/适配器目标对象编译及 `dbgc_ch585_platform` 静态库构建检查已通过，但均不计为板级或产品功能测试，PoC 交叉构建也不计为实板运行证据。此前 100 tick/s 基线的构建、ELF/链接检查和源码静态审查已完成；1000 tick/s 配置及 PB5 复位序列适配器已完成固定构建路径下的两次干净构建，ELF/map 散列一致；验证板设计软件门复核通过。该门要求可复现的干净构建、ELF/链接/资源检查，以及对启动、上下文和中断路径的静态审查；仅允许设计验证板，不放行产品原理图或 PCB 冻结。实板运行仍未执行，产品硬件冻结未放行。ThreadX 启动、中断进入/退出、SysTick 频率与 tick 投递、线程切换/睡眠/唤醒、栈完整性、复位恢复和持续运行项目均保持未执行，须在具体测试方案中预先定义时长、重复次数、负载和通过门限。软件放行与实板门见 OPEN-001 O18/O19。本文件定义覆盖面，不构成实板验证报告。
 
 ### 10.1 CMSIS 与 CH585 GPIO 主机/目标检查
 
@@ -142,10 +142,10 @@ Discovery、设备信息、Pair/Unpair、配置、状态、OTA、中断恢复、
 | CMSIS-COMP-02 | 用 WCH RISC-V GCC 和该编译器头编译测试配置下的固定上游 `DAP.c`、`SW_DP.c` | 两个独立对象均成功生成为 ELF32 RISC-V；无 Arm ISA 汇编进入对象编译路径 | 通过 |
 | CH585-GPIO-HOST-01 | 以模拟寄存器编译并运行 `dbgc_ch585_swd_gpio.c`，检查 SWDIO/SWCLK 的所有模式、读写和错误参数 | 模拟寄存器位变化符合 WCH EVT GPIOB 模式实现；57 项检查通过 | 通过（仅主机寄存器模型） |
 | CH585-GPIO-OBJ-01 | 用 WCH RISC-V GCC 编译 `platform/ch585/dbgc_ch585_swd_gpio.c` 并检查对象 ELF 头 | `-Werror` 编译成功，目标对象为 ELF32 RISC-V | 通过（仅目标对象编译） |
-| CH585-RESET-HOST-01 | 以模拟寄存器编译并运行 Target Reset GPIO BSP，检查五种模式、原始电平读写及错误参数 | PA4 模拟寄存器位变化符合 WCH EVT GPIOA 实现；33 项检查通过 | 通过（仅主机寄存器模型） |
+| CH585-RESET-HOST-01 | 以模拟寄存器编译并运行 Target Reset GPIO BSP，检查五种模式、原始电平读写及错误参数 | PB5 模拟寄存器位变化符合 WCH EVT GPIOB 实现；33 项检查通过 | 通过（仅主机寄存器模型） |
 | CH585-RESET-OBJ-01 | 用 WCH RISC-V GCC 编译 `platform/ch585/dbgc_ch585_target_reset_gpio.c` 并检查对象 ELF 头 | `-Werror` 编译成功，目标对象为 ELF32 RISC-V | 通过（仅目标对象编译） |
 
-SWD GPIO 与 Target Reset GPIO 主机检查分别以普通变量模拟 GPIOB/GPIOA 寄存器，验证 BSP 源码的位操作；不能证明 CH585M 实际寄存器、引脚、电气、目标复位效果或时序。Target Reset GPIO API 传递原始高/低电平，不实现复位极性映射或脉冲策略。目标对象检查不运行对象；CMSIS-DAP 与 GPIO/UART BSP 对象均未链接到 PoC，也不证明产品 DAP 配置、USB、ThreadX 或 CH585M 实板行为。为编译 CMSIS-DAP，构建脚本只在构建目录的 `DAP.h` 副本中选择上游 C 循环延时分支；该 C 循环的 SWD 时序尚未在实板校准。
+SWD GPIO 与 Target Reset GPIO 主机检查分别以普通变量模拟 GPIOB 寄存器，验证 BSP 源码的位操作；不能证明 CH585M 实际寄存器、引脚、电气、目标复位效果或时序。Target Reset GPIO API 传递原始高/低电平，不实现复位极性映射或脉冲策略。目标对象检查不运行对象；CMSIS-DAP 与 GPIO/UART BSP 对象均未链接到 PoC，也不证明产品 DAP 配置、USB、ThreadX 或 CH585M 实板行为。为编译 CMSIS-DAP，构建脚本只在构建目录的 `DAP.h` 副本中选择上游 C 循环延时分支；该 C 循环的 SWD 时序尚未在实板校准。
 
 复现命令（仓库根目录执行）：`DBGC_BUILD_DIR=build/uart0-duplex-adapter software/poc1-ch585-threadx/build.sh`。该现有构建入口运行 SWD GPIO、Target Reset GPIO 和 UART0 主机寄存器模型，并将三个 BSP 与 UART0 桥接适配器编译为 RISC-V 目标对象；这些对象均未链接到 PoC。
 
@@ -182,9 +182,19 @@ SWD GPIO 与 Target Reset GPIO 主机检查分别以普通变量模拟 GPIOB/GPI
 
 复现命令（仓库根目录）：`DBGC_BUILD_DIR=build/cmsis-dap-bounds-dispatch software/poc1-ch585-threadx/build.sh`。该现有构建入口通过 102 项边界预检、5 个有界 dispatch 主机用例，并将边界模块编译为 ELF32 RISC-V 对象；主机 profile 由测试显式提供。dispatch 主机用例调用固定上游 `DAP_ExecuteCommand()`，但尚未接入产品 USB 收包路径。上游 vendor、SWO、CMSIS-DAP UART 命令被拒绝；Info 检查依赖调用方提供真实最大写入字节数。该结果不证明产品调用路径、真实 USB 包长、回调行为或 CH585M 运行。O21 仍开放，产品级用例保持未执行。
 
-### 10.3 通用 Target Reset 序列服务主机检查
+### 10.3 CMSIS-DAP 队列服务主机检查
 
-测试对象为 `software/common/target_reset_sequence/`。它只编排调用方提供的断言、保持和释放回调；不访问 GPIO，不规定 PA4 电平、复位极性、保持时长、延时单位或调度上下文。
+对象为 `software/common/cmsis_dap_service/`，使用调用方提供的请求/响应定长队列和缓冲区；所有队列操作在单一主机测试上下文串行执行。
+
+| 用例 | 检查内容 | 通过条件 | 状态 |
+|---|---|---|---|
+| DAP-SERVICE-HOST-01 | 完整请求处理、空队列、无效对象、响应队列满时保留请求、畸形/超长请求拒绝、响应容量不足、上游错误及成功后出队 | 40 项主机检查通过 | 通过（仅主机模型） |
+
+此测试不包含真实 USB 收包、CMSIS-DAP Transport、ThreadX 并发或 CH585M 外设运行。复现命令：`DBGC_BUILD_DIR=build/goal-dap-service software/poc1-ch585-threadx/build.sh`。
+
+### 10.4 通用 Target Reset 序列服务主机检查
+
+测试对象为 `software/common/target_reset_sequence/`。它只编排调用方提供的断言、保持和释放回调；不访问 GPIO，不规定 PB5 电平、复位极性、保持时长、延时单位或调度上下文。
 
 | 检查内容 | 通过条件 | 状态 |
 |---|---|---|
@@ -194,12 +204,12 @@ SWD GPIO 与 Target Reset GPIO 主机检查分别以普通变量模拟 GPIOB/GPI
 | 释放失败 | 返回释放错误；当保持和释放都失败时释放错误优先 | 通过 |
 | 无效操作表 | 返回错误且不调用任一回调 | 通过 |
 
-24 项主机检查通过。该结果只验证硬件无关的调用顺序与错误传播，不验证 PA4、Target_nRESET 电平、脉宽、GPIO 电气行为或 CH585M 实板运行。复现命令：`DBGC_BUILD_DIR=build/target-reset-sequence software/poc1-ch585-threadx/build.sh`。
+24 项主机检查通过。该结果只验证硬件无关的调用顺序与错误传播，不验证 PB5、Target_nRESET 电平、脉宽、GPIO 电气行为或 CH585M 实板运行。复现命令：`DBGC_BUILD_DIR=build/target-reset-sequence software/poc1-ch585-threadx/build.sh`。
 
 
-### 10.4 CH585 PA4 Target Reset 序列集成主机检查
+### 10.5 CH585 PB5 Target Reset 序列集成主机检查
 
-测试对象为 `software/poc1-ch585-threadx/platform/ch585/dbgc_ch585_target_reset_sequence.c`、PA4 GPIO BSP 和通用序列服务。主机测试调用实际 BSP 源码，以普通变量模拟 GPIOA 寄存器；保持回调检查断言写入发生在保持之前，返回后检查释放写入。高有效和低有效是测试夹具参数，不是产品极性决定；5 mA 推挽模式也只是测试夹具配置。
+测试对象为 `software/poc1-ch585-threadx/platform/ch585/dbgc_ch585_target_reset_sequence.c`、PB5 GPIO BSP 和通用序列服务。主机测试调用实际 BSP 源码，以普通变量模拟 GPIOB 寄存器；保持回调检查断言写入发生在保持之前，返回后检查释放写入。高有效和低有效是测试夹具参数，不是产品极性决定；5 mA 推挽模式也只是测试夹具配置。
 
 | 检查内容 | 通过条件 | 状态 |
 |---|---|---|
@@ -207,4 +217,4 @@ SWD GPIO 与 Target Reset GPIO 主机检查分别以普通变量模拟 GPIOB/GPI
 | 保持失败恢复 | 保持回调返回错误时仍执行释放，并原样返回保持错误 | 通过 |
 | 配置入参检查 | 空配置、无保持回调或非 0/1 原始电平不触发 GPIO 操作并返回错误 | 通过 |
 
-37 项集成检查通过。它只验证源代码调用顺序和模拟寄存器操作，不验证真实 PA4、电气驱动、Target_nRESET 极性、脉宽或 CH585M 实板行为。调用前须由调用方按已评审电气策略使 PA4 处于释放输出态；主机测试未验证 GPIO 初始化期间的电平转换或目标复位效果。保持回调策略和调度上下文由上层提供。复现命令：`DBGC_BUILD_DIR=build/reset-sequence-pa4-repro software/poc1-ch585-threadx/build.sh`。
+37 项集成检查通过。它只验证源代码调用顺序和模拟寄存器操作，不验证真实 PB5、电气驱动、Target_nRESET 极性、脉宽或 CH585M 实板行为。调用前须由调用方按已评审电气策略使 PB5 处于释放输出态；主机测试未验证 GPIO 初始化期间的电平转换或目标复位效果。保持回调策略和调度上下文由上层提供。复现命令：`DBGC_BUILD_DIR=build/reset-sequence-pb5-repro software/poc1-ch585-threadx/build.sh`。

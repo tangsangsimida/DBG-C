@@ -6,9 +6,15 @@
 #include "wch/CH585SFR.h"
 #endif
 
-#define DBGC_CH585_PB5_MASK (1UL << 5)
-#define DBGC_CH585_PB6_MASK (1UL << 6)
+#define DBGC_CH585_PB0_MASK (1UL << 0)
+#define DBGC_CH585_PB1_MASK (1UL << 1)
 
+/**
+ * @brief 根据 SWD 信号返回 MCU 端口 B 的 GPIO 位掩码。
+ * @param signal SWDIO 或 SWCLK 信号。
+ * @param mask 接收位掩码的输出指针。
+ * @return 参数有效时返回零，否则返回非零值。
+ */
 static int dbgc_ch585_swd_gpio_mask(dbgc_ch585_swd_signal_t signal, uint32_t *mask)
 {
 	if (mask == 0) {
@@ -17,16 +23,22 @@ static int dbgc_ch585_swd_gpio_mask(dbgc_ch585_swd_signal_t signal, uint32_t *ma
 
 	switch (signal) {
 	case DBGC_CH585_SWD_SIGNAL_SWDIO:
-		*mask = DBGC_CH585_PB5_MASK;
+		*mask = DBGC_CH585_PB1_MASK;
 		return 0;
 	case DBGC_CH585_SWD_SIGNAL_SWCLK:
-		*mask = DBGC_CH585_PB6_MASK;
+		*mask = DBGC_CH585_PB0_MASK;
 		return 0;
 	default:
 		return -1;
 	}
 }
 
+/**
+ * @brief 配置目标 SWD GPIO 的输入输出模式。
+ * @param signal 要配置的 SWD 信号。
+ * @param mode 调用方选择的 GPIO 电气模式。
+ * @return 配置成功时返回零，否则返回非零值。
+ */
 int dbgc_ch585_swd_gpio_configure(dbgc_ch585_swd_signal_t signal, dbgc_ch585_gpio_mode_t mode)
 {
 	uint32_t mask;
@@ -64,6 +76,12 @@ int dbgc_ch585_swd_gpio_configure(dbgc_ch585_swd_signal_t signal, dbgc_ch585_gpi
 	}
 }
 
+/**
+ * @brief 写入目标 SWD GPIO 的原始高低电平。
+ * @param signal 要写入的 SWD 信号。
+ * @param high 非零写高，零写低。
+ * @return 写入成功时返回零，否则返回非零值。
+ */
 int dbgc_ch585_swd_gpio_write(dbgc_ch585_swd_signal_t signal, uint8_t high)
 {
 	uint32_t mask;
@@ -81,6 +99,12 @@ int dbgc_ch585_swd_gpio_write(dbgc_ch585_swd_signal_t signal, uint8_t high)
 	return 0;
 }
 
+/**
+ * @brief 读取目标 SWD GPIO 的原始逻辑电平。
+ * @param signal 要读取的 SWD 信号。
+ * @param high 接收逻辑电平的输出指针。
+ * @return 读取成功时返回零，否则返回非零值。
+ */
 int dbgc_ch585_swd_gpio_read(dbgc_ch585_swd_signal_t signal, uint8_t *high)
 {
 	uint32_t mask;

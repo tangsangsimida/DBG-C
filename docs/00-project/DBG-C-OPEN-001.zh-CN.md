@@ -1,11 +1,11 @@
 # DBG-C 未决问题与验证清单
 
-**文档编号：** DBG-C-OPEN-001　**版本：** V0.39　**状态：** 开放项
+**文档编号：** DBG-C-OPEN-001　**版本：** V0.40　**状态：** 开放项
 
 | ID | 问题 | 需要的证据/决策 | 影响文档 | 状态 |
 |---|---|---|---|---|
 | O01 | CH585M 可用私有 RF PHY/API、BLE 与私有 RF 并发限制是什么？ | WCH 官方参考手册、SDK/例程版本及实测 | MCU, RF, FW, TEST | 待获取 |
-| O02 | WCH SDK 的 USBFS Device 栈能否提供 CMSIS-DAP v2 Bulk + CDC 所需端点与缓冲？ | CH585M USBFS Device SDK 示例、端点 API、Host OS 实测 | MCU, USB, SYS | 待验证 |
+| O02 | WCH USBHS Device 栈能否承载 CMSIS-DAP v2 Bulk 与 CDC ACM 复合设备？USBFS 恢复通道是否能与 USBHS 同时使用？ | EVT USBHS Device/CDC/IAP 源码、USBHS API/端点资源、ThreadX 集成、主机枚举实测及双控制器资源证据 | MCU, USB, SYS, TEST | 待验证；EVT 有 USBHS CDC、双 HID 复合设备和 IAP 示例，但无 DAP+CDC 复合设备或双控制器并发验证 |
 | O03 | RF DAP 往返延迟和重试边界如何满足常见调试器？ | CMSIS-DAP Host 实测及 RF 原型 | RF, TEST, PRD | 待验证 |
 | O04 | DBG-C Basic/Full 在 Type-C 上的合法/可靠引脚及线缆方案？ | USB-IF 最新 Type-C 规范、线缆结构证据、电气评审 | IF, HW, TEST | 待研究 |
 | O05 | USB 插入、用户选择、无线连接如何决定 Standalone/Host/Target？ | 产品状态机评审，含冲突/切换规则 | PRD, SYS, RF, BLE | 待决策 |
@@ -14,17 +14,18 @@
 | O08 | USB VID/PID、接口/端点布局、字符串、Serial 策略？ | 正式实现及组织 VID 决策 | USB, TEST | 待决策 |
 | O09 | CDC UART 波特率、流控、目标电平和性能门限？ | 用户需求、电气设计及测量 | PRD, IF, TEST | 待决策；PB4/PB7 UART0 初始化已有 EVT 依据，轮询 BSP 主机模型/目标对象编译通过；产品参数、CDC、实际电气/收发和并发仍待定义验证 |
 | O10 | OTA 是否支持签名、双镜像、回滚及断电恢复？ | WCH Boot/SDK 文档、示例和断电测试 | MCU, FW, BLE, RF, RISK | 待验证 |
-| O11 | 目标 UART/RESET/SWD 最大允许电压、保护和 SWD GPIO 工作模式是什么？ | 冻结 Target 兼容范围、电气规范、SWDIO 上下拉/输出驱动/空闲态/方向切换要求与实测方案 | IF, HW, FW, TEST | 待决策；PB5/PB6 模式选择、PA4 原始电平 GPIO BSP 与复位序列适配器已完成主机模拟寄存器和目标构建检查；产品电气模式、复位有效电平映射、默认态、保护和脉宽仍未定义，须由电气规范评审并在验证板测量 |
+| O11 | 目标 UART/RESET/SWD 最大允许电压、保护和 SWD GPIO 工作模式是什么？ | 冻结 Target 兼容范围、电气规范、SWDIO 上下拉/输出驱动/空闲态/方向切换要求与实测方案 | IF, HW, FW, TEST | 待决策；PB1/PB0 模式选择、PB5 原始电平 GPIO BSP 与复位序列适配器已完成主机模拟寄存器和目标构建检查；产品电气模式、复位有效电平映射、默认态、保护和脉宽仍未定义，须由电气规范评审并在验证板测量 |
 | O12 | 性能目标：DAP 延迟、吞吐、射程、稳定运行时长？ | 原型数据与产品评审 | PRD, RF, TEST | 待决策 |
 | O13 | V1 BLE OTA 仅升级 Probe 自身；是否需要 RF OTA？ | 需求确认及资源/安全评审 | PRD, BLE, RF | 待决策 |
 | O14 | PC OS、IDE/OpenOCD/pyOCD 支持矩阵？ | 产品支持策略与逐项互操作测试 | PRD, USB, TEST | 待决策 |
 | O15 | 当前数据手册适用修订、勘误与参考手册版本？ | WCH 官方发布页和芯片版本核对 | MCU, HW, FW | 待获取 |
 | O16 | BLE 无线下载的应用协议、镜像格式、Target 范围和断点续传规则？ | 定义 DBG-C Tool ↔ Probe 协议并选定 Target 验收板 | PRD, BLE, TEST | 待决策 |
-| O17 | USBFS/USBHS 是否可同时运行？V1 已分配 USBFS，什么实现限制会要求改用 USBHS？ | SDK 实例、官方资源限制与对照实测 | MCU, USB, SYS | 待验证 |
+| O17 | USBHS 作为 V1 主接口、USBFS 保留恢复时，两者能否在同一固件中并行启用？若不能，恢复模式如何进入与切换？ | EVT 初始化与控制器资源源码、时钟/DMA/中断审查、验证板双接口测试 | MCU, USB, SYS | USBHS 已选作主接口；USBFS 并行能力与恢复流程待验证 |
 | O18 | Eclipse ThreadX RISC-V32/GNU 线程上下文例程及本地 CH585M 低层适配能否正确运行于 QingKe V3C？ | 在 CH585M 板上验证 HPE、PFIC/VTF、启动入口、异常栈帧、SysTick、睡眠唤醒、调度和持续运行 | MCU, FW, TEST | 待实板验证；软件门已放行验证板设计，但当前无可用板卡，芯片运行未执行 |
 | O19 | 进入硬件设计前，PoC-1 的“软件验证通过”门槛是什么？ | 采用 O19 放行标准：两次可复现构建、ELF/链接资源检查、startup/ThreadX 上下文与中断路径静态审查；仅放行验证硬件设计，产品冻结须实板验证 | MCU, FW, SYS, TEST | 1000 tick/s 配置两次干净构建及 ELF/map 复核通过，验证板设计软件门通过；ThreadX 实板运行与产品硬件冻结未通过 |
 | O20 | Arm CMSIS-DAP 固件核心能否由 CH585M 的 WCH RISC-V GCC 编译，需做哪些有依据的编译器/指令集适配？ | 对固定上游提交审查编译器头、内联汇编及端口依赖；完成有依据的适配后验证目标编译和主机命令层，禁止引入 Arm ISA 汇编 | FW, MCU, TEST | 本地 CMSIS 编译器宏适配及编译检查通过；8 项命令层主机检查、9 项 SWD 线模型用例通过；WCH GCC 将测试配置的 `DAP.c`、`SW_DP.c` 编译为 ELF32 RISC-V 对象。产品 HAL、时序校准、USB 接入和固件链接未完成，O20 仍开放 |
 | O21 | 如何在调用 CMSIS-DAP 上游命令处理前，验证实际输入长度及响应容量？ | 明确产品启用命令/功能、厂商命令覆盖策略、字符串回调最大写入量、USB 实际收包长度及请求/响应缓冲容量；把有界 dispatch 接入真实产品 USB 收包路径并覆盖产品命令配置 | USB, FW, TEST | 通用预检与有界 dispatch 已实现：102 项预检检查、5 个上游 dispatch 主机用例及 WCH GCC ELF32 RISC-V 对象编译通过；截断输入和容量不足会在上游调用前被拒绝，vendor/SWO/CMSIS-DAP UART 失败关闭。产品命令与 feature profile、Info 最大写入、USB 收包长度/响应容量及 USB 调用接入尚未实现，O21 保持开放；测试夹具不是产品配置 |
+| O22 | CH585 RF 初始化/预编译库是否启用 `RB_RF_ANT_SW_EN` 并占用 PB16–PB21？ | 审查实际链接库接口/配置；取得可追溯库源码或配置；验证板测引脚复用状态与 RF 收发 | MCU, FW, HW, RF, TEST | 待验证；EVT `CH58x_gpio.h` 定义该功能覆盖 PB16–PB21；当前公开示例源码扫描未找到显式 `GPIOPinRemap(..., RB_RF_ANT_SW_EN)` 调用，但不能据此判断预编译 RF 库不会启用 |
 
 ## O07 UID 接口证据更新
 
@@ -48,7 +49,7 @@
 
 - 新增 `software/poc1-ch585-threadx/platform/ch585/cmsis_compiler.h`，用 WCH EVT `CH585SFR.h`、`core_riscv.h` 的精确 GNU 宏定义及 GCC/RISC-V 指令基元映射 CMSIS inline、NOP 与 weak-symbol 宏。GCC 12.2.0 成功编译检查对象，ELF 符号表显示检查函数为 `WEAK`。
 - WCH GCC 使用该头文件将测试配置下的固定上游 `DAP.c` 与 `SW_DP.c` 编译为 ELF32 RISC-V 对象；测试 pin 仍为空操作宏，SWD 事务模型仍仅用于主机检查。两个对象没有链接进 PoC。
-- 上游 `DAP.h` 的 Arm `subs` 延时分支依然需要构建目录副本选择 C 循环；目前没有 SWD GPIO HAL、PB5/PB6 电气/时序校准、DAP USB/ThreadX 集成或产品固件链接。因此这是编译器基元和目标对象编译证据，不关闭 O20，也不代表 CH585M 实板通过。
+- 上游 `DAP.h` 的 Arm `subs` 延时分支依然需要构建目录副本选择 C 循环；目前没有 SWD GPIO HAL、PB1/PB0 与 PB5 电气/时序校准、DAP USB/ThreadX 集成或产品固件链接。因此这是编译器基元和目标对象编译证据，不关闭 O20，也不代表 CH585M 实板通过。
 
 - 固定 CMSIS-DAP 提交 `12636590eec66fae2d1bba4518749426ad5a4595` 的 8 项主机用例通过，覆盖固件版本 Info、未知 Info 标识符、未实现命令、DP 读的 WAIT 重试、DP 写完成检查、DAP_Transfer 与 DAP_TransferBlock 的 AP 读结果/`DP_RDBUFF` 顺序，以及 TransferConfigure 重试数对后续 DP 读的影响。
 - 测试启用 SWD 命令处理分支，但 SWD pin 宏为空操作，`SWD_Transfer()` 由确定性测试桩实现；不调用 GPIO、USB、ThreadX 或 CH585M API。构建目录中的头文件副本只调整延时分支选择条件，没有定义 `__CC_ARM` 或改动第三方子模块。
@@ -56,7 +57,7 @@
 - 这些结果不证明 CMSIS-DAP 产品集成、实际 SWD 物理传输、产品配置或 USB 接口。O20 保持开放。
 
 - 本轮新增上游 `SW_DP.c` 位级引擎 host line-model 九项检查共 168 项断言，覆盖读/写、WAIT/FAULT、10 位 SWD 输入/输出序列、DAP_Connect + DP IDCODE 读取，以及 AP DAP_Transfer / 两项 AP DAP_TransferBlock posted-read 经 DP_RDBUFF 返回数据的集成路径和 DAP_SWD_Sequence 混合输入输出序列命令；fast 延时为空操作，计数不代表频率/时序。WCH RISC-V GCC 将 `SW_DP.c` 编译为 ELF32 RISC-V 对象，未链接产品固件。
-- WCH EVT GPIO 头文件/实现中静态核对到 `GPIOB_ModeCfg`、`GPIOB_SetBits`、`GPIOB_ResetBits`、`GPIOB_ReadPortPin`。这些 API 尚未集成编译或连接到 SWD HAL；PB5/PB6 电气、时序和保护仍待 IF-001 与验证板测量。
+- WCH EVT GPIO 头文件/实现中静态核对到 `GPIOB_ModeCfg`、`GPIOB_SetBits`、`GPIOB_ResetBits`、`GPIOB_ReadPortPin`。PoC 软件映射已更新至 PB1/PB0 与 PB5，主机模型和交叉构建通过；芯片引脚行为、电气、时序和保护仍待 IF-001 与验证板测量。
 - O20 保持开放；上述 host 模型与对象编译不证明实际 SWD、GPIO、ThreadX、USB 或 CH585M 运行。
 
 ## O19 放行标准与判定
@@ -80,4 +81,4 @@
 - 仓库包含 `docs/09-references/CH585-CH584_Datasheet_V1.6.pdf`、`docs/09-references/CH585EVT/CH585EVT.ZIP` 归档及 PoC-1 使用的少量 EVT 启动、链接和头文件副本；没有独立 CH585 参考手册、DBG-C 原理图、板级测试记录或抓包。
 - EVT 索引日期为 2026.08，FreeRTOS 示例使用 FreeRTOS-Kernel V11.3.0；资料没有声明独立 WCH SDK 语义版本。已摘录 API/寄存器仅用于 ThreadX PoC，不代表 RF/BLE/USB 资源并发可行或已通过板级验证。
 - DBG-C Interface 的 Pin 映射、RF 帧字段、USB 描述符、角色切换规则均未冻结。
-- 用户补充明确了 BLE 无 Dongle 目标下载和 USBFS 优先的产品方向；前者仍缺应用协议与目标范围，后者已经确定为 V1 USB 分配；端点和 SDK Device 栈兼容性仍需验证。
+- 2026-09-29 用户补充将 USBHS 定为主 USB，CMSIS-DAP v2 Bulk 为有线调试传输，并把 JTAG、SWO、VTref、Target 电源控制、USB/2.4 GHz 自升级及 SPI NOR 纳入当前产品方向。USBFS 仅保留恢复/生产评估。USBHS DAP+CDC 复合设备、USBFS 并行能力、实现先后和验收条件仍待验证。

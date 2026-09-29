@@ -67,18 +67,18 @@ void dbgc_test_swclk_set(void)
 {
 	++clock_rising_count;
 	CHECK(dbgc_ch585_swd_gpio_write(DBGC_CH585_SWD_SIGNAL_SWCLK, 1U) == 0);
-	CHECK(dbgc_host_R32_PB_SET == (1UL << 6));
+	CHECK(dbgc_host_R32_PB_SET == (1UL << 0));
 }
 
 void dbgc_test_swclk_clear(void)
 {
 	CHECK(dbgc_ch585_swd_gpio_write(DBGC_CH585_SWD_SIGNAL_SWCLK, 0U) == 0);
-	CHECK(dbgc_host_R32_PB_CLR == (1UL << 6));
+	CHECK(dbgc_host_R32_PB_CLR == (1UL << 0));
 }
 
 void dbgc_test_swdio_output(uint32_t bit)
 {
-	const uint32_t mask = 1UL << 5;
+	const uint32_t mask = 1UL << 1;
 
 	CHECK(dbgc_ch585_swd_gpio_write(DBGC_CH585_SWD_SIGNAL_SWDIO, (uint8_t)(bit & 1U)) == 0);
 	CHECK(((bit & 1U) != 0U ? dbgc_host_R32_PB_SET : dbgc_host_R32_PB_CLR) == mask);
@@ -105,9 +105,9 @@ uint32_t dbgc_test_swdio_input(void)
 
 	bit = input_bits[input_bit_index++];
 	if (bit != 0U) {
-		dbgc_host_R32_PB_PIN |= 1UL << 5;
+		dbgc_host_R32_PB_PIN |= 1UL << 1;
 	} else {
-		dbgc_host_R32_PB_PIN &= ~(1UL << 5);
+		dbgc_host_R32_PB_PIN &= ~(1UL << 1);
 	}
 	CHECK(dbgc_ch585_swd_gpio_read(DBGC_CH585_SWD_SIGNAL_SWDIO, &bit) == 0);
 
@@ -120,7 +120,7 @@ void dbgc_test_swdio_output_enable(void)
 	/* This mode is a host-test fixture, not a product electrical choice. */
 	CHECK(dbgc_ch585_swd_gpio_configure(DBGC_CH585_SWD_SIGNAL_SWDIO,
 					    DBGC_CH585_GPIO_OUTPUT_PP_5MA) == 0);
-	CHECK((dbgc_host_R32_PB_DIR & (1UL << 5)) != 0U);
+	CHECK((dbgc_host_R32_PB_DIR & (1UL << 1)) != 0U);
 }
 
 void dbgc_test_swdio_output_disable(void)
@@ -129,7 +129,7 @@ void dbgc_test_swdio_output_disable(void)
 	/* This mode is a host-test fixture, not a product electrical choice. */
 	CHECK(dbgc_ch585_swd_gpio_configure(DBGC_CH585_SWD_SIGNAL_SWDIO,
 					    DBGC_CH585_GPIO_INPUT_FLOATING) == 0);
-	CHECK((dbgc_host_R32_PB_DIR & (1UL << 5)) == 0U);
+	CHECK((dbgc_host_R32_PB_DIR & (1UL << 1)) == 0U);
 }
 
 static void reset_line_model(void)

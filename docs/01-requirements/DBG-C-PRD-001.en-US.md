@@ -1,12 +1,12 @@
 # DBG-C Product Requirements Specification
 
-**Document ID:** DBG-C-PRD-001　**Version:** V0.1 (Draft baseline)　**Status:** For review
+**Document ID:** DBG-C-PRD-001　**Version:** V0.2 (Draft baseline)　**Status:** For review
 
 ## 1. Product Positioning
 
 DBG-C Platform is an embedded MCU debug and programming platform with wired, private 2.4 GHz, and BLE capabilities. DBG-C Probe is the device; DBG-C Interface is the physical connection from a Probe to a target; DBG-C RF Protocol is the wireless protocol between two Probes; DBG-C Tool is the PC configuration, management, and update software. These terms are distinct.
 
-The goal is to replace separate SWD/JTAG/UART jumper-wire connections with DBG-C Interface. V1 focuses on SWD and excludes JTAG. One DBG-C product provides wired debug, paired 2.4 GHz debug, and BLE management/download modes; these are not three separate products.
+The goal is to replace separate SWD/JTAG/UART jumper-wire connections with DBG-C Interface. The V1 host-facing wired interface uses CMSIS-DAP v2 Bulk over USBHS. Firmware follows the DAPLink ecosystem direction and reuses applicable open protocol/algorithm components; CMSIS-DAP is the debug protocol and USB Bulk is the wired transport. SWD is the first implementation priority. JTAG, SWO, Target VTref sensing, target power control, USB self-update, private 2.4 GHz self-update, and external SPI NOR are in the current product direction, with sequencing and acceptance to be reviewed in FW/TEST. One DBG-C product provides wired debug, paired 2.4 GHz debug, and BLE management/future OTA modes; these are not three separate products.
 
 ## 2. Problem and Goals
 
@@ -21,16 +21,18 @@ Traditional debug setups use multiple wires that are easy to misconnect and inco
 
 ## 4. V1 Scope
 
-- Single-chip CH585M; USB Device; CMSIS-DAP v2; SWD Engine; SWDIO, SWCLK, target nRESET.
+- Single-chip CH585M; USBHS Device; DAPLink firmware ecosystem direction, CMSIS-DAP v2 Bulk; SWD Engine; SWDIO, SWCLK, target nRESET.
+- Target JTAG, SWO receive, UART0-to-CDC ACM, VTref ADC sensing, target power control resources, and USB self-update architecture; electrical implementation, update partitioning, and acceptance criteria require review.
+- External SPI NOR resources for wireless image staging, rollback/configuration, and future offline-image evaluation; do not set part, capacity, or partition before reviewing measured link maps, image sizes, and frozen requirements.
 - CDC UART and DBG-C Interface (physical pin mapping is not frozen).
-- Standalone wired debug; private 2.4 GHz pairing between two identical Probes; Host/Target role mechanism; download, online debug, and UART channel.
-- BLE discovery, configuration, pairing management, status, target reset, planned wireless download, and Probe firmware update. The BLE download application protocol and supported target scope remain open.
+- Standalone wired debug; private 2.4 GHz pairing between two identical Probes; Host/Target role mechanism; download, online debug, UART channel, and Probe self-update over RF.
+- BLE discovery, configuration, pairing management, status, and target reset. BLE OTA and BLE Target download are later phases; their protocols and supported Target scope remain open.
 - Unique device identity; pairing, unpairing, re-pairing; recovery after wireless disconnection.
 - A Probe shall remain usable as a standalone wired debugger after leaving a wireless pair.
 
 ## 5. Non-Goals
 
-V1 acceptance excludes SWO, JTAG, Target Power/current sensing, offline programming, multiple targets, mobile apps, flash-file caching, automatic target-MCU identification, advanced trace, and USBHS performance optimization. The architecture may reserve for them, but V1 acceptance shall not depend on them.
+V1 excludes target current sensing, offline-programming acceptance, multiple targets, mobile apps, automatic target-MCU identification, and advanced trace. External Flash image storage is limited to update staging and future evaluation; offline programming remains a later feature. USBHS is the current wired-interface baseline, not an optional performance optimization. Concurrent BLE and private 2.4 GHz operation is unverified and is not an acceptance commitment.
 
 ## 6. System Elements and Security Requirements
 
@@ -44,10 +46,19 @@ The system includes PC/DBG-C Tool, DBG-C Probe, USB, BLE, private 2.4 GHz, DBG-C
 | PRD-002 | CDC target UART | RX/TX/full-duplex and concurrent debug pass USB CDC host tests; baud rates, flow control, and throughput thresholds require review |
 | PRD-003 | Target reset | Pulse, polarity, electrical compatibility, and connected/disconnected behavior pass interface review and oscilloscope verification; values remain open |
 | PRD-004 | Two-Probe wireless link | Pairing, roles, download, online debug, UART, disconnect detection, and recovery pass RF and verification specifications |
-| PRD-005 | BLE management/download | Discovery, information, configuration, pair/unpair, status, target reset, Probe OTA, and reconnect pass BLE specification; target-download commands/data flow require an application protocol and at least one target acceptance case |
+| PRD-005 | BLE management/download | Discovery, information, configuration, pair/unpair, status, target reset, and reconnect pass BLE specification; BLE OTA and Target download are later phases and excluded from current mandatory acceptance |
 | PRD-006 | Unique identity and pairing management | Devices are distinguishable; pairing, unpairing, re-pairing, and power-cycle behavior conform to frozen persistence rules |
 | PRD-007 | Standalone fallback | Independent USB debug regression passes after either paired unit leaves the wireless system |
 | PRD-008 | Recovery and visible errors | RF/USB/Target faults produce distinguishable states and results, with no silent command repetition or false success |
+| PRD-009 | USBHS composite device | Final USBHS firmware enumerates CMSIS-DAP v2 Bulk and CDC ACM on the approved Windows/Linux/macOS matrix; descriptors, endpoints, and packet sizes follow the frozen USB-001 implementation |
+| PRD-010 | Target JTAG | On at least one frozen Cortex-M target, pass CMSIS-DAP JTAG connect, DP/AP access, program/verify, reset, and online debug; speed and compatibility scope remain for review |
+| PRD-011 | SWO | Receive Target SWO and expose it through a defined host stream interface; baud, format, buffering, and loss metrics require USB/FW/TEST freeze |
+| PRD-012 | VTref sensing | Report voltage/validity over a frozen Target voltage range; divider, protection, calibration, accuracy, and thresholds pass electrical review and measurement |
+| PRD-013 | Target power control | Control Target supply through an external power switch; verify default-off/safe state, enable/disable, short/overcurrent, and reverse-power handling; circuit and thresholds remain open |
+| PRD-014 | USB self-update | Update Probe firmware from the PC over USBHS; pass complete-image validation, commit, reboot, corrupt-image recovery, and power-loss recovery |
+| PRD-015 | Private 2.4 GHz self-update | Paired devices transfer Probe images reliably under the frozen RF update protocol; verify loss/retry, link recovery, integrity, commit, and recovery |
+| PRD-016 | External SPI NOR | After part selection, verify image staging reads/writes, erase boundaries, integrity checks, and power-loss retention; rollback/offline-image use requires a separate decision |
+
 
 ## 8. Performance Metrics
 
@@ -61,4 +72,4 @@ Whether USB connection affects role, role-switch rules, pairing persistence, aut
 
 **DBG-C is an embedded MCU wired and wireless debug/programming platform with private 2.4 GHz and BLE capabilities. One unit works as a wired probe; two identical units form a symmetric 2.4 GHz link. The PC wired interface targets CMSIS-DAP v2, while BLE management/download uses an application protocol carried by DBG-C Tool.** “One wired, two wireless; one Type-C cable for a unified MCU debug interface” is product vision copy and does not mean Type-C pin mapping or cable compatibility has been verified.
 
-VTREF, Target Power, BOOT, and Target Detect are future extensions and not mandatory V1 acceptance. “BLE download without a dongle” is a product goal whose protocol and compatibility matrix remain open.
+VTref, Target Power, SWO, JTAG, USB self-update, private 2.4 GHz self-update, and external SPI NOR are in the current product direction; detailed acceptance criteria must still be frozen in FW/TEST. BOOT control and Target Detect are not in the currently verified V1 pin baseline. BLE OTA is a later implementation stage. BLE download without a dongle requires a separate application protocol and compatibility matrix and does not mean Keil/IAR/OpenOCD/pyOCD can directly use system BLE.

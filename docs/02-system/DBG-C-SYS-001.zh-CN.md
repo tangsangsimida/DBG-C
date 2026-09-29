@@ -1,6 +1,6 @@
 # DBG-C 系统架构设计
 
-**文档编号：** DBG-C-SYS-001　**版本：** V0.2　**状态：** 待评审
+**文档编号：** DBG-C-SYS-001　**版本：** V0.3　**状态：** 架构草案；2026-09-29 起 USBHS 为主接口，USBFS 保留作恢复/生产评估；产品集成及实板验证未执行
 
 ## 1. 系统边界
 
@@ -16,8 +16,8 @@ BLE 不被描述为原生 CMSIS-DAP USB 直连替代。若未来需要 BLE Debug
 
 ```text
 Application / Role & Pair Manager / OTA
-    USB / BLE / RF Transport
-    Command & DAP Layer (CMSIS-DAP v2 endpoint on USB host-facing role)
+    USBHS / BLE / RF Transport
+    DAPLink 固件组件 / CMSIS-DAP v2 DAP Command Core
     Service (UART Bridge, Reset, Update, Device Management)
     Target Manager
     SWD Engine
@@ -27,7 +27,7 @@ Application / Role & Pair Manager / OTA
 
 传输承载进入共用命令与目标控制路径；SWD Engine 和 Target Manager 不得按 USB、BLE、RF 复制三份。HAL/BSP 隔离 CH585M 寄存器及 SDK 依赖。DAP command 在 RF 链路上的语义、批处理及副作用重放规则须在 RF 规范冻结。
 
-PC 调试协议目标是 **CMSIS-DAP v2**。DAPLink 是可选的开源固件体系/实现来源，不是“DAPLink v2”协议版本。V1 可以复用 CMSIS-DAP/DAPLink 中可移植的协议层和算法，但 CH585M 的 USB、GPIO、时钟和无线部分必须适配 WCH SDK/HAL/BSP；是否移植完整 DAPLink 固件需单独做架构/许可/工具链审查。
+固件按 DAPLink 体系组织；PC 调试目标为 **CMSIS-DAP v2 + USB Bulk**，不实现 CMSIS-DAP v1 HID 作为主调试通道。DAPLink 是固件体系/开源实现来源，不是“DAPLink v2”协议。DAP Command Core 与 USBHS、BLE、RF Transport 解耦；无线载荷进入同一 DAP Command Core，RF 负责传输可靠性和分片。当前上游 CMSIS-DAP 代码已有独立主机模型/目标对象检查，但尚未接入产品 USBHS 收包路径。CH585M 的 USB、GPIO、时钟、无线和 ThreadX 适配须经 WCH SDK/HAL/BSP 隔离；完整移植 DAPLink 的模块范围、许可与构建集成尚未定案。
 
 ## 3. 设备角色与状态
 
@@ -41,12 +41,12 @@ PC 调试协议目标是 **CMSIS-DAP v2**。DAPLink 是可选的开源固件体�
 - UART：Target UART service ↔ USB CDC（有线单机/Host 侧）；无线模式的 UART 数据通过 RF 独立逻辑通道并受 QoS 调度。
 - BLE 管理：BLE Transport → 应用管理命令；不得绕过身份、权限和 OTA 状态机。
 - BLE 目标下载（计划）：由 DBG-C Tool 通过 BLE Application Protocol 发起；传输对象是定义好的下载/管理命令，不等同于透明 BLE CMSIS-DAP。Target 类型、下载算法/镜像格式、断点续传及 PC 兼容矩阵待 DBG-C-BLE-001 设计。
-- USB 分配：V1 使用 USBFS；USBHS 不启用。USBFS 端点/缓冲与 WCH SDK Device 栈对 CMSIS-DAP v2 Bulk + CDC 的支持，需要按 SDK 示例核对。
+- USB 分配：PC 主机连接使用 USBHS PB12/PB13，目标为 USBHS Device 上的 CMSIS-DAP v2 Bulk，并提供 UART CDC ACM；管理接口是否独立暴露待 USB 规范定义。USBFS PB10/PB11 保留为恢复/生产通道评估，不假设其与 USBHS 可同时运行。EVT 有 USBHS Device 与 USBHS IAP 示例，但不证明 DBG-C 复合设备、ThreadX 同步、端点分配或主机兼容性。
 - OTA：镜像接收、校验、安装、启动确认/失败恢复具体实现依赖 SDK/Boot 证据，当前待验证。
 
 ## 5. 硬件分层
 
-CH585M Probe 主控、USB Device 连接、2.4 GHz 天线/RF、电源与时钟、按键/状态指示、DBG-C Interface。VTREF/Target Power/BOOT/Target Detect 属后续扩展，不进入 V1 强制实现。接口电气和引脚分配、Type-C CC/VBUS、保护和电源路径均未冻结；不得据此直接画板。
+CH585M Probe 主控、USBHS Device 接入 PC Host、USBFS 恢复资源、2.4 GHz 天线/RF、电源与时钟、按键/状态指示、DBG-C Interface、Target SWD/JTAG/SWO/UART、VTref ADC、Target 电源控制及外部 SPI NOR。引脚基线见 MCU-001；本文件不是电气原理图。Target 电压转换、VBUS/目标供电隔离、Type-C CC/VBUS、保护、BOOT 条件、RF 天线开关复用、外部 Flash 型号和电源路径仍未冻结，不得据此冻结产品硬件。
 
 ## 6. 资源冲突关注
 
@@ -54,4 +54,4 @@ USB FS/HS 选择、RF/BLE 共存、DMA、端点缓冲、时钟、RAM、定时器
 
 ## 7. 相关规范
 
-需求见 DBG-C-PRD-001；物理接口见 DBG-C-IF-001；芯片资源见 DBG-C-MCU-001；RF/BLE/USB 细节分别由对应协议文档定义。本架构 V0.1 不冻结 PHY、USB 描述符、引脚或角色决策。
+需求见 DBG-C-PRD-001；物理接口见 DBG-C-IF-001；芯片资源见 DBG-C-MCU-001；RF/BLE/USB 细节分别由对应协议文档定义。本架构不冻结 PHY、USB 描述符、端点、角色、OTA 分区或电气设计。

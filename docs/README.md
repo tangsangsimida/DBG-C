@@ -35,6 +35,7 @@ This directory is organized by engineering domain. Each controlled document has 
 - [DBG-C Interface IF-001 中文](03-interfaces/DBG-C-IF-001.zh-CN.md) · [English](03-interfaces/DBG-C-IF-001.en-US.md)
 - [MCU 评估 MCU-001 中文](04-hardware/DBG-C-MCU-001.zh-CN.md) · [English](04-hardware/DBG-C-MCU-001.en-US.md)
 - [代码规范 CODE-001 中文](05-firmware/DBG-C-CODE-001.zh-CN.md) · [Coding Standard](05-firmware/DBG-C-CODE-001.en-US.md)
+- [USB Device 规范 USB-001 中文](06-protocols/DBG-C-USB-001.zh-CN.md) · [English](06-protocols/DBG-C-USB-001.en-US.md)
 - [RF 协议 RF-001 中文](06-protocols/DBG-C-RF-001.zh-CN.md) · [English](06-protocols/DBG-C-RF-001.en-US.md)
 - [验证规范 TEST-001 中文](07-verification/DBG-C-TEST-001.zh-CN.md) · [English](07-verification/DBG-C-TEST-001.en-US.md)
 - [风险登记册 RISK-001 中文](08-risk/DBG-C-RISK-001.zh-CN.md) · [English](08-risk/DBG-C-RISK-001.en-US.md)
@@ -42,6 +43,6 @@ This directory is organized by engineering domain. Each controlled document has 
 
 每次修改任一语言版本时，必须同步检查另一版本、相关文档和版本历史。不得只改一侧造成要求或状态不一致。
 
-术语基线：PC 调试协议写作 **CMSIS-DAP v2**；**DAPLink** 指可选的开源固件体系/实现来源，不写作“DAPLink v2”协议。V1 的 USB 目标是 CMSIS-DAP v2 Bulk + CDC，底层移植策略后续评审。
+术语基线：PC 调试协议写作 **CMSIS-DAP v2**；DBG-C 固件按 **DAPLink 固件体系**组织并采用 **CMSIS-DAP v2** 协议；DAPLink 不是“DAPLink v2”协议，是否移植上游完整固件需另行核实。V1 有线主接口基线是 USBHS 上的 CMSIS-DAP v2 Bulk + CDC；USBFS 保留作恢复评估，底层移植范围和描述符仍待评审。
 
-Terminology baseline: call the PC debug protocol **CMSIS-DAP v2**. **DAPLink** is an optional open-source firmware system/source, not a “DAPLink v2” protocol. The V1 USB target is CMSIS-DAP v2 Bulk + CDC; the porting strategy remains for later review.
+Terminology baseline: call the PC debug protocol **CMSIS-DAP v2**. DBG-C firmware follows the **DAPLink firmware system** and uses **CMSIS-DAP v2**; DAPLink is not a “DAPLink v2” protocol, and a complete upstream port requires separate review. The V1 wired-interface baseline is CMSIS-DAP v2 Bulk + CDC over USBHS; USBFS is reserved for recovery evaluation, and porting scope/descriptors remain under review.

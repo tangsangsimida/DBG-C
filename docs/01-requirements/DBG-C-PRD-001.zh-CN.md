@@ -1,12 +1,12 @@
 # DBG-C 产品需求规格书
 
-**文档编号：** DBG-C-PRD-001　**版本：** V0.1（需求基线草案）　**状态：** 待评审
+**文档编号：** DBG-C-PRD-001　**版本：** V0.2（需求基线草案）　**状态：** 待评审
 
 ## 1. 产品定位
 
 DBG-C Platform 是统一有线、私有 2.4G 与 BLE 管理能力的 MCU 调试下载平台。DBG-C Probe 是设备；DBG-C Interface 是 Probe 到目标板的物理连接；DBG-C RF Protocol 是两台 Probe 之间的无线协议；DBG-C Tool 是 PC 配置、管理与升级软件。这些术语不得互换。
 
-目标是以 DBG-C Interface 取代 SWD/JTAG/UART 杜邦线连接；V1 聚焦 SWD，不包含 JTAG。产品形态是同一个 DBG-C Probe 通过不同连接模式提供有线调试、成对 2.4G 调试及 BLE 管理/下载能力，而不是三个独立产品。
+目标是以 DBG-C Interface 取代分立的 SWD/JTAG/UART 杜邦线连接。V1 有线主机侧采用 USBHS 上的 CMSIS-DAP v2 Bulk；调试器固件按 DAPLink 体系组织并复用适用的开源协议/算法组件，CMSIS-DAP 是调试协议，USB Bulk 是有线传输。首阶段优先实现 SWD；JTAG、SWO、Target VTref 检测、Target 电源控制、USB 自升级、私有 2.4 GHz 自升级和外部 SPI NOR 纳入当前产品方向，但实现先后及验收依赖 FW/TEST 评审。产品形态是同一个 DBG-C Probe 通过不同连接模式提供有线调试、成对 2.4G 调试及 BLE 管理/后续 OTA 能力，而不是三个独立产品。
 
 ## 2. 问题与目标
 
@@ -21,16 +21,18 @@ DBG-C Platform 是统一有线、私有 2.4G 与 BLE 管理能力的 MCU 调试�
 
 ## 4. V1 范围
 
-- CH585M 单芯片；USB Device；CMSIS-DAP v2；SWD Engine；SWDIO、SWCLK、目标 nRESET。
+- CH585M 单芯片；USBHS Device；DAPLink 固件体系方向、CMSIS-DAP v2 Bulk；SWD Engine；SWDIO、SWCLK、目标 nRESET。
+- Target JTAG、SWO 接收、UART0 至 CDC ACM、VTref ADC 检测、Target 电源控制资源及 USB 自升级架构；具体电气实现、升级分区和验收门槛待评审。
+- 外部 SPI NOR 资源用于无线固件镜像暂存、回滚/配置及后续离线镜像评估；型号、容量和分区不得在实测链接映射、镜像大小和需求冻结前确定。
 - CDC UART；DBG-C Interface（实际 Pin 映射未冻结）。
-- 单机有线调试；两台同硬件 Probe 的私有 2.4G 配对、Host/Target 角色机制、下载、在线 Debug 和 UART 通道。
-- BLE 发现、配置、配对管理、状态、目标复位、计划中的无线下载和自身固件升级。BLE 下载的应用协议及适用 Target 范围仍待冻结。
+- 单机有线调试；两台同硬件 Probe 的私有 2.4G 配对、Host/Target 角色机制、下载、在线 Debug、UART 通道及 Probe 自身无线升级。
+- BLE 发现、配置、配对管理、状态与目标复位。BLE OTA 和 BLE Target 下载属于后续阶段，协议与适用 Target 范围待冻结。
 - 唯一设备身份；配对、解绑、重新配对；无线断开恢复。
 - 设备退出无线配对后仍可单机有线使用。
 
 ## 5. 非目标
 
-V1 验收不包含 SWO、JTAG、Target Power/电流检测、离线烧录、多 Target、手机 App、Flash 文件缓存、自动识别 MCU、高级 Trace、USBHS 性能优化。可预留架构，但不得依赖这些能力通过 V1 验收。
+V1 不包含 Target 电流检测、离线烧录验收、多 Target、手机 App、自动识别 MCU 和高级 Trace。外部 Flash 镜像存储仅按第 4 节所述升级暂存与后续评估使用；离线烧录仍是后续功能。USBHS 是当前有线主接口基线，不属于可选性能优化。BLE 与私有 2.4 GHz 是否能并发工作尚未验证，不作为同时在线的验收承诺。
 
 ## 6. 系统组成和安全需求
 
@@ -44,10 +46,19 @@ V1 验收不包含 SWO、JTAG、Target Power/电流检测、离线烧录、多 T
 | PRD-002 | CDC Target UART | RX/TX/全双工及与调试并发通过 USB CDC 主机验证；波特率、流控、吞吐门限待性能评审冻结 |
 | PRD-003 | Target Reset | 复位脉冲、极性、电气兼容性、连接和断开状态通过接口规范及示波器验证；数值待验证 |
 | PRD-004 | 双 Probe 无线链路 | 配对、角色、下载、在线 Debug、UART、断连检测与恢复按 RF 规范及测试规范通过 |
-| PRD-005 | BLE 管理/下载 | Discovery、信息、配置、配对/解绑、状态、目标复位、Probe OTA 和重连按 BLE 规范通过；目标下载命令/数据流须另有应用协议和至少一个 Target 验收用例 |
+| PRD-005 | BLE 管理/下载 | Discovery、信息、配置、配对/解绑、状态、目标复位和重连按 BLE 规范通过；BLE OTA 与 Target 下载属于后续阶段，不纳入当前强制验收 |
 | PRD-006 | 唯一身份与配对管理 | 两设备身份可区分；配对、解绑、重新配对及掉电后行为符合冻结的数据持久化规则 |
 | PRD-007 | 单机回退 | 任一配对设备脱离无线链路后，独立 USB 调试能力通过回归 |
 | PRD-008 | 恢复与错误可见性 | RF/USB/Target 故障均有可区分状态与错误结果；不出现无报告的命令重复或伪成功 |
+| PRD-009 | USBHS 复合设备 | 最终 USBHS 固件在批准的 Windows/Linux/macOS 矩阵枚举 CMSIS-DAP v2 Bulk 与 CDC ACM；描述符、端点和包长以冻结的 USB-001 实现为准 |
+| PRD-010 | Target JTAG | 在至少一个冻结的 Cortex-M Target 上通过 CMSIS-DAP JTAG 连接、DP/AP 访问、下载校验、复位和在线调试；速率与兼容范围待评审 |
+| PRD-011 | SWO | 接收 Target SWO 并通过已定义的主机流接口读取；波特率、数据格式、缓冲与丢失指标待 USB/FW/TEST 冻结 |
+| PRD-012 | VTref 检测 | 在冻结的 Target 电压输入范围内报告电压/有效状态；分压、保护、校准、误差和阈值通过电气评审及测量 |
+| PRD-013 | Target 电源控制 | 通过外部电源开关控制 Target 供电；验证默认关闭/安全状态、使能/关闭、短路/过流和反向供电处理；具体电路与门限待冻结 |
+| PRD-014 | USB 自升级 | PC 通过 USBHS 更新 Probe 固件；完整镜像校验、提交、复位启动、损坏镜像恢复和断电恢复通过测试 |
+| PRD-015 | 私有 2.4 GHz 自升级 | 成对设备按冻结的 RF 更新协议可靠传送 Probe 镜像；验证丢包/重传、断链恢复、完整性校验、提交和恢复 |
+| PRD-016 | 外部 SPI NOR | 选定器件后验证镜像暂存读写、擦除边界、完整性校验和断电保留；是否承载回滚/离线镜像须单独冻结 |
+
 
 ## 8. 性能指标
 
@@ -61,4 +72,4 @@ V1 验收不包含 SWO、JTAG、Target Power/电流检测、离线烧录、多 T
 
 产品方向概括为：**统一有线、私有 2.4G 与 BLE 无线能力的嵌入式 MCU 调试下载平台。单机可作为有线调试器，两台同型 DBG-C 组成对称式 2.4G 链路；PC 有线侧目标为 CMSIS-DAP v2，BLE 由 DBG-C Tool 承载应用管理/下载协议。**“一台有线，两台无线；一根 Type-C，统一 MCU 调试接口”是产品愿景文案，不能解释为 Type-C Pin/线缆兼容性已验证。
 
-产品方向中提及的 VTREF、Target Power、BOOT、Target Detect 属后续扩展，V1 不作强制验收；“BLE 无 Dongle 下载”属于目标能力，其技术协议与兼容矩阵仍待验证。
+VTref、Target Power、SWO、JTAG、USB 自升级、私有 2.4 GHz 自升级和外部 SPI NOR 已纳入当前产品方向；各项具体验收门槛仍须在 FW/TEST 中冻结。BOOT 控制和 Target Detect 不在当前已核实的 V1 引脚基线中。BLE OTA 属后续实现阶段；BLE 无 Dongle 下载仍需独立应用协议与兼容矩阵，不代表 Keil/IAR/OpenOCD/pyOCD 可直接使用系统 BLE。
