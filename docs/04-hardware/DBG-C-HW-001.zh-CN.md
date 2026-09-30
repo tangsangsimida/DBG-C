@@ -1,6 +1,6 @@
 # DBG-C 硬件设计规范
 
-**文档编号：** DBG-C-HW-001　**版本：** V0.3　**状态：** 验证板设计输入草案；V1规定支持1.8 V/3.3 V Target并要求VTref关联电平适配；不是产品板冻结依据
+**文档编号：** DBG-C-HW-001　**版本：** V0.4　**状态：** 验证板设计输入草案；V1 Target电平适配架构已冻结；转换器选型、数值电气边界及主动Target供电仍开放；不是产品板冻结依据
 
 ## 1. 范围与设计门
 
@@ -122,23 +122,33 @@ IF-001 的 Basic/Full 仍是概念分类，没有冻结连接器触点。USB-IF 
 
 ### 8.1 电压兼容与 SWD/JTAG/UART
 
-DBG-C V1 的 Target I/O 电压域已由需求冻结为 **1.8 V 与 3.3 V**。所有 Target-facing 数字信号必须经过与 `TARGET_VTREF_ADC` 所测 Target VTref 关联的电平适配，并在 Probe 或 Target 任一侧掉电时隔离；不得将 CH585M 3.3 V GPIO 直接接入 Target。具体器件/通道拓扑仍需基于 WCH GPIO/ADC 电气限制和待选定器件规格审查。
+DBG-C V1 外部供电 Target 的 I/O 电压域已冻结为**标称 1.8 V 与 3.3 V**。CH585M 保持在 Probe 侧 I/O 电压域。所有面向 Target 的数字信号必须经过与 VTref 关联的电平适配，并在 Probe 或 Target 任一侧掉电时隔离。禁止将 CH585M GPIO 直连 Target 作为工作通路。Target 侧逻辑域跟随有效 Target VTref，不要求用户通过软件手动选择。此处冻结的是接口架构，不是两个标称电压周围未经证实的数值容差。
 
-SWDIO/TMS 是双向信号，须验证方向转换、输出使能时序、上下拉和总线争用；SWCLK/TCK、TDI、Probe UART TX 属输出方向；TDO、Target UART TX、SWO 属输入方向；nRESET须位于Target电压域。每条数字路径均需有VTref关联的电平适配，并审查掉电高阻/隔离、上电安全默认态、过压、反灌、传播延迟、速度/边沿及 ESD。电平转换器是否需多器件实现必须由器件规格和SWD双向时序决定，当前不预设器件型号。验证板应保留可替换器件位和测点，不得保留违反本需求的3.3 V直连Target作为工作路径。
+电平转换器选型必须满足以下准则，并在产品原理图冻结前逐项依据器件数据手册及验证板实测关闭：
+
+- Probe 侧供电为 DBG-C Probe I/O 电压域；Target 侧供电/参考通过经审查且受保护的路径跟随 Target VTref，并支持标称 1.8 V 与 3.3 V 域。
+- 任一侧电源缺失时，器件须有 Ioff 或有正式资料证明等效的掉电隔离能力；Target 侧输出可保持高阻或另一种经评审的安全态。
+- 输入阈值须由选定供电条件下的器件规格保证；不得依赖 CH585M GPIO 直接识别 Target 域电平。
+- SWDIO 必须显式控制方向。方向控制路径须在与 SWD bit engine 同步时满足 SWD turnaround 时序。无证据证明支持推挽 SWD 波形及 turnaround 时，不得选用自动方向器件。
+- 传播延迟、输出驱动、边沿、负载和通道偏斜必须纳入最终 SWD/JTAG/SWO/UART 时序预算。目前时序预算和最高速率待确定，本文不编造数值器件门限。
+- 仅面向开漏总线的器件不得承载推挽 SWD/JTAG 信号，除非具体电路经过正式评审和验证。
+- 每路均须审查绝对最大额定值、掉电注入/反灌、ESD、故障电压、热插拔和输出使能默认行为。
+
+信号方向要求：SWCLK/TCK、TDI、Probe UART TX 为 Probe 至 Target 输出；TDO、Target UART TX、SWO 为 Target 至 Probe 输入；SWD 模式下 SWDIO 双向；JTAG 模式下 TMS 为 Probe 至 Target。验证板应保留可替换器件位和测试点，不得提供绕过适配路径的工作通路。
 
 ### 8.2 Target nRESET
 
-PB5 固件方向切换仿真不证明硬件开漏。nRESET位于Target电压域，默认必须释放；调试器断电、复位、Bootloader运行或固件异常时不得拉低Target。原理图须研究由Target侧VTref建立释放电平的开漏/等效安全输出与掉电隔离；具体器件、上拉值、极性、脉宽及故障行为必须由器件规格和实板验证确定。
+PB5 固件方向切换仿真不证明硬件开漏。nRESET 位于 Target 电压域，默认必须释放；调试器断电、复位、Bootloader 运行或固件异常时不得拉低 Target。输出级必须仅在 Target 域拉低并释放，由 Target 侧 VTref 建立释放电平，不得向 Target 输出固定 3.3 V 高电平；并须具备掉电隔离、VTref 无效时禁止断言。具体器件、上拉值、极性、脉宽及故障行为必须由器件规格和实板验证确定。
 
 ### 8.3 VTref 检测
 
-DBG-C V1 Target域为1.8 V与3.3 V；PA4/A0检测范围必须覆盖这两个域，并能区分有效Target电源与掉电/异常状态。当前只有原始 ADC BSP 和主机模拟寄存器检查，尚无硅片采样、分压、量程、误差或保护验证。以 CH585M ADC 输入范围/参考、允许注入电流和精度参数计算分压阻值、输入阻抗、RC、钳位及误差预算。具体门限与校准值待计算和验证。
+VTref 表示 Target 实际 I/O 供电，不是 Probe 产生的固定参考。V1 外部供电 Target 要求覆盖标称 1.8 V 与 3.3 V 域。PA4/A0 检测必须能区分有效 Target 供电、掉电和异常状态。当前仅有原始 ADC BSP 和主机模拟寄存器检查，尚无硅片采样、分压、量程、误差或保护验证。须依据 CH585M ADC 输入/参考、注入电流、精度及所选转换器规格计算允许最小/最大值、故障范围、分压、输入阻抗、RC、钳位、校准和误差预算。仅凭标称电压不能定义有效门限。
 
-VTref检测与电平转换器的参考电源是不同电气节点/功能。Target VTref应关联数字电平适配参考，但不得把PA4分压节点直接作为电平转换器供电。验证板分别测量检测路径和参考供电路径；实现掉电隔离。异常、未上电、超量程状态需安全拒绝Target操作。
+VTref 检测与转换器参考供电属于不同电气路径/功能。受保护的 Target VTref 路径应为电平适配器 Target 侧供电/参考；不得将 PA4 分压节点作为转换器供电。分别分析负载与启动顺序。VTref 缺失、无效或异常时，硬件须禁止 Probe 至 Target 输出并进入安全隔离态。软件可以显示电压及有效状态，但不选择电气电压域。
 
 ### 8.4 Target Power
 
-PB6 仅是控制 GPIO。USB VBUS 能否供 Target、输出电压/电流、稳压器或负载开关、限流、短路保护、反向电流、浪涌、Fault/PG 检测及 Target 自供电切换均未冻结。验证板可预留断开的供电功能块及测量位，但在电源预算、目标电压范围和器件数据审查前不得装配后驱动 Target。不得把电流测量列为 V1 强制功能。
+V1 必须支持 Target 使用自身外部电源、I/O 域为标称 1.8 V 或 3.3 V 时的调试能力；这与 DBG-C 主动输出 Target 电源是不同能力。DBG-C 是否必须主动供电，以及输出须支持 1.8 V、3.3 V 或两者，仍是明确的产品决策项。PB6 仅为控制 GPIO，不能代表已定义供电电路。决策完成前不得宣称主动供电能力或冻结其电源模块。若保留主动输出，须分别定义输出电压选择、电流、电源来源、负载开关/稳压、限流、短路、反向阻断、浪涌、Fault 报告及与外部供电 Target 并存的处理。验证板可预留断开且可隔离的模块和测量点。电流测量不是 V1 强制功能。
 
 ## 9. SPI NOR、RF 与 UI
 
@@ -183,15 +193,15 @@ USB、Target 信号、外部连接器、电源轨需分别分析 ESD/EOS、误�
 
 ### 信号级默认状态基线
 
-原理图进入逐信号电路设计前，采用以下可审查的安全默认态：Target Power保持关闭；所有Target数字电平适配器的输出使能默认关闭，Probe侧和Target侧均隔离/高阻；Target输出仅在VTref落入已冻结有效范围、方向配置完成后使能；`TARGET_nRESET`默认释放。VTref检测输入按ADC保护方案处理，不直接承担数字电平适配供电。具体电阻/逻辑极性/使能器件仍须按所选器件数据手册核验并在原理图冻结。
+原理图进入逐信号电路设计前，采用以下可审查的安全默认态：主动Target供电输出关闭；所有Target数字电平适配路径默认隔离；VTref缺失/无效时由硬件禁止Probe至Target输出；仅在VTref处于冻结有效范围且方向配置完成后使能路径；仅在VTref有效且收到有效复位请求时才允许`TARGET_nRESET`拉低，默认保持释放。VTref检测输入按ADC保护方案处理，不直接承担电平转换器供电。具体电阻/逻辑极性/输出使能默认态和隔离能力仍须按所选器件数据手册核验并在原理图冻结。
 
 | 信号组 | 逻辑方向 | 上电/复位/固件未初始化安全态 | 使能条件 |
 |---|---|---|---|
-| TARGET_SWCLK_TCK / TARGET_TDI | Probe to Target | Probe输出关闭；Target侧不被适配器驱动 | VTref有效且Target操作已启动 |
-| TARGET_SWDIO_TMS | Bidirectional | 双向输出关闭/高阻，不向Target注入电流 | 方向控制已建立且VTref有效 |
+| TARGET_SWCLK_TCK / TARGET_TDI | Probe to Target | 隔离/高阻 | 硬件确认VTref有效、Target操作已启动且路径已使能 |
+| TARGET_SWDIO_TMS | SWD双向；JTAG为Probe至Target | 隔离/高阻 | 硬件确认VTref有效且方向已配置；SWD方向与bit engine同步 |
 | TARGET_TDO / TARGET_UART_RX / TARGET_SWO | Target to Probe | Probe输入侧隔离且不加载Target信号 | VTref有效且接收路径已配置 |
-| TARGET_UART_TX | Probe to Target | 适配器关闭/高阻 | VTref有效且CDC/UART已启动 |
-| TARGET_nRESET | Probe控制，Target电压域 | 释放，不主动拉低 | 收到有效复位请求后短暂断言 |
+| TARGET_UART_TX | Probe to Target | 隔离/高阻 | 硬件确认VTref有效且CDC/UART已启动 |
+| TARGET_nRESET | Probe控制，Target电压域 | 释放，不主动拉低 | VTref有效并收到有效复位请求后，在Target域拉低再释放 |
 | TARGET_VTREF_ADC | Analog Sense | 输入限流/钳位，按ADC安全范围 | 采样前完成ADC初始化 |
 | TARGET_PWR_EN | 内部控制 | 默认关闭 | 明确供电请求且保护状态有效 |
 

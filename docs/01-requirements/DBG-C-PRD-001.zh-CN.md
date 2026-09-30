@@ -1,6 +1,6 @@
 # DBG-C 产品需求规格书
 
-**文档编号：** DBG-C-PRD-001　**版本：** V0.3（需求基线草案）　**状态：** Target电压域需求已补充，其他需求待评审
+**文档编号：** DBG-C-PRD-001　**版本：** V0.4（需求基线草案）　**状态：** V1 Target电压域与电平适配要求已冻结；主动Target供电范围仍待决策
 
 ## 1. 产品定位
 
@@ -54,11 +54,11 @@ V1 不包含 Target 电流检测、离线烧录验收、多 Target、手机 App�
 | PRD-010 | Target JTAG | 在至少一个冻结的 Cortex-M Target 上通过 CMSIS-DAP JTAG 连接、DP/AP 访问、下载校验、复位和在线调试；速率与兼容范围待评审 |
 | PRD-011 | SWO | 接收 Target SWO 并通过已定义的主机流接口读取；波特率、数据格式、缓冲与丢失指标待 USB/FW/TEST 冻结 |
 | PRD-012 | VTref 检测 | 在冻结的 Target 电压输入范围内报告电压/有效状态；分压、保护、校准、误差和阈值通过电气评审及测量 |
-| PRD-013 | Target 电源控制 | 通过外部电源开关控制 Target 供电；验证默认关闭/安全状态、使能/关闭、短路/过流和反向供电处理；具体电路与门限待冻结 |
+| PRD-013 | Target 供电输出控制 | V1 必需能力：可安全调试由外部供电、标称 I/O 域为 1.8 V 或 3.3 V 的 Target，接口电平跟随有效 Target VTref。DBG-C 是否必须主动向 Target 输出电源、输出须支持 1.8 V、3.3 V 或两者，属于待决策产品需求。不得从 VTref 支持或 `TARGET_PWR_EN` 推断已具备主动供电能力；原理图冻结前须单独冻结输出电压/电流、保护和验收条件 |
 | PRD-014 | USB 自升级 | PC 通过 USBHS 更新 Probe 固件；完整镜像校验、提交、复位启动、损坏镜像恢复和断电恢复通过测试 |
 | PRD-015 | 私有 2.4 GHz 自升级 | 成对设备按冻结的 RF 更新协议可靠传送 Probe 镜像；验证丢包/重传、断链恢复、完整性校验、提交和恢复 |
 | PRD-016 | 外部 SPI NOR | 选定器件后验证镜像暂存读写、擦除边界、完整性校验和断电保留；是否承载回滚/离线镜像须单独冻结 |
-| PRD-017 | Target I/O 电压域与电平适配 | V1 支持 1.8 V 与 3.3 V Target I/O；所有 Target 数字信号经与 Target VTref 关联的电平适配，Probe 或 Target 任一侧掉电时隔离；禁止依赖 CH585M 3.3 V GPIO 直连兼容。器件、时序、保护和误差通过 HW 评审及验证板实测 |
+| PRD-017 | Target I/O 电压域与电平适配 | 已冻结的 V1 要求：支持标称 1.8 V 与 3.3 V 外部供电 Target I/O 域。每条 Target 数字信号均经过与 VTref 关联的电平适配，并在 Probe 或 Target 任一侧掉电时隔离。Target 侧逻辑电压域跟随有效 Target VTref，不要求用户通过软件手动选择。VTref 无效时由硬件禁止 Probe 至 Target 输出。禁止 CH585M GPIO 直连 Target 工作通路。SWDIO 使用显式方向控制并与 SWD turnaround 同步；JTAG TMS 方向为 Probe 至 Target。实际电压容差、电平转换器件、时序、保护和可测门限依据器件资料及验证板测试冻结 |
 
 
 ## 8. 性能指标
@@ -67,7 +67,7 @@ V1 不包含 Target 电流检测、离线烧录验收、多 Target、手机 App�
 
 ## 9. 未决需求
 
-设备插 USB 是否影响角色、角色切换规则、配对是否持久、自动/手动配对、并发 USB 多设备规则、PC OS/IDE 矩阵、CDC 参数、Target 有效电压门限和故障范围、无线恢复时限、OTA 回滚与授权、BLE 目标下载协议/Target 范围、接口电缆能力，均待需求评审决议。Target I/O 电压域为 1.8 V 与 3.3 V 已冻结；见 [DBG-C-OPEN-001](../00-project/DBG-C-OPEN-001.zh-CN.md)。
+设备插 USB 是否影响角色、角色切换规则、配对是否持久、自动/手动配对、并发 USB 多设备规则、PC OS/IDE 矩阵、CDC 参数、标称 Target 电压域周围的允许最小/最大值与故障范围、主动 Target 供电的电压/电流、无线恢复时限、OTA 回滚与授权、BLE 目标下载协议/Target 范围、接口电缆能力，均待需求评审决议。标称 1.8 V 与 3.3 V 外部供电 Target 域及 VTref 跟随适配要求已冻结；见 [DBG-C-OPEN-001](../00-project/DBG-C-OPEN-001.zh-CN.md)。
 
 ## 10. 产品表述（需求输入，非验证结论）
 

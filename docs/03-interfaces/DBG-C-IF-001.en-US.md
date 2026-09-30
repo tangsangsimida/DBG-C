@@ -1,6 +1,6 @@
 # DBG-C Interface Specification
 
-**Document ID:** DBG-C-IF-001　**Version:** V0.4　**Status:** Concept draft; Target voltage-domain requirement frozen; contact mapping not frozen
+**Document ID:** DBG-C-IF-001　**Version:** V0.5　**Status:** Concept draft; V1 Target electrical architecture requirements frozen; contact mapping and component values not frozen
 
 ## 1. Definition
 
@@ -67,20 +67,36 @@ Define every Target signal separately; no unexplained blank may remain before fo
 | TARGET_TDO | Target to Probe |
 | TARGET_UART_TX | Probe to Target |
 | TARGET_UART_RX | Target to Probe |
-| TARGET_nRESET | Probe controlled, Target voltage domain |
+| TARGET_nRESET | Probe controlled, Target voltage domain; pull-low/release output referenced to Target VTref |
 | TARGET_SWO | Target to Probe |
 | TARGET_VTREF_ADC | Target to Probe, Analog Sense |
 | TARGET_PWR_EN | Internal Probe control, not Target data |
 
-DBG-C V1 shall support both 1.8 V and 3.3 V Target I/O domains. Every Target-facing digital signal shall use level adaptation associated with Target VTref and provide isolation when either Probe or Target is unpowered. Do not rely on direct electrical compatibility between CH585M 3.3 V GPIO and the Target. Freeze translator parts, direction control, propagation-delay/speed boundaries, and powered-off behavior in HW-001 from component data and measurements.
+DBG-C V1 shall support Target I/O domains nominally at 1.8 V and 3.3 V. CH585M Probe-side I/O remains in the Probe voltage domain. Every Target-facing digital signal shall pass through VTref-associated level adaptation and provide powered-off isolation when either Probe or Target is unpowered. Direct CH585M GPIO-to-Target connection as an operating path is prohibited. These are frozen V1 requirements; they do not define unverified numeric operating tolerances.
+
+| Signal | Direction | Frozen electrical requirement |
+|---|---|---|
+| TARGET_SWCLK_TCK | Probe to Target | Adapt output level to the Target VTref domain; disable or isolate when VTref is invalid |
+| TARGET_SWDIO_TMS | Bidirectional in SWD; Probe to Target in JTAG TMS mode | Use explicit direction control. In SWD, synchronize direction changes with the SWD bit engine and turnaround; in JTAG TMS mode, set Probe-to-Target direction. Do not assume an auto-direction translator is suitable |
+| TARGET_TDI | Probe to Target | Adapt output level to the Target VTref domain; disable or isolate when VTref is invalid |
+| TARGET_TDO | Target to Probe | Adapt input from Target VTref domain to Probe domain; isolate for either-side power-off |
+| TARGET_UART_TX | Probe to Target | Adapt output level to the Target VTref domain; disable or isolate when VTref is invalid |
+| TARGET_UART_RX | Target to Probe | Adapt input from Target VTref domain to Probe domain; isolate for either-side power-off |
+| TARGET_SWO | Target to Probe | Adapt input from Target VTref domain to Probe domain; isolate for either-side power-off |
+| TARGET_nRESET | Probe controlled, Target domain | Pull low and release in the Target domain; do not drive a fixed 3.3 V high level into the Target |
+| TARGET_VTREF_ADC | Target to Probe, analog sense | Use a separate protected ADC sensing path; the ADC divider node is not the translator supply |
+
+VTref represents the Target's actual I/O supply, not a Probe-generated reference. The Target-side translator supply/reference shall follow Target VTref through an electrically reviewed path. The ADC sensing path and translator-reference path are separate nets/functions and require separate loading, protection, startup, and power-off analysis. No user software voltage selector is required for the 1.8 V/3.3 V domain choice; the interface voltage follows valid Target VTref. Software may report the measured/valid state.
+
+When VTref is invalid or Target power is absent, Probe-to-Target outputs (`TARGET_SWCLK_TCK`, `TARGET_SWDIO_TMS`, `TARGET_TDI`, `TARGET_UART_TX`, and `TARGET_nRESET`) shall remain in a hardware-reviewed high-impedance or equivalent isolated safe state. With either side unpowered, all Target digital signal paths shall prevent unacceptable back-power into the other side. The valid VTref range, fault range, error budget, and detection thresholds shall be frozen after selecting and reviewing the ADC front end and translator parts.
 
 ### 4.4 Default State and Hot Plug
 
-During Probe power-up/reset, Bootloader, and before GPIO initialization, the interface shall be safe. Target Power stays off absent explicit control. Outputs shall not inject back-power current before Target supply is known. HW-001 shall specify and board-verify safe defaults for SWDIO, SWCLK, JTAG, UART, SWO, and nRESET. nRESET stays released unless reset is requested; Probe reset/update/failure/power loss shall not hold Target reset. Hot-plug sequence: disconnected → detect Target supply → establish safe IO → enable debug. On removal or VTref loss, stop driving and return to safe state. Timing is measured on the Validation Board.
+During Probe power-up/reset, Bootloader, and before GPIO initialization, the interface shall be safe. Active Target Power output stays off absent a separate approved power request. Invalid/absent VTref shall hardware-inhibit Probe-to-Target digital outputs. Outputs shall not inject back-power current before Target supply is known. nRESET shall be implemented in the Target voltage domain as pull-low/release (open-drain or reviewed equivalent), with its released level referenced to Target VTref; it shall not be driven to a fixed 3.3 V high level. nRESET stays released unless reset is requested and VTref is valid; Probe reset/update/failure/power loss shall not hold Target reset. Hot-plug sequence: disconnected → detect Target supply → establish safe IO → enable debug. On removal or VTref loss, hardware-inhibit outputs and return to safe state. Timing is measured on the Validation Board.
 
 ### 4.5 VTref and Voltage Domains
 
-HW-001 shall define a VTref detection range covering 1.8 V and 3.3 V, ADC protection, divider, filter, clamp, power-off isolation, calibration, and valid threshold. Do not exceed CH585 ADC limits. VTref shall be associated with level adaptation on all Target digital signals. Assess the ADC sensing path and translator reference-supply path separately for loading, startup order, and powered-off behavior.
+HW-001 shall define a VTref detection range covering the frozen nominal 1.8 V and 3.3 V Target domains, with allowed minimum/maximum, fault range, ADC protection, divider, filter, clamp, power-off isolation, calibration, error budget, and valid threshold established from selected part specifications. Do not exceed CH585 ADC limits. VTref shall be associated with the Target-side reference of all Target digital level-adaptation paths. Assess the ADC sensing path and translator reference-supply path separately for loading, startup order, and powered-off behavior. Invalid VTref shall inhibit Target-facing outputs in hardware.
 
 ### 4.6 Reverse Power, Shorts, and Misconnection
 
@@ -114,7 +130,7 @@ Before schematic entry, freeze signal names, directions, MCU resources, power do
 
 ## 5. Freeze Gate
 
-Before freeze, obtain the applicable USB-IF Type-C Cable and Connector Specification, Target electrical requirements, cable construction/mapping evidence, protection review, and test records for both orientations, hot plug, and abnormal/misconnected cases. The 1.8 V/3.3 V domains and VTref-associated level-adaptation requirement are frozen; component design and board verification remain incomplete. V0.4 has not met the interface freeze gate.
+Before freeze, obtain the applicable USB-IF Type-C Cable and Connector Specification, Target electrical requirements, cable construction/mapping evidence, protection review, and test records for both orientations, hot plug, and abnormal/misconnected cases. The nominal externally powered 1.8 V/3.3 V domains and VTref-following level-adaptation architecture are frozen; component design, numeric tolerances, and board verification remain incomplete. V0.5 has not met the contact-mapping/product interface freeze gate.
 
 ## 6. USB-IF Reference Review
 
@@ -131,4 +147,4 @@ This review checked USB-IF *USB Type-C Cable and Connector Specification* Releas
 
 The current Contact → Cable Conductor → Target Signal mapping table is empty and cannot be frozen. Select a specific connector and cable assembly, obtain formal cable-construction information, and complete both-orientation continuity and signal tests. USB-IF source: [Release 2.5 document page](https://www.usb.org/document-library/usb-type-cr-cable-and-connector-specification-release-25).
 
-The validation board shall expose Target signals on separate test points/isolatable headers. Whether to retain the Basic/Full categories and any custom Type-C Target interface remain under review. Do not make it the sole Target connection before the mapping is approved.
+The validation board shall expose Target signals on separate test points/isolatable headers located around the mandatory level-adaptation path; no test configuration may create a CH585M-to-Target operating bypass. Whether to retain the Basic/Full categories and any custom Type-C Target interface remain under review. Do not make it the sole Target connection before the mapping is approved.

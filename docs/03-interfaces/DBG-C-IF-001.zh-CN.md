@@ -1,6 +1,6 @@
 # DBG-C Interface Specification
 
-**文档编号：** DBG-C-IF-001　**版本：** V0.4　**状态：** 概念草案；Target电压域要求已冻结；触点映射未冻结
+**文档编号：** DBG-C-IF-001　**版本：** V0.5　**状态：** 概念草案；V1 Target电气架构要求已冻结；触点映射和器件参数未冻结
 
 ## 1. 定义
 
@@ -67,20 +67,36 @@ Target Interface 必须考虑误插普通 PC Host、USB Charger 或其它 Type-C
 | TARGET_TDO | Target to Probe |
 | TARGET_UART_TX | Probe to Target |
 | TARGET_UART_RX | Target to Probe |
-| TARGET_nRESET | Probe 控制，处于 Target 电压域 |
+| TARGET_nRESET | Probe 控制，处于 Target 电压域；以 Target VTref 为参考的拉低/释放输出 |
 | TARGET_SWO | Target to Probe |
 | TARGET_VTREF_ADC | Target to Probe，Analog Sense |
 | TARGET_PWR_EN | Probe 内部控制，不是 Target 数据接口 |
 
-DBG-C V1 必须支持 1.8 V 与 3.3 V 两种 Target I/O 电压域。所有 Target 数字信号必须经过与 Target VTref 关联的电平适配，并具备 Probe 或 Target 任一侧掉电时的隔离。不得依赖 CH585M 3.3 V GPIO 与 Target 直接电气兼容。电平适配器件、方向控制、传播延迟/速度边界和掉电指标须在 HW-001 中依据器件手册与实测冻结。
+DBG-C V1 必须支持标称 1.8 V 与 3.3 V 两种 Target I/O 电压域。CH585M Probe 侧 I/O 保持在 Probe 电压域。所有面向 Target 的数字信号必须经过与 VTref 关联的电平适配，并在 Probe 或 Target 任一侧掉电时提供隔离。禁止将 CH585M GPIO 直连 Target 作为工作通路。这些属于已冻结的 V1 需求，但不代表未经确认的具体电压容差已冻结。
+
+| 信号 | 方向 | 已冻结的电气要求 |
+|---|---|---|
+| TARGET_SWCLK_TCK | Probe 至 Target | 输出电平适配到 Target VTref 电压域；VTref 无效时禁止输出或隔离 |
+| TARGET_SWDIO_TMS | SWD 双向；JTAG TMS 为 Probe 至 Target | 使用显式方向控制。SWD 模式下方向切换须与 SWD bit engine 及 turnaround 同步；JTAG TMS 模式固定为 Probe 至 Target。不得假定自动方向转换器件适用 |
+| TARGET_TDI | Probe 至 Target | 输出电平适配到 Target VTref 电压域；VTref 无效时禁止输出或隔离 |
+| TARGET_TDO | Target 至 Probe | 从 Target VTref 域适配到 Probe 域；任一侧掉电时隔离 |
+| TARGET_UART_TX | Probe 至 Target | 输出电平适配到 Target VTref 电压域；VTref 无效时禁止输出或隔离 |
+| TARGET_UART_RX | Target 至 Probe | 从 Target VTref 域适配到 Probe 域；任一侧掉电时隔离 |
+| TARGET_SWO | Target 至 Probe | 从 Target VTref 域适配到 Probe 域；任一侧掉电时隔离 |
+| TARGET_nRESET | Probe 控制，Target 电压域 | 在 Target 域实现拉低和释放；不得以固定 3.3 V 高电平驱动 Target |
+| TARGET_VTREF_ADC | Target 至 Probe，模拟检测 | 使用独立且受保护的 ADC 检测路径；ADC 分压节点不得作为电平转换器供电 |
+
+VTref 表示 Target 实际 I/O 供电电压，不是 Probe 产生的固定参考。Target 侧电平转换器供电/参考须经审查后跟随 Target VTref。ADC 检测路径与电平转换器参考路径是不同网络/功能，须分别分析负载、保护、启动顺序和掉电行为。1.8 V/3.3 V 域不要求用户通过软件手动选择；接口电平随有效 Target VTref 工作。软件可报告测量值及有效状态。
+
+VTref 无效或 Target 未供电时，所有 Probe 至 Target 输出（`TARGET_SWCLK_TCK`、`TARGET_SWDIO_TMS`、`TARGET_TDI`、`TARGET_UART_TX`、`TARGET_nRESET`）必须保持经硬件评审的高阻或等效隔离安全态。任一侧掉电时，所有 Target 数字路径须防止向另一侧形成不可接受的反向供电。有效 VTref 范围、故障范围、误差预算和检测门限，应在电平转换器及 ADC 前端选型和审查后冻结。
 
 ### 4.4 上电默认状态
 
-Probe 上电、复位、Bootloader运行和 GPIO 初始化前，Target Interface 必须处于安全态。没有明确控制条件时 Target Power 必须关闭；Target供电状态未确认前，Target-facing输出不得注入可能反向供电的电流。SWDIO、SWCLK、JTAG、UART、SWO、nRESET 的默认态必须由 HW-001 分别规定并实板确认。未执行复位时 nRESET 必须释放；Probe复位、升级、异常重启或掉电不得使 Target 长时间保持复位。
+Probe 上电、复位、Bootloader运行和 GPIO 初始化前，Target Interface 必须处于安全态。未经单独批准的主动Target供电输出必须保持关闭。VTref缺失/无效时，硬件必须禁止Probe至Target数字输出。Target供电状态未确认前，输出不得注入可能反向供电的电流。nRESET 必须在 Target 电压域实现拉低/释放（开漏或经评审的等效方式），释放电平以 Target VTref 为参考，不得固定驱动为3.3 V高电平。仅在VTref有效且收到复位请求时允许拉低；Probe复位、升级、异常重启或掉电不得使 Target 长时间保持复位。
 
 ### 4.5 VTref 与电压域
 
-`TARGET_VTREF_ADC` 检测 Target 电压。HW-001 必须定义覆盖 1.8 V 与 3.3 V 的检测范围、ADC保护、计算分压、滤波、钳位、掉电隔离、校准方法和有效门限。Target电压不得超过 MCU ADC 允许范围。VTref 必须关联所有 Target 数字信号的电平适配参考；ADC检测路径与电平适配参考供电路径仍须分别评估负载、启动顺序和掉电行为。
+`TARGET_VTREF_ADC` 检测 Target 电压。HW-001 须基于所选器件规格定义覆盖标称 1.8 V 与 3.3 V Target 域的有效最小/最大值、故障范围、ADC保护、分压、滤波、钳位、掉电隔离、校准、误差预算和有效门限。Target 电压不得超过 MCU ADC 允许范围。VTref 必须关联所有 Target 数字电平适配路径的 Target 侧参考；ADC 检测路径与电平转换器参考供电路径须分别评估。VTref 无效时，硬件必须禁止 Target 输出。
 
 ### 4.6 热插拔
 
@@ -149,7 +165,7 @@ V1 Pin Mapping 冻结后不得静默改变触点功能。未来改变可能电�
 
 ## 5. 冻结门槛
 
-冻结前需取得 USB-IF Type-C Cable and Connector Specification 对应版本、目标端电气需求、线缆结构/映射证据、保护方案评审及正反插/热插拔/异常误连验证记录。电压域要求已冻结，当前为 V0.4，接口未冻结。
+冻结前需取得 USB-IF Type-C Cable and Connector Specification 对应版本、目标端电气需求、线缆结构/映射证据、保护方案评审及正反插/热插拔/异常误连验证记录。标称电压域及VTref跟随电平适配架构已冻结，当前为 V0.5；器件数值边界、触点映射与板级验证尚未完成。
 
 ## 6. USB-IF 资料审查记录
 
@@ -166,4 +182,4 @@ V1 Pin Mapping 冻结后不得静默改变触点功能。未来改变可能电�
 
 当前 Contact → Cable Conductor → Target Signal 映射表为空，不能冻结。需选择具体连接器与线缆组件，取得正式线缆结构信息并完成正反插导通及信号验证。USB-IF 来源：[Release 2.5 文档页](https://www.usb.org/document-library/usb-type-cr-cable-and-connector-specification-release-25)。
 
-验证板应使用独立测试点/可隔离排针暴露 Target 信号。Basic/Full 分类是否保留以及任何 Type-C 自定义目标接口均待评审；在映射获批前不得把它作为唯一 Target 连接方式。
+验证板应在强制电平适配路径两侧使用独立测试点/可隔离排针暴露 Target 信号；任何测试配置均不得形成绕过适配器的 CH585M 至 Target 工作通路。Basic/Full 分类是否保留以及任何 Type-C 自定义目标接口均待评审；在映射获批前不得把它作为唯一 Target 连接方式。

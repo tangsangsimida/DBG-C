@@ -1,6 +1,6 @@
 # DBG-C MCU Selection and Resource Assessment
 
-**Document ID:** DBG-C-MCU-001　**Version:** V0.17　**Status:** CH585M V1 MCU resource allocation draft; Target 1.8 V/3.3 V domains defined by IF-001/PRD-001; validation-board hardware input in HW-001 V0.3; board verification not run
+**Document ID:** DBG-C-MCU-001　**Version:** V0.18　**Status:** CH585M V1 MCU resource allocation draft; externally powered Target domains and level-adaptation architecture defined by IF-001/PRD-001; validation-board hardware input in HW-001 V0.4; board verification not run
 
 ## 1. Evidence Source
 
@@ -136,7 +136,7 @@ The table cross-checks the proposed V1 pin baseline against official materials. 
 4. PB20 can be UART3 RXD3 through the EVT UART3 remap; this allows PA4/A0 to remain available for VTref ADC. Without remapping, UART3 RX conflicts with PA4 allocation.
 5. Describe PB22 only as a board-level BOOT control net: the reference schematic shows a switch connected to it, but the chip pin table lists no dedicated BOOT mux. Confirm entry requirements from official ISP/download documentation.
 6. EVT GPIO remap documentation includes RF antenna-switch outputs on PB16–PB21. Whether EXT_IRQ, EXT_RESET_N, LEDs, and SWO coexist depends on whether RF initialization enables this output; inspect source/library configuration and disable conflicting routing before board testing.
-7. Targets may use 1.8 V or 3.3 V. GPIO mux data does not prove tolerance at arbitrary voltage; separately design VTref input, target signal translation, protection, and power-off isolation.
+7. V1 supports externally powered Targets with nominal 1.8 V and 3.3 V I/O domains. This is a frozen product requirement, not a claim that CH585M GPIO is directly compatible. Route every Target digital signal through VTref-associated level adaptation and powered-off isolation; numeric tolerances and component implementation are controlled by IF-001/HW-001.
 
 ### V1 Peripheral Scope
 
@@ -185,4 +185,4 @@ Obtain the matching WCH SDK/example version, official package drawing, silicon r
 
 ## 8. Validation-Board Hardware Boundary
 
-MCU-001 defines the draft MCU-side resource allocation only. Actual peripheral circuits, supplies, level translation, protection, recovery paths, test points, and PCB constraints are controlled by [HW-001](DBG-C-HW-001.en-US.md). V1 Target I/O domains are 1.8 V and 3.3 V; every Target digital signal requires VTref-associated level adaptation and powered-off isolation. HW-001 V0.3 permits modular validation-board schematic work, while translator parts, Target power, custom Type-C mapping, BOOT/recovery timing, PB16–PB21 RF mux, RF matching, and final power/clock values remain evidence-dependent. This does not mean MCU pins have been electrically verified or product hardware is frozen.
+MCU-001 defines the draft MCU-side resource allocation only. Actual peripheral circuits, supplies, level adaptation, protection, recovery paths, test points, and PCB constraints are controlled by [HW-001](DBG-C-HW-001.en-US.md). V1 requires externally powered nominal 1.8 V and 3.3 V Target domains, VTref-following level adaptation and powered-off isolation on every Target digital signal, and hardware output inhibit for invalid VTref. SWDIO direction control and Target-domain nRESET pull-low/release are required. HW-001 V0.4 permits modular validation-board schematic work; translator parts/numeric limits, active Target power-output scope, custom Type-C mapping, BOOT/recovery timing, PB16–PB21 RF mux, RF matching, and final power/clock values remain evidence-dependent. This does not mean MCU pins have been electrically verified or product hardware is frozen.

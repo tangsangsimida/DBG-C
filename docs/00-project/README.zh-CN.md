@@ -4,19 +4,19 @@
 
 | 编号 | 文档 | 当前状态 |
 |---|---|---|
-| PRD-001 | [产品需求规格书](../01-requirements/DBG-C-PRD-001.zh-CN.md) | V0.3；V1 Target域要求为1.8 V与3.3 V；其余需求待评审 |
-| SYS-001 | [系统架构设计](../02-system/DBG-C-SYS-001.zh-CN.md) | V0.4；所有Target数字信号经VTref关联电平适配；产品集成待验证 |
-| IF-001 | [DBG-C Interface Specification](../03-interfaces/DBG-C-IF-001.zh-CN.md) | V0.4；1.8 V/3.3 V Target域及VTref关联数字电平适配已冻结；触点映射未冻结 |
-| MCU-001 | [MCU 选型与资源评估](../04-hardware/DBG-C-MCU-001.zh-CN.md) | V0.17；MCU资源分配草案，Target电气输入见HW-001 |
-| HW-001 | [硬件设计规范](../04-hardware/DBG-C-HW-001.zh-CN.md) | V0.3；Target电气基线已定义，可继续验证板模块化原理图；电平适配、供电、恢复、RF和接口映射仍待验证；产品板未冻结 |
+| PRD-001 | [产品需求规格书](../01-requirements/DBG-C-PRD-001.zh-CN.md) | V0.4；外部供电Target标称域及VTref跟随适配已冻结；主动Target供电输出仍待决策 |
+| SYS-001 | [系统架构设计](../02-system/DBG-C-SYS-001.zh-CN.md) | V0.5；VTref跟随适配架构及VTref无效时硬件禁止输出已记录；产品集成待验证 |
+| IF-001 | [DBG-C Interface Specification](../03-interfaces/DBG-C-IF-001.zh-CN.md) | V0.5；V1 Target电气架构已冻结；触点映射和数值边界未冻结 |
+| MCU-001 | [MCU 选型与资源评估](../04-hardware/DBG-C-MCU-001.zh-CN.md) | V0.18；MCU资源分配草案，Target电气输入见HW-001 |
+| HW-001 | [硬件设计规范](../04-hardware/DBG-C-HW-001.zh-CN.md) | V0.4；可继续验证板模块化原理图；转换器件/数值边界、主动Target供电、恢复、RF和接口映射仍开放；产品板未冻结 |
 | FW-001 | [固件架构与 PoC-1 记录](../05-firmware/DBG-C-FW-001.zh-CN.md) | V0.79；PB8 KEY_MODE/PB9 LED_TARGET 原始 GPIO 56 项检查通过，按键与 LED 电气策略未定义；PB6 TARGET_PWR_EN 原始 GPIO 适配器 36 项主机寄存器检查通过且不定义电源极性；SPI1 配置 BSP 19 项及 PA0–PA3 GPIO 与 PA3 原始片选 BSP 104 项主机检查通过，数据传输未实现；PA4/A0 原始 ADC 采样适配器纳入 PoC 构建，44 项主机检查通过、硅片采样待验证；镜像更新事务管理器新增 57 项主机检查；fish 环境配置示例已补充；CH585 JTAG GPIO BSP 与上游 CMSIS-DAP JTAG Sequence、IDCODE、DP Transfer 写入/posted-read 主机模型累计 1610 项检查通过；MCU-001 V0.11 的 SWD/Reset BSP 已迁移并通过相关主机检查；队列化 CMSIS-DAP 服务 40 项主机检查通过；定长包队列 54 项主机检查通过；通用 Target Reset 服务 24 项检查、PB5 序列适配器 37 项集成检查及 PB5 GPIO 方向切换原语累计 69 项检查通过；SWD 引擎 10 个主机线模型用例经 GPIO BSP 模拟寄存器执行，3321 项断言；两次固定路径 clean rebuild 的 ELF/map 一致，当前 ELF text/data/bss 为 8916/8/5580 字节；PoC tick 目标 1000 tick/s；PB5 集成及 1000 tick/s 配置两次干净构建通过，ThreadX 实板运行仍未验证 |
 | USB-001 | [USB Device 规范](../06-protocols/DBG-C-USB-001.zh-CN.md) | V0.3 架构草案；已记录 EVT CDC 端点/API 及头文件 IRQ 名与实际向量函数名不一致；DAP+CDC 描述符和端点未冻结，无产品枚举验证 |
 | RF-001 | [Private 2.4G Protocol Specification](../06-protocols/DBG-C-RF-001.zh-CN.md) | V0.1 协议框架，不可据此编码 |
-| TEST-001 | [Verification Specification](../07-verification/DBG-C-TEST-001.zh-CN.md) | V0.71；新增 PB8/PB9 UI GPIO 56 项检查；新增 PB6 TARGET_PWR_EN GPIO 36 项检查；新增 SPI1 配置 BSP 19 项及 PA0–PA3 GPIO 与原始片选 BSP 104 项主机检查；PA4/A0 ADC 原始采样主机检查通过，硅片采样未执行；镜像更新事务管理器 57 项主机检查通过；JTAG GPIO PB0–PB3 与上游 CMSIS-DAP JTAG Sequence、IDCODE、DP Transfer 经 GPIO BSP 的累计 1610 项主机寄存器模型检查通过；目标访问与实板仍未验证；SWD/Reset 主机检查现覆盖 PB1/PB0 与 PB5 软件映射，PB5 GPIO BSP 为 69 项模拟寄存器检查通过，板测未执行；定长包队列 54 项主机检查通过；新增 ThreadX 实板观测用例，当前全部未执行；UID 适配器 31 项 mock 检查和目标对象编译已执行，硅片读取未执行；UART0 与桥接主机检查结果见文档 |
-| RISK-001 | [Risk Register](../08-risk/DBG-C-RISK-001.zh-CN.md) | V0.12；R03/R23 跟踪Target电平适配与掉电隔离，R19/R21跟踪RF复用/BOOT风险；ThreadX移植仍待实板验证 |
-| OPEN-001 | [未决问题与验证清单](DBG-C-OPEN-001.zh-CN.md) | V0.48；验证板设计软件门通过；1.8 V/3.3 V域已决策但电平适配器件/实测未完成；Type-C映射、BOOT/恢复、RF复用、Target电气和ThreadX实板验证仍开放；产品硬件冻结未放行 |
+| TEST-001 | [Verification Specification](../07-verification/DBG-C-TEST-001.zh-CN.md) | V0.72；新增Target域VTref、无效电压硬件禁止输出、SWDIO turnaround、JTAG TMS、nRESET、隔离与主动供电决策测试；所有板级测试仍未执行 |
+| RISK-001 | [Risk Register](../08-risk/DBG-C-RISK-001.zh-CN.md) | V0.13；R03/R23跟踪已冻结适配架构及实现风险；R26跟踪主动Target供电决策；ThreadX实板验证仍开放 |
+| OPEN-001 | [未决问题与验证清单](DBG-C-OPEN-001.zh-CN.md) | V0.49；架构已冻结，转换器件/数值边界和主动Target供电输出仍开放；Type-C映射、BOOT/恢复、RF复用及ThreadX实板验证仍开放；产品硬件冻结未放行 |
 
-BLE-001 尚未建立；HW-001 V0.3 已建立验证板硬件设计输入；USB-001 为 V0.3 双语架构草案。
+BLE-001 尚未建立；HW-001 V0.4 已建立验证板硬件设计输入；USB-001 为 V0.3 双语架构草案。
 
 ## 资料来源与证据边界
 

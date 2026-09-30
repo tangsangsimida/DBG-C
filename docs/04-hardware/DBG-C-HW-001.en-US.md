@@ -1,6 +1,6 @@
 # DBG-C Hardware Design Specification
 
-**Document ID:** DBG-C-HW-001　**Version:** V0.3　**Status:** Validation-board design-input draft; V1 requires 1.8 V/3.3 V Targets and VTref-associated level adaptation; not a product-board freeze basis
+**Document ID:** DBG-C-HW-001　**Version:** V0.4　**Status:** Validation-board design-input draft; V1 Target level-adaptation architecture frozen; translator selection, numeric electrical limits, and active Target power output remain open; not a product-board freeze basis
 
 ## 1. Scope and Design Gate
 
@@ -122,23 +122,33 @@ There are currently **no approved rows** for Connector Contact→Cable Conductor
 
 ### 8.1 Voltage Compatibility, SWD/JTAG, and UART
 
-The DBG-C V1 Target I/O domains are frozen by requirement as **1.8 V and 3.3 V**. Every Target-facing digital signal shall use level adaptation associated with Target VTref measured by `TARGET_VTREF_ADC` and shall be isolated when either Probe or Target is unpowered. Do not directly connect CH585M 3.3 V GPIO to the Target. Review WCH GPIO/ADC limits and specifications for not-yet-selected parts before selecting the specific part/topology.
+The DBG-C V1 externally powered Target I/O domains are frozen at **nominal 1.8 V and 3.3 V**. CH585M remains in the Probe-side I/O domain. Every Target-facing digital signal shall pass through VTref-associated level adaptation and be isolated when either Probe or Target is unpowered. A direct CH585M GPIO-to-Target operating path is prohibited. The Target-side logic domain follows valid Target VTref; no user software voltage selector is required. This freezes the interface architecture, not the numeric tolerance around either nominal voltage.
 
-SWDIO/TMS is bidirectional and requires verification of direction changes, output-enable timing, pulls, and bus contention. SWCLK/TCK, TDI, and Probe UART TX are outputs; TDO, Target UART TX, and SWO are inputs; nRESET is in the Target voltage domain. Every digital path requires VTref-associated level adaptation and review of power-off isolation/high impedance, safe startup default, overvoltage, back-feed, propagation delay, speed/edge, and ESD. Whether multiple translator devices are needed must follow device data and SWD bidirectional timing; no part is assumed here. Keep replaceable footprints and test points on the validation board; do not provide a 3.3 V direct-to-Target operating path that violates this requirement.
+The following are mandatory translator-selection criteria; close each against the selected component data sheet and validation-board measurements before product schematic freeze:
+
+- Probe-side supply is the DBG-C Probe I/O domain; Target-side supply/reference follows Target VTref through a reviewed and protected path and supports the frozen nominal 1.8 V and 3.3 V domains.
+- With either supply absent, the device provides Ioff or a documented functionally equivalent partial-power-down isolation behavior. Target-side outputs can be held high impedance or in another reviewed safe state.
+- Input thresholds must be specified for the selected supply conditions. Do not rely on CH585M GPIO directly recognizing Target-domain levels.
+- SWDIO requires explicit direction control. The translator and control path must meet SWD turnaround timing when direction changes are synchronized with the SWD bit engine. Do not select an auto-direction device without evidence that it supports the push-pull SWD waveform and turnaround.
+- Propagation delay, output drive, edge rate, loading, and channel skew must fit the eventual SWD/JTAG/SWO/UART timing budgets. These budgets and maximum rates remain to be established; no numeric component limit is asserted here.
+- A component intended only for open-drain buses must not carry push-pull SWD/JTAG signals unless the exact circuit is formally reviewed and validated.
+- Review absolute maximum ratings, powered-off injection/back-feed, ESD, fault voltage, hot-plug, and output-enable default behavior for every channel.
+
+Signal direction requirements: SWCLK/TCK, TDI, and Probe UART TX are Probe-to-Target outputs; TDO, Target UART TX, and SWO are Target-to-Probe inputs; SWDIO is bidirectional in SWD; TMS is Probe-to-Target in JTAG. Keep replaceable footprints and test points on the validation board, with no operating bypass around the adaptation path.
 
 ### 8.2 Target nRESET
 
-Firmware direction-switch emulation does not prove a hardware open-drain output. nRESET is in the Target voltage domain and must default to released; Probe power-off/reset, Bootloader, or firmware failure shall not assert it. Evaluate a safe open-drain/equivalent output with released level sourced from Target-side VTref and powered-off isolation. Part, pull value, polarity, pulse width, and fault behavior require component review and board verification.
+Firmware direction-switch emulation does not prove a hardware open-drain output. nRESET is in the Target voltage domain and must default to released; Probe power-off/reset, Bootloader, or firmware failure shall not assert it. The output stage shall pull low and release, with the released level established from Target-side VTref; it shall not drive a fixed 3.3 V high level into Target. Provide powered-off isolation and inhibit assertion when VTref is invalid. Part, pull value, polarity, pulse width, and fault behavior require component review and board verification.
 
 ### 8.3 VTref Detection
 
-The DBG-C V1 Target domains are 1.8 V and 3.3 V; PA4/A0 detection must cover both and distinguish a valid Target supply from power-off/abnormal states. PA4/A0 currently has a raw ADC BSP and modeled-register host checks only; silicon sampling, divider, range, error, and protection are unverified. Calculate divider resistance, input impedance, RC, clamp, and error budget from CH585 ADC input/reference, injection-current, and accuracy specifications. Thresholds and calibration values require calculation and verification.
+VTref is the Target's actual I/O supply, not a Probe-generated reference. The V1 external-Target requirement covers nominal 1.8 V and 3.3 V domains. PA4/A0 detection must distinguish valid Target supply, power-off, and abnormal states. PA4/A0 currently has a raw ADC BSP and modeled-register host checks only; silicon sampling, divider, range, error, and protection are unverified. Calculate the allowed minimum/maximum, fault range, divider resistance, input impedance, RC, clamp, calibration, and error budget from CH585 ADC input/reference, injection-current, accuracy, and selected translator specifications. No nominal voltage alone defines a valid threshold.
 
-VTref sensing and the translator reference supply are separate electrical nodes/functions. Target VTref shall be associated with digital level adaptation, but do not use the PA4 divider node directly as translator supply. Measure sensing and reference-supply paths separately and implement power-off isolation. Absent, out-of-range, and abnormal voltage shall fail safely by preventing Target operations.
+VTref sensing and the translator reference supply are separate electrical paths/functions. The protected Target VTref feed shall supply/reference the Target side of the level adapters; do not use the PA4 divider node as translator supply. Analyze loading and startup order separately. Invalid, absent, or abnormal VTref shall cause hardware inhibition of Probe-to-Target outputs and safe isolation. Software may report voltage and validity but does not select the electrical voltage domain.
 
 ### 8.4 Target Power
 
-PB6 is only a control GPIO. Whether USB VBUS may power a Target, output voltage/current, regulator or load switch, current limit, short-circuit protection, reverse current, inrush, externally powered Target behavior, and Fault/PG sensing are unfrozen. A disconnected power block and measurement points may be reserved on the validation board, but do not populate and drive a Target until the power budget, Target voltage range, and component data are reviewed. Current measurement is not a mandatory V1 feature.
+Support for a Target powered from its own external supply at nominal 1.8 V or 3.3 V is a mandatory V1 capability and shall not be conflated with DBG-C-sourced Target Power. Whether V1 must actively source Target power, and whether an output must provide 1.8 V, 3.3 V, or both, remains an explicit product decision. PB6 is only a control GPIO and does not define the power circuit. Until that decision is made, do not claim active output support or freeze its power block. If active output is retained, separately define voltage selection, current, source, load switch/regulator, current limit, short circuit, reverse blocking, inrush, fault reporting, and compatibility with an externally powered Target. A disconnected, isolatable block and measurement points may be reserved on the validation board. Current measurement is not a mandatory V1 feature.
 
 ## 9. SPI NOR, RF, and UI
 
@@ -183,15 +193,15 @@ Before PCB layout, obtain and follow WCH CH585M package, power, and RF reference
 
 ### Per-signal default-state baseline
 
-Before drawing individual electrical circuits, use these reviewable safe defaults: Target Power off; every Target digital level adapter output disabled by default, isolating/high-impedance on both Probe and Target sides; enable Target outputs only after VTref is within a frozen valid range and direction is configured; `TARGET_nRESET` released by default. Protect the VTref ADC input according to its limits; it is not the digital translator supply. Verify resistor values, logic polarity, and enable devices against the selected parts' data sheets before schematic freeze.
+Before drawing individual electrical circuits, use these reviewable safe defaults: active Target power output off; every Target digital level-adaptation path isolated by default; invalid/absent VTref must hardware-inhibit Probe-to-Target outputs; enable paths only after VTref is within a frozen valid range and direction is configured; `TARGET_nRESET` remains released unless a valid reset is requested and VTref is valid. Protect the VTref ADC input according to its limits; it is not the digital translator supply. Verify resistor values, logic polarity, output-enable defaults, and isolation against selected part data sheets before schematic freeze.
 
 | Signal group | Logical direction | Safe state at power-up/reset/pre-init | Enable condition |
 |---|---|---|---|
-| TARGET_SWCLK_TCK / TARGET_TDI | Probe to Target | Probe output disabled; adapter does not drive Target side | Valid VTref and Target operation started |
-| TARGET_SWDIO_TMS | Bidirectional | Bidirectional outputs disabled/high impedance; no current injected into Target | Direction configured and VTref valid |
+| TARGET_SWCLK_TCK / TARGET_TDI | Probe to Target | Isolated/high impedance | Hardware confirms VTref valid, Target operation started, and path enabled |
+| TARGET_SWDIO_TMS | Bidirectional in SWD; Probe to Target in JTAG | Isolated/high impedance | Hardware confirms VTref valid and direction configured; SWD direction synchronized with bit engine |
 | TARGET_TDO / TARGET_UART_RX / TARGET_SWO | Target to Probe | Probe input isolated and does not load Target signal | VTref valid and receive path configured |
-| TARGET_UART_TX | Probe to Target | Adapter disabled/high impedance | VTref valid and CDC/UART started |
-| TARGET_nRESET | Probe-controlled, Target domain | Released; do not assert | Brief assertion only on valid reset request |
+| TARGET_UART_TX | Probe to Target | Isolated/high impedance | Hardware confirms VTref valid and CDC/UART started |
+| TARGET_nRESET | Probe-controlled, Target domain | Released; do not assert | VTref valid and valid reset request; pull low then release in Target domain |
 | TARGET_VTREF_ADC | Analog Sense | Current-limited/clamped within ADC-safe range | ADC initialized before sampling |
 | TARGET_PWR_EN | Internal control | Off by default | Explicit power request and protection valid |
 
