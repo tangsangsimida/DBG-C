@@ -4,7 +4,7 @@ DBG-C is a debugger project based on the CH585M. This repository maintains produ
 
 ## Repository Layout
 
-- [`docs/`](docs/README.md): engineering document index and project references.
+- [`docs/`](docs/README.en-US.md): engineering document index and project references.
 - [`software/`](software/): root for software source, build configuration, and build outputs.
 - [`hardware/`](hardware/): root for hardware files such as schematics and symbol libraries.
 
