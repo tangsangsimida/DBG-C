@@ -1,6 +1,6 @@
 # DBG-C Verification Specification
 
-**文档编号：** DBG-C-TEST-001　**版本：** V0.72　**状态：** 测试计划草案；PB8/PB9 UI GPIO 适配器 56 项主机模拟寄存器检查通过；SPI1 配置 BSP 19 项及 PA0–PA3 GPIO 模式及 PA3 原始片选电平 BSP 104 项主机模拟寄存器检查通过，SPI 传输未实现；SWD 引擎线模型已接入 CH585 GPIO BSP 模拟寄存器路径，3321 项断言通过；通用 Target Reset 序列服务 24 项主机回调检查及 PB5 复位序列适配器 37 项主机模拟寄存器检查及 PB5 GPIO BSP 69 项主机模拟寄存器检查通过；CH585 JTAG GPIO BSP 四信号映射 116 项及上游 CMSIS-DAP JTAG Sequence、IDCODE 与 DP Transfer 写入/posted-read 经 GPIO BSP 累计 1610 项模拟寄存器主机检查通过；定长包队列（54 项主机检查）、更新事务管理器（57 项主机检查）、FIFO、单向/双向字节流桥接、CMSIS-DAP 命令层、有界 dispatch、SWD 引擎主机模型、边界预检器、CMSIS 编译器映射及 CH585 SWD GPIO、Target Reset/PB6 Target Power GPIO 与 UART0、UID 读取适配器主机/目标静态链接检查已执行；PoC ThreadX 创建状态/tick 观测代码已加入并随目标交叉构建；CH585 BSP/适配器静态库纳入 PoC 交叉构建；产品 UART/命令边界、硅片 UID 与 ThreadX 实板测试未执行
+**文档编号：** DBG-C-TEST-001　**版本：** V0.73　**状态：** 测试计划草案；新增Target线缆映射、VTref故障隔离、3.3 V Target Power和Type-C误插用例；板级测试未执行
 
 ## 1. 通过规则
 
@@ -323,7 +323,7 @@ SWD GPIO 与 Target Reset GPIO 主机检查分别以普通变量模拟 GPIOB 寄
 
 ## 11. Validation Board 硬件 Bring-up 与 Gate
 
-本节依据 HW-001 V0.4 增加实板验证计划，不代表现有板级测试已执行。当前无可用板卡，以下项目全部为“未执行”。
+本节依据 HW-001 V0.5 增加实板验证计划，不代表现有板级测试已执行。当前无可用板卡，以下项目全部为“未执行”。
 
 | 阶段/用例 | 观测或验证内容 | 通过证据 | 当前状态 |
 |---|---|---|---|
@@ -333,11 +333,26 @@ SWD GPIO 与 Target Reset GPIO 主机检查分别以普通变量模拟 GPIOB 寄
 | USBHS/USBFS | 独立枚举、热插拔、恢复入口、双控制器冲突检查 | 主机日志、描述符/接口记录、断电/应用损坏恢复日志 | 未执行；并发能力未确认 |
 | Target接口 | PB0–PB5、PB20及PA4检测的VTref关联电平适配路径两侧隔离测试点；不得有绕过适配器的CH585M至Target工作通路 | 引脚/网表连续性、上下电状态波形、保护与误插记录 | 未执行；不得接入不兼容电压 |
 | Target电压/VTref/电平适配 | 外部供电Target标称1.8 V与3.3 V及四种Probe/Target供电组合；逐条检查所有信号、VTref无效时硬件禁止输出、SWDIO方向及turnaround、JTAG TMS方向、Target域nRESET释放/拉低、隔离、反灌、短路、热插拔和电压边界/故障 | 校准电源读数、示波器波形、方向/turnaround捕获、VTref ADC误差、掉电注入电流、故障恢复和器件温升记录 | 未执行；电平转换器件、电压数值边界、时序/速率和判据待冻结 |
-| 主动Target供电输出 | 仅在产品决策冻结输出电压、电流、电源、保护及与外部供电Target交互规则后测试 | 输出精度、负载/限流/短路/反向阻断记录、故障报告 | 未执行；V1主动输出范围未决策 |
+| 主动Target供电输出 | 验证V1标称3.3 V输出，不包含主动1.8 V输出；覆盖电源、负载、保护及与外部供电Target交互 | 输出精度、负载/限流/短路/反向阻断记录、故障报告 | 未执行；电气限值和供电电路未冻结 |
 | RF复用/射频 | PB16–PB21复用状态；天线网络；BLE/RF模式分别运行 | 配置/寄存器证据、RF收发日志、射频测量 | 未执行；预编译库占脚待查 |
 | SPI NOR | SPI波形、器件识别、边界读写、掉电恢复 | 器件料号、逻辑分析记录、镜像完整性日志 | 未执行；器件/传输实现未定 |
 | 产品验收门 | ThreadX tick/中断/调度、DAP、SWD/JTAG/UART、OTA等系统项 | 按本规范相应章节和 HW-001 Gate 留存全套版本化证据 | 未执行；不能由验证板原理图完成替代 |
 
 ### 原理图 Gate 状态
 
-**可以开始/继续 Validation Board 原理图设计**：MCU-001 引脚基线和当前软件放行门已建立；可以绘制 MCU 核心、USBHS PHY、独立恢复接口、直接 Target 测试点及可隔离模块。Target 电压前端、供电、BOOT/恢复时序、PB16–PB21 RF复用、RF匹配和 Type-C 自定义接口在证据不足时必须保持隔离/待定。PCB Layout 前 Gate 和投板前 Gate 均未通过。该判定不是 Product Board 冻结。
+**可以开始/继续 Validation Board 原理图设计**：MCU-001 引脚基线和当前软件放行门已建立；可以绘制 MCU 核心、USBHS PHY、独立恢复接口、直接 Target 测试点及可隔离模块。Target电压前端、供电、BOOT/恢复时序、PB16–PB21 RF复用、RF匹配和Type-C自定义接口在证据不足时必须保持隔离/待定。PCB Layout前Gate和投板前Gate均未通过。该判定不是Product Board冻结。
+
+## Target接口评审输入的验证用例
+
+以下用例用于验证板，不表示映射或器件方案已批准。故障电压、持续时间、电流和通过门限须在器件/电气评审后冻结；当前无硬件，所有用例均为未执行。
+
+| 用例 | 检查内容 | 通过条件 | 状态 |
+|---|---|---|---|
+| IF-TGT-01 | 连接器触点到网络的导通/短路矩阵；线缆两端及插头正反向 | 实测矩阵符合最终获批Contact-to-Conductor表，无开路、错接或意外短路 | 未执行；映射未批准 |
+| IF-TGT-02 | 指定线缆结构、长度、型号及两端触点关系 | 供应商资料与实测一致，线缆型号进入受控BOM，且符合规范适用性决议 | 未执行；未选定获批线缆 |
+| IF-TGT-03 | VTref断电、标称1.8 V/3.3 V及无效电压扫描，监测每颗转换器电源脚和Target输出 | 故障不使器件超额定；无效VTref时输出安全隔离；限值按正式保护设计冻结 | 未执行；过压门控未设计 |
+| IF-TGT-04 | 限流5 V故障注入，测ADC、AXC VCCB、保护节点和注入电流 | 引脚应力在器件额定/保护限值内且无危险Target输出 | 未执行；当前直连VCCB提案不得接线测试 |
+| IF-TGT-05 | Probe/Target四种供电组合、热插拔、掉电及Target nRESET释放/拉低 | 无不可接受反灌；Target未供电时输出隔离；Probe重启/掉电不持续拉低复位 | 未执行；电路未冻结 |
+| IF-TGT-06 | 1.8 V/3.3 V下SWDIO方向切换/turnaround及SWD、UART、JTAG复用 | 无总线争用；波形/时序满足后续冻结的最高速率与目标矩阵 | 未执行；前端未实现 |
+| IF-TGT-07 | Target Power默认关闭、3.3 V稳态、启动浪涌、限流、短路、故障信号和外部供电并存 | 满足HW/PRD冻结的电压、电流、热、保护和恢复门限；不得把典型500 mA设定当通过门限 | 未执行；电源模块未冻结 |
+| IF-TGT-08 | 误插标准USB Host/Charger/Device、ESD及相邻触点短路 | 无永久损坏、反灌或超额定；ESD判据按项目EMC决议 | 未执行；接口未批准 |

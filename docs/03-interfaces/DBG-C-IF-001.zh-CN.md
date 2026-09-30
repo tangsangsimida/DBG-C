@@ -1,6 +1,6 @@
 # DBG-C Interface Specification
 
-**文档编号：** DBG-C-IF-001　**版本：** V0.5　**状态：** 概念草案；V1 Target电气架构要求已冻结；触点映射和器件参数未冻结
+**文档编号：** DBG-C-IF-001　**版本：** V0.6　**状态：** V1 Target电气架构要求已冻结；24触点映射仅作评审输入，USB-IF适用性与电气安全闭环前不得冻结
 
 ## 1. 定义
 
@@ -183,3 +183,27 @@ V1 Pin Mapping 冻结后不得静默改变触点功能。未来改变可能电�
 当前 Contact → Cable Conductor → Target Signal 映射表为空，不能冻结。需选择具体连接器与线缆组件，取得正式线缆结构信息并完成正反插导通及信号验证。USB-IF 来源：[Release 2.5 文档页](https://www.usb.org/document-library/usb-type-cr-cable-and-connector-specification-release-25)。
 
 验证板应在强制电平适配路径两侧使用独立测试点/可隔离排针暴露 Target 信号；任何测试配置均不得形成绕过适配器的 CH585M 至 Target 工作通路。Basic/Full 分类是否保留以及任何 Type-C 自定义目标接口均待评审；在映射获批前不得把它作为唯一 Target 连接方式。
+
+## 7. V1 验证板触点映射评审输入
+
+下表记录 2026-09-30 提交的 24 触点方案，作为后续 USB-IF/线缆/硬件评审的精确输入；**不是已批准的连接器映射，不得据此释放 PCB**。USB-IF Release 2.5 对 Type-C 连接器和线缆第三方功能的许可范围构成待解决问题。即使产品不宣称 USB 合规，仍须由项目负责人完成规范适用性审查；丝印 `DBG-C TARGET` / `NOT USB` 不能替代该审查。
+
+| Type-C 触点 | 提交的 DBG-C 网络 | SWD 功能 | JTAG 功能 | 评审状态 |
+|---|---|---|---|---|
+| A6、B6 | DBG_SWDIO_TMS | SWDIO | TMS | 待 USB-IF 与连接器触点映射审查 |
+| A7、B7 | DBG_SWCLK_TCK | SWCLK | TCK | 待审查 |
+| A2、B11 | DBG_TDI_UART_TX | UART TX | TDI | 待核对线缆内部导体关系及规范范围 |
+| A3、B10 | DBG_TDO_UART_RX | UART RX | TDO | 待核对线缆内部导体关系及规范范围 |
+| B2、A11 | DBG_SWO | SWO | 保留输入 | 待核对线缆内部导体关系及规范范围 |
+| B3、A10 | DBG_nRESET | nRESET | nRESET | 待核对线缆内部导体关系及规范范围 |
+| A8、B8 | DBG_VTREF | VTref | VTref | 待电气与规范审查 |
+| A4、B4、A9、B9 | DBG_TARGET_PWR | Target供电 | Target供电 | 待电气与规范审查；与Type-C VBUS触点用途冲突风险未关闭 |
+| A1、B1、A12、B12 | DBG_GND | GND | GND | 待连接器/线缆连续性核对 |
+| A5、B5 | NC | 不使用 | 不使用 | 不接入产品网络；不得添加Rd/Rp或私有信号 |
+| Shell | DBG_SHIELD | 屏蔽 | 屏蔽 | 接地方式待EMC/ESD评审 |
+
+该提交方案主张通过对应触点配对实现无需方向MUX的正反插行为，并指定被动全功能 C-C 线缆、0.5 m 验证长度。当前未取得所指定连接器厂商的受控图纸、USB-IF规范中对应完整线缆跨接矩阵、指定线缆型号及实物导通记录；因此触点成对关系、正反插等效性和长度能力均未证实。USB2-only、主动、光纤、含Retimer/Redriver线缆的排除要求可作为产品兼容策略评审输入，但不能弥补规范许可问题。
+
+验证板必须另设不依赖该 Type-C 接口的可隔离 Target 测试入口。只有完成 USB-IF 适用性书面决议、连接器受控图纸与脚位核对、具体线缆双方向导通矩阵、电气安全评审和验证板测量后，才能决定是否将该表升级为 V1 映射。若规范审查不允许此类用途，应改用不造成 Type-C 规范/兼容性误导的专用连接器和线缆。
+
+PC USB Type-C 与 Target 连接器的外形、丝印和产品说明必须明确区分。PC 口仍是标准 USB Device 接口；Target 口在任何文件和丝印上均不得称为 USB 端口。`NOT USB` 仅是防误用提示，不构成电气保护或规范许可。

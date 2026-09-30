@@ -1,6 +1,6 @@
 # DBG-C Interface Specification
 
-**Document ID:** DBG-C-IF-001　**Version:** V0.5　**Status:** Concept draft; V1 Target electrical architecture requirements frozen; contact mapping and component values not frozen
+**Document ID:** DBG-C-IF-001　**Version:** V0.6　**Status:** V1 Target electrical architecture requirements frozen; 24-contact map is review input only and shall not be frozen before USB-IF applicability and electrical-safety closure
 
 ## 1. Definition
 
@@ -148,3 +148,27 @@ This review checked USB-IF *USB Type-C Cable and Connector Specification* Releas
 The current Contact → Cable Conductor → Target Signal mapping table is empty and cannot be frozen. Select a specific connector and cable assembly, obtain formal cable-construction information, and complete both-orientation continuity and signal tests. USB-IF source: [Release 2.5 document page](https://www.usb.org/document-library/usb-type-cr-cable-and-connector-specification-release-25).
 
 The validation board shall expose Target signals on separate test points/isolatable headers located around the mandatory level-adaptation path; no test configuration may create a CH585M-to-Target operating bypass. Whether to retain the Basic/Full categories and any custom Type-C Target interface remain under review. Do not make it the sole Target connection before the mapping is approved.
+
+## 7. V1 Validation-Board Contact-Map Review Input
+
+The table records the 24-contact proposal submitted on 2026-09-30 as exact input for USB-IF, cable, and hardware review. **It is not an approved connector map and shall not be used to release a PCB.** The third-party-function scope in USB-IF Release 2.5 remains unresolved. Even if the product makes no USB-compliance claim, the project owner must complete a specification-applicability review; `DBG-C TARGET` / `NOT USB` markings do not replace that review.
+
+| Type-C contacts | Submitted DBG-C net | SWD function | JTAG function | Review status |
+|---|---|---|---|---|
+| A6, B6 | DBG_SWDIO_TMS | SWDIO | TMS | Pending USB-IF and connector-contact review |
+| A7, B7 | DBG_SWCLK_TCK | SWCLK | TCK | Pending review |
+| A2, B11 | DBG_TDI_UART_TX | UART TX | TDI | Cable conductor topology and specification scope unverified |
+| A3, B10 | DBG_TDO_UART_RX | UART RX | TDO | Cable conductor topology and specification scope unverified |
+| B2, A11 | DBG_SWO | SWO | Reserved input | Cable conductor topology and specification scope unverified |
+| B3, A10 | DBG_nRESET | nRESET | nRESET | Cable conductor topology and specification scope unverified |
+| A8, B8 | DBG_VTREF | VTref | VTref | Electrical and specification review pending |
+| A4, B4, A9, B9 | DBG_TARGET_PWR | Target power | Target power | Electrical and specification review pending; conflict risk with Type-C VBUS contacts remains open |
+| A1, B1, A12, B12 | DBG_GND | GND | GND | Connector/cable continuity review pending |
+| A5, B5 | NC | Unused | Unused | No product net; do not add Rd/Rp or private signals |
+| Shell | DBG_SHIELD | Shield | Shield | EMC/ESD grounding review pending |
+
+The submitted design claims that paired contacts provide reversible operation without an orientation MUX and specifies a passive full-featured C-to-C cable with a 0.5 m validation length. Controlled drawings from the named connector manufacturer, the full-featured cable cross-connect matrix from the USB-IF specification, a specific cable part number, and physical continuity records have not been obtained. Contact pairing, orientation equivalence, and cable-length capability are therefore unverified. Excluding USB2-only, active, optical, and retimer/redriver cables may be evaluated as a product compatibility policy, but does not resolve the specification-permission question.
+
+The validation board shall provide an isolatable Target test connection independent of this Type-C interface. Upgrade this table to a V1 map only after a written USB-IF applicability decision, controlled connector drawing and pin check, cable continuity matrix in both orientations, electrical-safety review, and validation-board measurements. If the review does not permit this use, select a dedicated connector and cable that do not imply Type-C specification or compatibility.
+
+The PC USB Type-C connector and Target connector shall be clearly distinguished by appearance, markings, and product documentation. The PC port remains a standard USB Device interface; the Target port shall not be called a USB port in any document or marking. `NOT USB` is only a misuse warning and does not provide electrical protection or specification permission.

@@ -1,6 +1,6 @@
 # DBG-C 系统架构设计
 
-**文档编号：** DBG-C-SYS-001　**版本：** V0.5　**状态：** 架构草案；V1外部供电Target电压域及VTref跟随电平适配架构已冻结；产品集成及实板验证未执行
+**文档编号：** DBG-C-SYS-001　**版本：** V0.6　**状态：** 架构草案；V1主动Target Power范围记录为标称3.3 V；电路和产品集成未冻结/验证
 
 ## 1. 系统边界
 
@@ -46,7 +46,7 @@ Application / Role & Pair Manager / OTA
 
 ## 5. 硬件分层
 
-CH585M Probe 主控、USBHS Device 接入 PC Host、USBFS 恢复资源、2.4 GHz 天线/RF、电源与时钟、按键/状态指示、DBG-C Interface、Target SWD/JTAG/SWO/UART、VTref ADC、Target 电源控制及外部 SPI NOR。V1支持外部供电、标称 I/O 域为1.8 V与3.3 V的Target。所有Target数字信号须使用VTref跟随电平适配；VTref无效时由硬件禁止输出，任一侧掉电时隔离。DBG-C主动输出Target电源属于单独的待决策产品能力。引脚基线见 MCU-001；电气实现见 HW-001。本文件不是电气原理图。转换器件及数值边界、主动Target供电、VBUS隔离、Type-C CC/VBUS、保护、BOOT条件、RF天线开关复用和外部Flash型号仍未冻结，不得据此冻结产品硬件。
+CH585M Probe 主控、USBHS Device 接入 PC Host、USBFS 恢复资源、2.4 GHz 天线/RF、电源与时钟、按键/状态指示、DBG-C Interface、Target SWD/JTAG/SWO/UART、VTref ADC、Target 电源控制及外部 SPI NOR。V1支持外部供电、标称I/O域为1.8 V与3.3 V的Target；所有Target数字信号须使用VTref跟随电平适配，VTref无效时由硬件禁止输出，任一侧掉电时隔离。DBG-C主动Target Power范围已决策为标称3.3 V输出，不主动输出1.8 V；输出电气限值和电路仍待确认。引脚基线见MCU-001；电气实现见HW-001。本文件不是电气原理图。转换器件及数值边界、Type-C自定义触点的规范适用性、VBUS隔离、保护、BOOT条件、RF天线开关复用和外部Flash型号仍未冻结，不得据此冻结产品硬件。
 
 ## 6. 资源冲突关注
 

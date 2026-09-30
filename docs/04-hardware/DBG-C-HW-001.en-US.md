@@ -1,6 +1,6 @@
 # DBG-C Hardware Design Specification
 
-**Document ID:** DBG-C-HW-001　**Version:** V0.4　**Status:** Validation-board design-input draft; V1 Target level-adaptation architecture frozen; translator selection, numeric electrical limits, and active Target power output remain open; not a product-board freeze basis
+**Document ID:** DBG-C-HW-001　**Version:** V0.5　**Status:** Validation-board design-input draft; active Target output scope fixed at 3.3 V only; contact mapping, translation/protection circuits, and part numbers remain unfrozen; not a product-board freeze basis
 
 ## 1. Scope and Design Gate
 
@@ -44,7 +44,7 @@ The MCU-side nets below follow the current MCU-001 allocation. They do not defin
 | PB0 / PB1 | TARGET_SWCLK_TCK / TARGET_SWDIO_TMS | Shared SWD/JTAG signals; retain separate test points and an isolatable path |
 | PB2 / PB3 | TARGET_TDI / TARGET_TDO | JTAG signals; unused state requires firmware/electrical definition |
 | PB4 / PB7 | TARGET_UART_RX / TARGET_UART_TX | MCU perspective; connect to Target TX / RX through an electrical front end |
-| PB5 | TARGET_nRESET | Separate from MCU PB23/RST; driver topology TBD |
+| PB5 | TARGET_RESET_ASSERT (reset-stage control input) | Separate from MCU PB23/RST; external interface net TARGET_nRESET must pull low/release in the Target voltage domain |
 | PB6 | TARGET_PWR_EN | GPIO control resource only; do not drive a load directly |
 | PA4 | TARGET_VTREF_ADC | ADC A0; voltage/current limiting required; no assumed arbitrary VTref compatibility |
 | PB20 | TARGET_SWO | UART3 RX remap resource; resolve RF antenna-switch mux conflict |
@@ -148,7 +148,9 @@ VTref sensing and the translator reference supply are separate electrical paths/
 
 ### 8.4 Target Power
 
-Support for a Target powered from its own external supply at nominal 1.8 V or 3.3 V is a mandatory V1 capability and shall not be conflated with DBG-C-sourced Target Power. Whether V1 must actively source Target power, and whether an output must provide 1.8 V, 3.3 V, or both, remains an explicit product decision. PB6 is only a control GPIO and does not define the power circuit. Until that decision is made, do not claim active output support or freeze its power block. If active output is retained, separately define voltage selection, current, source, load switch/regulator, current limit, short circuit, reverse blocking, inrush, fault reporting, and compatibility with an externally powered Target. A disconnected, isolatable block and measurement points may be reserved on the validation board. Current measurement is not a mandatory V1 feature.
+Support for an externally powered Target at nominal 1.8 V or 3.3 V is mandatory in V1. The user has decided that DBG-C active Target Power **sources nominal 3.3 V only, not 1.8 V**; a 1.8 V Target must be externally powered, with DBG-C following valid VTref. This product-scope decision does not freeze the circuit. PB6 is only a control GPIO. Validation-board review inputs include a controlled load switch, current limiting, external-supply conflict protection, fault reporting, and default-off behavior. Output accuracy/tolerance, continuous current, inrush, and thermal conditions must be frozen after review against the power tree, component data sheets, and Target load.
+
+The part evaluation input submitted on 2026-09-30 is TPS22950CDDCR, RILIM 2.21 kΩ, CIN/COUT 1 µF each, and a typical current-limit setting near 500 mA. TI documentation associates 2.21 kΩ with a typical setting near 500 mA; it is not a precision guaranteed threshold. Orderable package, reverse current with an external supply, fault pin, thermal/inrush behavior, output capacitance, and upstream USB budget have not been reviewed item by item. These part/value selections are circuit-review input only, not a frozen BOM or a 500 mA product guarantee.
 
 ## 9. SPI NOR, RF, and UI
 
@@ -255,6 +257,40 @@ Before drawing individual electrical circuits, use these reviewable safe default
 |---|---|---|
 | WCH, CH585/CH584 Datasheet | V1.6, repository copy | Chip pin, electrical, power/clock, and peripheral basis; check errata before use |
 | WCH CH585EVT archive | Index 2026.08; `EVT/PUB/CH585SCH.pdf` | Official example circuit/software reference, not a frozen DBG-C circuit |
+| Texas Instruments, SN74AXC1T45 Datasheet | Rev. E, 2023-12 | Six-pin package, DIR, dual-supply range, and powered-off isolation boundaries; [vendor datasheet](https://www.ti.com/lit/ds/symlink/sn74axc1t45.pdf) |
+| Texas Instruments, SN74AXC4T245 Datasheet | Rev. B, 2024-04 | Dual DIR/OE controls, supply range, and high-impedance conditions; [vendor datasheet](https://www.ti.com/lit/ds/symlink/sn74axc4t245.pdf) |
+| Texas Instruments, TPS22950 Datasheet | Rev. B, 2023-02 | Target load switch and current-limit resistor example; typical values are not guaranteed limits; [vendor datasheet](https://www.ti.com/lit/ds/symlink/tps22950.pdf) |
 | USB-IF, USB Type-C Cable and Connector Specification | Release 2.5, 2026-04-08 | Type-C cable/connector specification; applicability clauses must be reviewed before interface freeze |
 
 External source: [USB-IF Type-C Specification Release 2.5](https://www.usb.org/document-library/usb-type-cr-cable-and-connector-specification-release-25), checked 2026-09-30. This document does not reproduce specification tables; conductor details remain subject to verification against a specific assembly.
+
+## 15. Validation-Board Front-End Review Inputs and Blocking Items, 2026-09-30
+
+The parts and nets below are specific review inputs, not an approved BOM. Vendor data sheets establish device boundaries but do not replace system-topology review, package/pin verification, timing budgets, power-fault analysis, or board measurements.
+
+| Function | Submitted evaluation part | Vendor-documented boundary | Current disposition |
+|---|---|---|---|
+| Bidirectional SWDIO translation | SN74AXC1T45DBVR | VCCA/VCCB 0.65–3.6 V; DIR control; six-pin package has no separate OE; ports become high-Z below 100 mV supply and support Ioff | Not approved. With VTref directly on VCCB, below-100-mV isolation does not cover 0.1–0.65 V or above-3.6-V faults. Hardware gating must also synchronize with SWD direction changes |
+| Fixed-direction signals | SN74AXC4T245PWR | Dual supplies 0.65–3.6 V; two DIR/OE groups; controls referenced to VCCA; high OE gives high-Z; Ioff supported | Verify channel grouping and package pins against Rev. B; shared OE does not protect against VCCB overvoltage |
+| UART/JTAG mux | TMUX1574PWR | Four-channel 2:1 analog switch | Supply, control thresholds, power-off state, and placement relative to translators require full data-sheet review; connection diagram not approved |
+| Target nRESET | TXU0101DBVR | Single-channel fixed-direction translator with OE | Proposed A=GND, B=Target reset, OE-controlled pull-low/high-Z topology requires exact package-pin, OE-polarity, VCCB, and Target pull-up review; not approved |
+| VTref ADC front end | 10 kΩ/10 kΩ divider, 10 nF | Ideal calculation: 1.8 V→0.9 V, 3.3 V→1.65 V, 5 V→2.5 V | PA4 ADC range, error, acquisition time, divider loading, fault current/clamp, and calibration remain open; calculations are not measurements |
+| Target Power | TPS22950CDDCR, RILIM 2.21 kΩ, 1 µF input/output | TI associates 2.21 kΩ with a typical current-limit setting near 500 mA | 3.3 V budget, guaranteed limits, fault/short/reverse-current behavior, output capacitance, and load tests incomplete; not frozen |
+| Target ESD | TPD4E05U06DQAR ×2 | ESD protection device | Not a 5 V DC overvoltage clamp; channel assignment, return path, and Target Power/VTref fault capability unapproved |
+| PC USB ESD | TPD2EUSB30A | USB data-line protection device | Connector, package, routing, and USBHS electrical design require separate review |
+
+Submitted connector evaluation parts are Korean Hroparts `TYPE-C-31-M-05` (distributor number C845581, 24 contacts) for Target and `TYPE-C-31-M-14` (distributor number C223907, 16 contacts) for PC. Neither may be frozen in schematic/PCB libraries until a controlled manufacturer data sheet is obtained and the symbol, package, pad numbering, shield contacts, and mechanical dimensions are checked. Distributor identifiers, stock, and price are not durable controlled design evidence.
+
+Submitted control-net default biases are review inputs: 100 kΩ pull-down on PA5 `TARGET_SWDIO_DIR`; 100 kΩ pull-up to 3.3 V on PA6 `TARGET_IF_OE_N`; 100 kΩ pull-down on PA7 `TARGET_MODE_SEL`; 100 kΩ pull-down on PB5 `TARGET_RESET_ASSERT`; and 100 kΩ pull-down on PB6 `TARGET_PWR_EN`. The pull-up supply/value for PA12 `TARGET_PWR_FLT_N` is undefined. Verify these values and logic defaults against MCU reset/high-impedance behavior, translator/load-switch control thresholds, leakage, startup sequencing, and VTref gating before BOM freeze. Do not copy them directly into a frozen BOM. AXC1T45 has no OE, so `TARGET_IF_OE_N` alone cannot disable the entire interface.
+
+**PB5 reset-polarity conflict:** The current PoC `dbgc_ch585_target_reset_gpio_set_nreset()` drives PB5 low for CMSIS-DAP reset-bit zero and changes it to input for release. The submitted TXU0101 proposal instead uses PB5 high to pull the Target reset low and PB5 low to make the output high-impedance. These polarities conflict. `TARGET_RESET_ASSERT` in MCU-001 is the proposed hardware-control semantic; it does not mean current firmware already uses that polarity. Before integrating the proposed circuit, revise the PB5 HAL mapping and its host cases. This turn did not modify or run software tests, and board behavior remains unverified.
+
+**Blocking item: the VTref circuit cannot be frozen as submitted.** The proposal directly connects Target VTref to VCCB of SN74AXC1T45/SN74AXC4T245 while treating 5 V as a fault to detect. Both AXC devices have a 3.6 V supply maximum; the 10 kΩ/10 kΩ divider only affects the ADC input and does not limit VCCB. Firmware disabling outputs after reading 2.5 V cannot prevent overvoltage from reaching VCCB first; AXC1T45 also has no OE pin. Design and substantiate VTref over/undervoltage gating, Target-side supply isolation, and a safe SWDIO path from vendor specifications before freezing. Do not guess thresholds, delays, or fault current. Also verify I/O behavior for VCCB between 0.1 V and 0.65 V; the below-100-mV high-Z statement cannot be extended to the full invalid-voltage interval.
+
+**Target contact/power risk:** The submitted map joins four VBUS contacts as `DBG_TARGET_PWR` and sources 3.3 V, using Type-C-defined VBUS contacts for custom Target power. Neither `NOT USB` markings nor current limiting establish acceptability. Wait for the USB-IF applicability decision in IF-001; otherwise use a dedicated connector/cable. Verify every power and signal fault path when misconnected to a standard Host/Charger; ESD parts are not reverse-current blockers.
+
+**Series-damping input:** The proposal places 33 Ω in each of six digital signals and reserves 0/22/33/47 Ω options for the validation board. This is an SI tuning input. Driver impedance, cable, Target input, and maximum-rate evidence are absent; configurable pads may be reserved, but the assembly value follows waveform/timing review.
+
+**PC connector input:** TYPE-C-31-M-14, C223907, its 16 contacts, and USBHS/CC/VBUS/GND pin relationships remain subject to the controlled vendor drawing. Do not freeze symbol/footprint from a distributor page alone. The 90 Ω D+/D− target, TPD2EUSB30A, and omission of a common-mode choke require review against USB rules, CH585 USBHS evidence, PCB stack-up, and measurement plan.
+
+Until overvoltage gating, Target power, Type-C permission/map, pin-by-pin component review, and cable matrix are closed, validation-board work may continue on block boundaries and independent test access; do not freeze the Target-interface schematic, BOM, or PCB routing. Target test access must still pass through level adaptation and must not provide a direct CH585M GPIO bypass.

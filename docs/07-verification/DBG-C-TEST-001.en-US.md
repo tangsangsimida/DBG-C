@@ -1,6 +1,6 @@
 # DBG-C Verification Specification
 
-**Document ID:** DBG-C-TEST-001　**Version:** V0.72　**Status:** Test-plan draft; PB8/PB9 UI GPIO adapter passes 56 modeled-register host checks; SPI1 configuration BSP passes 19 modeled-register checks and PA0–PA3 GPIO modes and raw PA3 chip-select BSP pass 104 modeled-register checks; SPI transfer is not implemented; SWD-engine host line model now runs through the CH585 GPIO BSP modeled-register path with 3321 assertions; the generic Target Reset sequence service passes 24 callback host checks and the PB5 reset-sequence adapter passes 37 modeled-register host checks; the PB5 GPIO BSP passes 69 modeled-register host checks; the CH585 JTAG GPIO BSP passes 116 modeled-register checks, and upstream CMSIS-DAP JTAG Sequence, IDCODE, and DP Transfer write/posted-read paths through the BSP pass 1610 cumulative modeled-register host checks; fixed-slot packet queue (54 host checks), update transaction manager (57 host checks), FIFO, single/duplex byte-stream bridges, CMSIS-DAP command-core, upstream SWD-engine host model, bounded dispatch, bounds preflight, CMSIS compiler mapping, and CH585 SWD GPIO, Target Reset/PB6 Target Power GPIO, UART0 and UID-read adapter host and target relocatable-link checks executed; PoC ThreadX creation-status/tick-observation code is included in the target cross-build; the CH585 BSP/adapter static library is included in the PoC cross-build; product UART/command bounds, silicon UID, and ThreadX board tests have not run
+**Document ID:** DBG-C-TEST-001　**Version:** V0.73　**Status:** Test-plan draft; Target cable-map, VTref fault-isolation, 3.3 V Target Power, and Type-C misconnection cases added; no board tests run
 
 ## 1. Pass Criteria
 
@@ -323,7 +323,7 @@ This check does not define button polarity, debounce/wakeup policy, LED polarity
 
 ## 11. Validation Board Hardware Bring-up and Gates
 
-This section adds board-verification planning from HW-001 V0.4; it does not mean any board test has run. No board is currently available, so all items below are **Not run**.
+This section adds board-verification planning from HW-001 V0.5; it does not mean any board test has run. No board is currently available, so all items below are **Not run**.
 
 | Stage/case | Observation or verification | Passing evidence | Current status |
 |---|---|---|---|
@@ -333,7 +333,7 @@ This section adds board-verification planning from HW-001 V0.4; it does not mean
 | USBHS/USBFS | Independent enumeration, hot plug, recovery entry, dual-controller conflict | Host logs, descriptor/interface records, recovery with power loss/corrupt app | Not run; concurrency unconfirmed |
 | Target interface | Isolated test access on both sides of VTref-associated level-adaptation paths for PB0–PB5, PB20, and PA4 sensing; no direct CH585M-to-Target operating path | Pin/net continuity, power-state waveforms, protection/misconnection records | Not run; do not connect incompatible voltage |
 | Target voltage/VTref/level adaptation | Externally powered Target at nominal 1.8 V/3.3 V and all four Probe/Target power combinations; test every signal, invalid-VTref hardware inhibit, SWDIO direction/turnaround, JTAG TMS direction, Target-domain nRESET release/pull-low, isolation, back-feed, short, hot plug, and voltage boundaries/faults | Calibrated supply readings, scope traces, direction/turnaround captures, VTref ADC error, powered-off injection current, fault recovery, component temperature | Not run; translator parts, numeric voltage boundaries, timing/rate limits, and acceptance thresholds TBD |
-| Active Target power output | Test only after product decision freezes output voltage(s), current, source, protection, and external-Target interaction | Supply accuracy, load/current-limit/short/reverse-block records, fault reporting | Not run; V1 active-output scope undecided |
+| Active Target power output | Validate V1 nominal 3.3 V output only, not active 1.8 V; cover source, load, protection, and external-Target interaction | Supply accuracy, load/current-limit/short/reverse-block records, fault reporting | Not run; electrical limits and circuit are not frozen |
 | RF mux/RF | PB16–PB21 mux state; antenna network; separate BLE/RF mode operation | Configuration/register evidence, RF logs, RF measurements | Not run; prebuilt-library pin use unresolved |
 | SPI NOR | SPI waveforms, device identification, boundary read/write, power-loss recovery | Part number, logic-analyzer record, image-integrity log | Not run; part/transfer implementation TBD |
 | Product acceptance gate | ThreadX tick/interrupt/scheduling, DAP, SWD/JTAG/UART, OTA, and system cases | Complete versioned evidence under applicable sections and HW-001 gates | Not run; schematic completion cannot substitute |
@@ -341,3 +341,18 @@ This section adds board-verification planning from HW-001 V0.4; it does not mean
 ### Schematic Gate Status
 
 **Validation Board schematic design may start/continue**: the MCU-001 pin baseline and software-design gate are established. The MCU core, USBHS PHY, independent recovery interface, direct Target test access, and isolatable modules may be drawn. Keep Target voltage front end/power, BOOT/recovery timing, PB16–PB21 RF mux, RF matching, and custom Type-C interface isolated or pending where evidence is insufficient. PCB-layout and fabrication gates have not passed. This is not a Product Board freeze.
+
+## Target Interface Review-Input Verification Cases
+
+These are validation-board cases; they do not mean the map or component topology is approved. Fault voltage, duration, current, and pass limits must be frozen after component/electrical review. No hardware is available, so all cases are Not run.
+
+| Case | Check | Pass condition | Status |
+|---|---|---|---|
+| IF-TGT-01 | Connector-contact to net continuity/short matrix; both cable ends and plug orientations | Measured matrix matches the finally approved Contact-to-Conductor table; no open, miswire, or unintended short | Not run; map not approved |
+| IF-TGT-02 | Cable construction, length, model, and contact relationships | Vendor data matches measurement; model is controlled in BOM and satisfies the specification-applicability decision | Not run; no approved cable selected |
+| IF-TGT-03 | VTref off, nominal 1.8 V/3.3 V, and invalid-voltage sweep; monitor every translator supply pin and Target output | Faults do not exceed device ratings; invalid VTref isolates outputs safely; limits follow approved protection design | Not run; overvoltage gating not designed |
+| IF-TGT-04 | Current-limited 5 V fault injection; measure ADC, AXC VCCB, protection nodes, and injection current | Pin stress remains within ratings/protection limits with no hazardous Target output | Not run; do not wire the current direct-VCCB proposal |
+| IF-TGT-05 | Four Probe/Target power combinations, hot-plug, power loss, Target nRESET release/assert | No unacceptable backfeed; outputs isolated with Target unpowered; Probe reset/power loss does not hold Target reset low | Not run; circuit not frozen |
+| IF-TGT-06 | SWDIO direction/turnaround and SWD/UART/JTAG muxing at 1.8 V/3.3 V | No bus contention; waveforms/timing meet subsequently frozen maximum-rate and Target matrix | Not run; front end not implemented |
+| IF-TGT-07 | Target Power default-off, 3.3 V steady state, inrush, limit, short, fault signal, and external-supply coexistence | Meets frozen HW/PRD voltage, current, thermal, protection, and recovery limits; typical 500 mA setting is not itself a pass threshold | Not run; power module not frozen |
+| IF-TGT-08 | Misconnection to standard USB Host/Charger/Device, ESD, and adjacent-contact short | No permanent damage, backfeed, or overrating; ESD criteria follow project EMC decision | Not run; interface not approved |

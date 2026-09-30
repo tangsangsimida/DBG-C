@@ -1,6 +1,6 @@
 # DBG-C Product Requirements Specification
 
-**Document ID:** DBG-C-PRD-001　**Version:** V0.4 (Draft baseline)　**Status:** V1 Target voltage-domain and level-adaptation requirements frozen; active Target power-output scope remains for decision
+**Document ID:** DBG-C-PRD-001　**Version:** V0.5 (Draft baseline)　**Status:** V1 Target voltage domains, level adaptation, and active output voltage scope frozen; electrical limits and circuit remain to be defined
 
 ## 1. Product Positioning
 
@@ -54,7 +54,7 @@ The system includes PC/DBG-C Tool, DBG-C Probe, USB, BLE, private 2.4 GHz, DBG-C
 | PRD-010 | Target JTAG | On at least one frozen Cortex-M target, pass CMSIS-DAP JTAG connect, DP/AP access, program/verify, reset, and online debug; speed and compatibility scope remain for review |
 | PRD-011 | SWO | Receive Target SWO and expose it through a defined host stream interface; baud, format, buffering, and loss metrics require USB/FW/TEST freeze |
 | PRD-012 | VTref sensing | Report voltage/validity over a frozen Target voltage range; divider, protection, calibration, accuracy, and thresholds pass electrical review and measurement |
-| PRD-013 | Target power output control | Required V1 capability: safely debug an externally powered Target at nominal 1.8 V or 3.3 V, with interface levels following valid Target VTref. Whether DBG-C itself must source Target power, and whether that output must support 1.8 V, 3.3 V, or both, is an open product decision. Do not infer active-output capability from VTref support or `TARGET_PWR_EN`; freeze output voltage/current, protection, and acceptance separately before schematic freeze |
+| PRD-013 | Target power output control | V1 must support externally powered nominal 1.8 V and 3.3 V Targets. DBG-C active Target Power is decided to provide nominal 3.3 V only; active 1.8 V output is not supported. A 1.8 V Target is powered externally. Output accuracy, allowed current, current limit/short circuit, reverse current, thermal/inrush, and concurrent external-supply behavior must still be defined from selected parts and validation-board tests before schematic freeze; do not present a typical current-limit resistor setting as a guaranteed output rating |
 | PRD-014 | USB self-update | Update Probe firmware from the PC over USBHS; pass complete-image validation, commit, reboot, corrupt-image recovery, and power-loss recovery |
 | PRD-015 | Private 2.4 GHz self-update | Paired devices transfer Probe images reliably under the frozen RF update protocol; verify loss/retry, link recovery, integrity, commit, and recovery |
 | PRD-016 | External SPI NOR | After part selection, verify image staging reads/writes, erase boundaries, integrity checks, and power-loss retention; rollback/offline-image use requires a separate decision |
@@ -67,7 +67,7 @@ No latency, throughput, startup time, power, range, or packet-loss thresholds ha
 
 ## 9. Open Requirements
 
-Whether USB connection affects role, role-switch rules, pairing persistence, automatic/manual pairing, multi-device USB behavior, PC OS/IDE matrix, CDC parameters, allowed minimum/maximum and fault ranges around nominal Target domains, active Target power-output voltage/current, wireless recovery deadline, OTA rollback/authorization, BLE target-download protocol/scope, and cable capabilities remain for product review. The nominal 1.8 V and 3.3 V externally powered Target domains and their VTref-following adaptation requirements are frozen; see `../00-project/DBG-C-OPEN-001.en-US.md`.
+Whether USB connection affects role, role-switch rules, pairing persistence, automatic/manual pairing, multi-device USB behavior, PC OS/IDE matrix, CDC parameters, allowed minimum/maximum and fault ranges around nominal Target domains, active Target Power current/tolerance/protection, wireless recovery deadline, OTA rollback/authorization, BLE target-download protocol/scope, and cable capabilities remain for product review. V1 active Target output scope is set to nominal 3.3 V; externally powered nominal 1.8 V and 3.3 V Target domains and VTref-following adaptation requirements are frozen; see `../00-project/DBG-C-OPEN-001.en-US.md`.
 
 ## 10. Product Statement (Input, Not Verification Evidence)
 

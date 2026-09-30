@@ -1,6 +1,6 @@
 # DBG-C MCU 选型与资源评估
 
-**文档编号：** DBG-C-MCU-001　**版本：** V0.18　**状态：** CH585M V1 MCU 资源分配草案；外部供电Target域与电平适配架构由 IF-001/PRD-001规定；验证板硬件输入见 HW-001 V0.4；实板验证未执行
+**文档编号：** DBG-C-MCU-001　**版本：** V0.19　**状态：** CH585M V1 MCU资源分配草案；新增Target前端控制GPIO分配作为验证板输入；复用配置和电气实现未验证
 
 ## 1. 证据来源
 
@@ -55,7 +55,7 @@ SPI 能力核对还使用 `EVT/EXAM/SRC/StdPeriphDriver/CH58x_spi1.c`（SHA-256 
 | 16 | PB10 / UD− | USBFS D− 恢复通道预留 | 恢复/生产接口是否装配待硬件设计确认；不与 USBHS 混接 |
 | 17 | PB7 / TXD0 | TARGET_UART_TX | UART0 TXD0；连接 Target RX |
 | 18 | PB6 | TARGET_PWR_EN | GPIO 控制信号；目标供电开关、电平和默认状态待电源设计 |
-| 19 | PB5 | TARGET_nRESET | GPIO 控制信号；极性、驱动级、默认状态和脉宽待 IF/电气设计 |
+| 19 | PB5 | TARGET_RESET_ASSERT | 电平适配/复位输出级控制输入；Assert有效极性、复位默认释放和高阻电气行为须由HW-001核对 |
 | 20 | PB4 / RXD0 | TARGET_UART_RX | UART0 RXD0；连接 Target TX |
 | 21 | PB3 | TARGET_TDO | GPIO 输入；JTAG 模式使用，电气约束待 IF 设计 |
 | 22 | PB2 | TARGET_TDI | GPIO 输出；JTAG 模式使用，电气约束待 IF 设计 |
@@ -73,8 +73,8 @@ SPI 能力核对还使用 `EVT/EXAM/SRC/StdPeriphDriver/CH58x_spi1.c`（SHA-256 
 | 34 | ANT | RF 射频网络/天线连接 | 手册标注 RF 输入输出并建议直连天线；具体网络必须依据 WCH CH585M 射频参考设计核验，当前仓库未包含该设计 |
 | 35 | VDCIA | 按手册连接去耦电容 | 与 VDCID 的连接按手册核验 |
 | 36 | PA4 / A0 | TARGET_VTREF_ADC | ADC A0 复用；同时是 UART3 RX 默认引脚，启用 UART3 RX 重映射至 PB20 后避免冲突；前端量程/保护待设计 |
-| 37 | PA5 | 保留 | UART3 TX 默认引脚；若使用 PB20/PB21 重映射，需确认复用配置；保留 |
-| 38 | PA6 | 未分配，保留 | 不启用 RXD2、PWM4_、LED5 或 ADC A10 |
+| 37 | PA5 | TARGET_SWDIO_DIR | UART3 使用 `RB_PIN_UART3` 重映射到 PB20/PB21 时，PA5 不承载 UART3 TX；需先确认复用配置不再占用PA5 |
+| 38 | PA6 | TARGET_IF_OE_N | GPIO控制资源；复位/上电默认由外部上拉保持接口关闭；不得启用冲突复用 |
 | 39 | PA0 / SCK1 | EXT_FLASH_SCK | SPI1 SCK1 复用；总线模式/时钟待驱动设计 |
 | 40 | PA1 / MOSI1 | EXT_FLASH_MOSI | SPI1 MOSI1 复用 |
 | 41 | PA2 / MISO1 | EXT_FLASH_MISO | SPI1 MISO1 复用 |
@@ -82,7 +82,7 @@ SPI 能力核对还使用 `EVT/EXAM/SRC/StdPeriphDriver/CH58x_spi1.c`（SHA-256 
 | 43 | PA15 | 官方 ISP UART 资源预留 | 手册列 UART0 RXD0_ 重映射；是否为 ISP 通道待官方下载资料确认 |
 | 44 | PA14 | 官方 ISP UART 资源预留 | 手册列 UART0 TXD0_ 重映射；是否为 ISP 通道待官方下载资料确认 |
 | 45 | PA13 | 未分配，保留 | 不启用 SPI0 SCK 或 PWM5 |
-| 46 | PA12 | 未分配，保留 | 不启用 SPI0 SCS 或 PWM4 |
+| 46 | PA12 | TARGET_PWR_FLT_N | GPIO输入资源；须核对目标负载开关故障输出的电压域、极性和掉电状态后连接 |
 | 47 | PA11 / X32KO | 保留给 32 kHz 时钟评估，不接外部信号 | 低频振荡器输出；是否需要 32 kHz 晶体由 WCH BLE/低功耗 SDK 配置确认 |
 | 48 | PA10 / X32KI | 保留给 32 kHz 时钟评估，不接外部信号 | 低频振荡器输入；是否需要 32 kHz 晶体由 WCH BLE/低功耗 SDK 配置确认 |
 
@@ -95,7 +95,8 @@ SPI 能力核对还使用 `EVT/EXAM/SRC/StdPeriphDriver/CH58x_spi1.c`（SHA-256 
 | PC USB Device | USBHS CMSIS-DAP v2 Bulk、CDC ACM 与管理通道 | USBHS；PB12 QFN48-14=U2D−，PB13 QFN48-13=U2D+ | EVT 有 USBHS Device/IAP 示例；复合描述符、ThreadX 集成和 HS 实板枚举待实现/验证 |
 | USBFS 恢复 | 生产/恢复 USB 通道 | PB10 QFN48-16=UD−，PB11 QFN48-15=UD+ | 保留；是否接入连接器、与官方 ISP 的完整流程待核实 |
 | Target SWD/JTAG | 共用 GPIO 引擎 | PB0 QFN48-24=SWCLK/TCK；PB1 QFN48-23=SWDIO/TMS；PB2 QFN48-22=TDI；PB3 QFN48-21=TDO | 引脚复用表对应关系已核；波形、速率和 DAP JTAG 能力待软件/板测 |
-| Target Reset/Power | 复位、目标电源使能 | PB5 QFN48-19=TARGET_nRESET；PB6 QFN48-18=TARGET_PWR_EN | GPIO 焊盘已核；电平转换、默认态、供电保护与控制逻辑待设计 |
+| Target Reset/Power | 目标复位控制、目标电源使能 | PB5 QFN48-19=TARGET_RESET_ASSERT；PB6 QFN48-18=TARGET_PWR_EN；PA12 QFN48-46=TARGET_PWR_FLT_N | 作为验证板GPIO输入；PB5固件/API语义须与低有效Assert及高阻释放电路核对；负载开关故障脚兼容性待确认 |
+| Target前端控制 | SWDIO方向、接口使能、协议模式 | PA5 QFN48-37=TARGET_SWDIO_DIR；PA6 QFN48-38=TARGET_IF_OE_N；PA7 QFN48-4=TARGET_MODE_SEL | PA5仅在UART3重映射成立时分配；PA6/PA7芯片复用表已核，外部默认电阻和有效极性属于电路评审输入；当前固件未实现 |
 | Target UART/CDC | 全双工 UART 桥 | UART0；PB4 QFN48-20=RXD0，PB7 QFN48-17=TXD0 | EVT UART0 引脚和接口已核；CDC 桥接、速率和并发待实现/验证 |
 | SWO | NRZ SWO 接收 | PB20 QFN48-28=RXD3_；UART3 RX 由 EVT `RB_PIN_UART3` 重映射至 PB20 | 头文件声明映射；SWO 采样、波特率和 CMSIS-DAP SWO 输出路径待实现/验证 |
 | Target VTref | 目标电压检测 | PA4 QFN48-36=ADC A0 | 仅确认 ADC 复用名；分压、钳位、量程、校准和判定阈值待电气设计/测量 |
@@ -115,7 +116,7 @@ SPI 能力核对还使用 `EVT/EXAM/SRC/StdPeriphDriver/CH58x_spi1.c`（SHA-256 
 | PC USB | USBHS Device | PB12=USBHS D−、PB13=USBHS D+ | 数据手册引脚表及 EVT `USBHS_IAP`、USBHS Device 示例可确认外设/示例存在；DAP Bulk+CDC 复合描述符、端点规划、ThreadX 集成与 HS 信号实测待完成 |
 | USB 恢复 | USBFS Device 保留 | PB10=USBFS D−、PB11=USBFS D+，预留生产/恢复接入 | 数据手册确认引脚；恢复模式进入和产品是否引出待确认 |
 | Target SWD/JTAG | 共用 SWD/JTAG GPIO backend | PB0=SWCLK/TCK、PB1=SWDIO/TMS、PB2=TDI、PB3=TDO | GPIO 复用有效；IO 电压、输出结构、转换器和时序待 IF-001/验证板确定 |
-| Target nRESET | GPIO | PB5=TARGET_nRESET | 不与芯片自身 PB23/RST 混网；驱动级、默认态、脉宽待定 |
+| Target nRESET控制 | GPIO | PB5=TARGET_RESET_ASSERT；外部接口输出网络为TARGET_nRESET | 不与芯片自身PB23/RST混网；PB5只控制Target域拉低/释放级，具体驱动和默认态须经电路评审 |
 | Target 电源控制 | GPIO | PB6=TARGET_PWR_EN | 外部负载开关、限流、反灌、故障检测和默认状态需电源设计 |
 | Target UART/CDC | UART0 + USB CDC ACM | PB4=Probe RX/Target TX；PB7=Probe TX/Target RX | EVT remap 文档与 datasheet 对应；波特率、CDC interface/endpoint 和并发待实现 |
 | SWO | UART3 RX | PB20=RXD3_；启用 EVT `RB_PIN_UART3` 映射 | PA4/PA5 默认 UART3 路径与 PA4 ADC 分配冲突；使用重映射后 PA4 可保留 ADC，需用实际初始化验证 |
@@ -169,7 +170,7 @@ V1 基线包含 USBHS、USBFS 恢复预留、CMSIS-DAP v2 Bulk、SWD、JTAG、SW
 | CPU | 调度、中断和协议处理时间 | 以 USB/RF 并发负载验证最坏响应时间 | 手册最高 78 MHz 不能单独证明符合性能目标 |
 | Compiler/Port | 与 CH585M 工具链、ABI、启动代码兼容的 ThreadX 端口 | ThreadX `v6.5.1.202602a_rel`，commit `b91b03b9e75fa523b17127f9e0eca09dca916459`；MounRiver GCC 12.2.0；WCH EVT GCC12 配置 | 主机交叉构建通过；EVT 工具链补丁版本未标注，板级端口兼容性未验证 |
 
-ThreadX 不增加外部连接器信号；当前分配为 USBHS 主 Device、USBFS 恢复预留、UART0、PB0–PB3 Target SWD/JTAG、PB5/PB6 Target reset/power、集成 Radio。硬件侧须保留 Probe 编程/恢复路径。当前资源基线将 SysTick 指定为 ThreadX kernel tick 来源，TMR0 至 TMR3 保留；端口接入验证失败时，须记录并评审资源变更。
+ThreadX 不增加外部连接器信号；当前分配为 USBHS 主 Device、USBFS恢复预留、UART0、PB0–PB3 Target SWD/JTAG、PB5/PB6 Target reset/power、PA5/PA6/PA7前端控制、PA12故障输入及集成Radio。PA5分配以UART3成功重映射到PB20/PB21为前提。硬件侧须保留Probe编程/恢复路径。当前资源基线将SysTick指定为ThreadX kernel tick来源，TMR0至TMR3保留；端口接入验证失败时，须记录并评审资源变更。
 
 ### ThreadX 上游依赖来源
 
@@ -185,4 +186,4 @@ ThreadX 上游该版本包含 `ports/risc-v32/gnu`，PoC 使用通用上下文�
 
 ## 8. 验证板硬件接口边界
 
-MCU-001 只定义 MCU 侧资源分配草案；实际外围电路、供电、电平适配、保护、恢复路径、测试点和 PCB 约束由 [HW-001](DBG-C-HW-001.zh-CN.md) 管理。V1 要求支持外部供电、标称 1.8 V 与 3.3 V Target 域；所有 Target 数字信号须 VTref 跟随电平适配并掉电隔离，VTref 无效时由硬件禁止输出；SWDIO 显式方向控制及 Target 域 nRESET 拉低/释放为强制要求。HW-001 V0.4允许验证板模块化原理图继续；转换器件/数值边界、主动Target供电范围、Type-C自定义映射、BOOT/恢复时序、PB16–PB21 RF复用、RF匹配及供电/时钟具体值仍需证据。此结论不等于MCU引脚已电气验证或产品硬件冻结。
+MCU-001只定义MCU侧资源分配草案；实际外围电路、供电、电平适配、保护、恢复路径、测试点和PCB约束由[HW-001](DBG-C-HW-001.zh-CN.md)管理。V1要求支持外部供电、标称1.8 V与3.3 V Target域；所有Target数字信号须VTref跟随电平适配并掉电隔离，VTref无效时由硬件禁止输出；SWDIO显式方向控制及Target域nRESET拉低/释放为强制要求。HW-001 V0.5允许继续模块化验证板设计；VTref故障隔离、主动3.3 V供电电路、Type-C自定义映射、BOOT/恢复时序、PB16–PB21 RF复用、RF匹配及供电/时钟具体值仍需证据。新增PA5控制分配依赖UART3重映射到PB20/PB21。此结论不等于MCU引脚已电气验证或产品硬件冻结。

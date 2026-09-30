@@ -1,6 +1,6 @@
 # DBG-C 硬件设计规范
 
-**文档编号：** DBG-C-HW-001　**版本：** V0.4　**状态：** 验证板设计输入草案；V1 Target电平适配架构已冻结；转换器选型、数值电气边界及主动Target供电仍开放；不是产品板冻结依据
+**文档编号：** DBG-C-HW-001　**版本：** V0.5　**状态：** 验证板设计输入草案；主动Target输出范围冻结为仅3.3 V；触点映射、转换/保护电路及器件料号仍未冻结；不是产品板冻结依据
 
 ## 1. 范围与设计门
 
@@ -44,7 +44,7 @@
 | PB0 / PB1 | TARGET_SWCLK_TCK / TARGET_SWDIO_TMS | SWD/JTAG 共用信号；保留独立测试点和可隔离路径 |
 | PB2 / PB3 | TARGET_TDI / TARGET_TDO | JTAG 信号；未用时状态待固件/电气设计确定 |
 | PB4 / PB7 | TARGET_UART_RX / TARGET_UART_TX | MCU 视角方向；分别连接 Target TX / RX，经电气前端 |
-| PB5 | TARGET_nRESET | 与 MCU 自身 PB23/RST 分网，驱动拓扑待定 |
+| PB5 | TARGET_RESET_ASSERT（复位级控制输入） | 与MCU自身PB23/RST分网；外部接口网络TARGET_nRESET须在Target电压域拉低/释放 |
 | PB6 | TARGET_PWR_EN | 仅为 GPIO 控制资源，不直接驱动负载 |
 | PA4 | TARGET_VTREF_ADC | ADC A0；必须经过限压、限流设计，不能直接假定兼容任意 VTref |
 | PB20 | TARGET_SWO | UART3 RX 重映射资源；与 RF 天线开关复用待解冲突 |
@@ -148,7 +148,9 @@ VTref 检测与转换器参考供电属于不同电气路径/功能。受保护�
 
 ### 8.4 Target Power
 
-V1 必须支持 Target 使用自身外部电源、I/O 域为标称 1.8 V 或 3.3 V 时的调试能力；这与 DBG-C 主动输出 Target 电源是不同能力。DBG-C 是否必须主动供电，以及输出须支持 1.8 V、3.3 V 或两者，仍是明确的产品决策项。PB6 仅为控制 GPIO，不能代表已定义供电电路。决策完成前不得宣称主动供电能力或冻结其电源模块。若保留主动输出，须分别定义输出电压选择、电流、电源来源、负载开关/稳压、限流、短路、反向阻断、浪涌、Fault 报告及与外部供电 Target 并存的处理。验证板可预留断开且可隔离的模块和测量点。电流测量不是 V1 强制功能。
+V1 必须支持 Target 使用自身外部电源、I/O 域为标称 1.8 V 或 3.3 V 时的调试能力。用户已决定 DBG-C 主动 Target Power **只输出标称 3.3 V，不输出 1.8 V**；1.8 V Target 必须由 Target 自身供电，DBG-C 从有效 VTref 跟随电平域。该产品范围决策不等于电源电路已冻结。PB6 仅为控制 GPIO。验证板评审输入为受控负载开关、限流、外部供电冲突防护、故障指示和默认关闭；输出精度、容差、持续电流、浪涌和热条件须结合电源树、器件数据手册及目标负载评审后冻结。
+
+2026-09-30 提交的器件评估输入为 TPS22950CDDCR、RILIM 2.21 kΩ、CIN/COUT 各 1 µF、限流典型值约 500 mA。TI 数据手册将 2.21 kΩ 关联至典型约 500 mA 设定；这不是精确保证门限。可订购封装、外部供电反灌、故障引脚、热/浪涌、输出电容和上游 USB 预算尚未逐项完成审查。因此这些料号/数值只作电路评审输入，不得写入冻结 BOM；也不代表已确定 500 mA 产品保证能力。
 
 ## 9. SPI NOR、RF 与 UI
 
@@ -255,6 +257,40 @@ USB、Target 信号、外部连接器、电源轨需分别分析 ESD/EOS、误�
 |---|---|---|
 | WCH, CH585/CH584 Datasheet | V1.6，仓库版本 | 芯片引脚、电气参数、电源/时钟和外设依据；使用前应核实勘误 |
 | WCH CH585EVT archive | 索引 2026.08；`EVT/PUB/CH585SCH.pdf` | 官方示例原理图/软件接口参考，不等于DBG-C冻结电路 |
+| Texas Instruments, SN74AXC1T45 Datasheet | Rev. E，2023-12 | 6引脚、DIR、双电源范围和掉电隔离边界；[原厂数据手册](https://www.ti.com/lit/ds/symlink/sn74axc1t45.pdf) |
+| Texas Instruments, SN74AXC4T245 Datasheet | Rev. B，2024-04 | 双DIR/OE控制、供电范围和端口高阻条件；[原厂数据手册](https://www.ti.com/lit/ds/symlink/sn74axc4t245.pdf) |
+| Texas Instruments, TPS22950 Datasheet | Rev. B，2023-02 | Target负载开关及限流电阻示例；典型值不作为保证门限；[原厂数据手册](https://www.ti.com/lit/ds/symlink/tps22950.pdf) |
 | USB-IF, USB Type-C Cable and Connector Specification | Release 2.5，2026-04-08 | Type-C线缆/连接器规范；本轮确认其对第三方功能有明确范围约束，需在接口冻结前审阅适用章节 |
 
 外部来源：[USB-IF Type-C Specification Release 2.5](https://www.usb.org/document-library/usb-type-cr-cable-and-connector-specification-release-25)，核对日期 2026-09-30。本文不复制规范表格，线缆导体细节仍待按具体组件核验。
+
+## 15. 2026-09-30 验证板前端评审输入与阻断项
+
+以下器件和网络是提交评审的具体对象，不是已批准 BOM。供应商数据手册可确认器件边界，不能替代整机拓扑审查、封装/引脚核对、时序预算、供电故障分析和板级测量。
+
+| 功能 | 提交评估对象 | 可从厂商资料确认的边界 | 当前处理 |
+|---|---|---|---|
+| SWDIO 双向转换 | SN74AXC1T45DBVR | VCCA/VCCB为0.65–3.6 V；DIR控制方向；6引脚封装无独立OE；任一电源低于100 mV时端口高阻并支持Ioff | 未批准。VTref直接作VCCB时，低于100 mV高阻特性不能覆盖0.1–0.65 V及超3.6 V故障区间；还须证明硬件安全门控可与SWD方向切换同步 |
+| 固定方向信号 | SN74AXC4T245PWR | 双电源0.65–3.6 V；两组DIR/OE；控制脚参考VCCA；OE高时端口高阻；支持Ioff | SWCLK、TDI、TDO、SWO通道及封装脚位须按Rev.B逐脚核对；共同OE不能替代VCCB过压保护 |
+| UART/JTAG复用 | TMUX1574PWR | 4通道2:1模拟开关 | 供电、控制脚阈值、掉电状态，以及其与电平转换器的前后级关系须按原厂资料审查；连接图未批准 |
+| Target nRESET | TXU0101DBVR | 单通道固定方向电平转换器，带OE | A=GND、B=Target reset、OE控制拉低/高阻的连接提案须核对封装脚位、OE极性、VCCB范围和Target侧上拉；未批准 |
+| VTref ADC前端 | 10 kΩ/10 kΩ分压、10 nF | 理想分压计算：1.8 V→0.9 V、3.3 V→1.65 V、5 V→2.5 V | PA4 ADC输入范围、误差、采样建立、分压负载、故障电流/钳位与校准未闭环；计算值不是测量结果 |
+| Target Power | TPS22950CDDCR、RILIM 2.21 kΩ、1 µF输入/输出 | TI资料将2.21 kΩ关联至典型约500 mA限流设定 | 3.3 V电源预算、保证限值、故障/短路/反灌、输出电容和目标负载验证未完成；未冻结 |
+| Target ESD | TPD4E05U06DQAR ×2 | ESD保护器件 | 不是5 V直流过压钳位器；通道、回流和Target Power/VTref故障耐受尚未核准 |
+| PC USB ESD | TPD2EUSB30A | USB数据线保护器件 | 连接器、封装、线路和USBHS电气设计仍须单独审查 |
+
+提交的连接器评估对象为 Target 端 Korean Hroparts `TYPE-C-31-M-05`（分销编号 C845581，24触点）和 PC 端 `TYPE-C-31-M-14`（分销编号 C223907，16触点）。在取得制造商受控数据手册并核对实际符号、封装、焊盘编号、屏蔽脚和机械尺寸前，两者都不得冻结为原理图/PCB库器件。分销商编号、库存与价格不作为长期受控设计证据。
+
+提交的控制网络默认偏置为评审输入：PA5 `TARGET_SWDIO_DIR` 100 kΩ下拉；PA6 `TARGET_IF_OE_N` 100 kΩ上拉至3.3 V；PA7 `TARGET_MODE_SEL` 100 kΩ下拉；PB5 `TARGET_RESET_ASSERT` 100 kΩ下拉；PB6 `TARGET_PWR_EN` 100 kΩ下拉。PA12 `TARGET_PWR_FLT_N` 的上拉电源/阻值未定义。以上阻值与逻辑默认态必须结合MCU复位/高阻行为、转换器和负载开关控制脚阈值、漏电、启动顺序及VTref门控逐项核对；不得直接复制到冻结BOM。AXC1T45没有OE，系统接口关闭方案不能只靠`TARGET_IF_OE_N`实现。
+
+**PB5复位极性冲突：** 当前PoC `dbgc_ch585_target_reset_gpio_set_nreset()` 在CMSIS-DAP复位位为0时把PB5设为输出低，在释放时改为输入；提交的TXU0101提案则以PB5高电平使Target侧输出低、PB5低电平使输出高阻。二者极性不兼容。MCU-001中`TARGET_RESET_ASSERT`是拟定的硬件控制语义，不代表现有固件已经采用该极性。接入拟定电路前必须重做PB5 HAL映射并更新其主机用例；本轮未修改或运行软件测试，板上行为未验证。
+
+**阻断项：VTref 方案目前不能冻结。** 提交拓扑把Target VTref直接接至SN74AXC1T45/SN74AXC4T245的VCCB，同时将5 V误接视为需检测的故障。两个AXC器件的供电上限为3.6 V；10 kΩ/10 kΩ分压只作用于ADC输入，不限制VCCB。ADC读到2.5 V后再由固件禁用输出，不能阻止过压先到达VCCB；AXC1T45也没有OE脚。因此须先设计并按正式规格证明VTref过压/欠压门控、Target侧电源隔离和SWDIO安全路径。门限、延时和故障电流不得猜定。另须核实VCCB介于0.1 V与0.65 V之间时的I/O状态，不能把“低于100 mV高阻”外推到整个无效电压区间。
+
+**Target触点/电源风险：** 提交映射将四个VBUS触点并为`DBG_TARGET_PWR`并输出3.3 V，即以Type-C VBUS定义触点承载自定义Target供电。不能仅凭`NOT USB`丝印或限流认定方案可接受。须等待IF-001的USB-IF适用性决议；否则改用专用连接器/线缆。还要验证误插标准Host/Charger时所有方向的电源与信号故障；ESD器件不等同反灌阻断器。
+
+**串联阻尼输入：** 提交的六路数字信号各串33 Ω，并为验证板预留0/22/33/47 Ω选项，作为信号完整性调试输入记录。尚无驱动阻抗、线缆、Target输入及最高速率证据；PCB可保留可配置焊盘，装配值须在波形/时序评审后确定。
+
+**PC侧连接器输入：** TYPE-C-31-M-14、C223907、16触点及其USBHS/CC/VBUS/GND脚位关系属于供应商图纸待核对象。不得只依据分销页面冻结Symbol/Footprint。D+/D− 90 Ω目标、TPD2EUSB30A及不装共模电感均须按USB规范、CH585 USBHS资料、PCB叠层和测量计划评审。
+
+在过压门控、Target供电、Type-C许可/映射、器件数据手册逐脚审查和线缆矩阵完成前，验证板可继续画模块边界和独立测试入口；不得冻结Target接口原理图、器件BOM或PCB走线。Target测试入口仍必须经过电平适配，不得提供CH585M GPIO直连旁路。

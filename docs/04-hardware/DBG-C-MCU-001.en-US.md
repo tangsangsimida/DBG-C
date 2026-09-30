@@ -1,6 +1,6 @@
 # DBG-C MCU Selection and Resource Assessment
 
-**Document ID:** DBG-C-MCU-001　**Version:** V0.18　**Status:** CH585M V1 MCU resource allocation draft; externally powered Target domains and level-adaptation architecture defined by IF-001/PRD-001; validation-board hardware input in HW-001 V0.4; board verification not run
+**Document ID:** DBG-C-MCU-001　**Version:** V0.19　**Status:** CH585M V1 MCU resource-allocation draft; Target front-end control GPIOs added as validation-board inputs; mux configuration and electrical implementation unverified
 
 ## 1. Evidence Source
 
@@ -55,7 +55,7 @@ Package pin numbers below are read from the **CH585M column** of datasheet Table
 | 16 | PB10 / UD− | Reserve USBFS D− recovery path | Recovery/production connector population TBD; keep separate from USBHS |
 | 17 | PB7 / TXD0 | TARGET_UART_TX | UART0 TXD0; connects to Target RX |
 | 18 | PB6 | TARGET_PWR_EN | GPIO control; target power switch, voltage, and default state require power design |
-| 19 | PB5 | TARGET_nRESET | GPIO control; polarity, driver, default state, and pulse width require IF/electrical design |
+| 19 | PB5 | TARGET_RESET_ASSERT | Control input to the level-adaptation/reset output stage; HW-001 must review assertion polarity, default release, and high-impedance behavior |
 | 20 | PB4 / RXD0 | TARGET_UART_RX | UART0 RXD0; connects to Target TX |
 | 21 | PB3 | TARGET_TDO | GPIO input used in JTAG mode; electrical constraints require IF design |
 | 22 | PB2 | TARGET_TDI | GPIO output used in JTAG mode; electrical constraints require IF design |
@@ -73,8 +73,8 @@ Package pin numbers below are read from the **CH585M column** of datasheet Table
 | 34 | ANT | RF network/antenna connection | The datasheet describes an RF input/output and recommends direct antenna connection. Verify the actual network against the WCH CH585M RF reference design, which is not present in this repository |
 | 35 | VDCIA | Decoupling capacitor per datasheet | VDCIA/VDCID connection per datasheet |
 | 36 | PA4 / A0 | TARGET_VTREF_ADC | ADC A0 mux; also default UART3 RX pin. Enable UART3 RX remap to PB20 to avoid conflict; front-end range/protection TBD |
-| 37 | PA5 | Reserve | Default UART3 TX pin; verify mux setup when using PB20/PB21 remap; reserve |
-| 38 | PA6 | Unallocated reserve | Do not enable RXD2, PWM4_, LED5, or ADC A10 |
+| 37 | PA5 | TARGET_SWDIO_DIR | When UART3 uses `RB_PIN_UART3` to remap onto PB20/PB21, PA5 does not carry UART3 TX; verify the mux setup leaves PA5 available |
+| 38 | PA6 | TARGET_IF_OE_N | GPIO control; external pull-up keeps the interface disabled by default; do not enable conflicting mux functions |
 | 39 | PA0 / SCK1 | EXT_FLASH_SCK | SPI1 SCK1 mux; bus mode/clock TBD in driver design |
 | 40 | PA1 / MOSI1 | EXT_FLASH_MOSI | SPI1 MOSI1 mux |
 | 41 | PA2 / MISO1 | EXT_FLASH_MISO | SPI1 MISO1 mux |
@@ -82,7 +82,7 @@ Package pin numbers below are read from the **CH585M column** of datasheet Table
 | 43 | PA15 | Reserve for official ISP UART resources | Datasheet lists UART0 RXD0_ remap; confirm whether this is an ISP channel from official download documentation |
 | 44 | PA14 | Reserve for official ISP UART resources | Datasheet lists UART0 TXD0_ remap; confirm whether this is an ISP channel from official download documentation |
 | 45 | PA13 | Unallocated reserve | Do not enable SPI0 SCK or PWM5 |
-| 46 | PA12 | Unallocated reserve | Do not enable SPI0 SCS or PWM4 |
+| 46 | PA12 | TARGET_PWR_FLT_N | GPIO input; confirm load-switch fault-output voltage domain, polarity, and power-off state before connection |
 | 47 | PA11 / X32KO | Reserve for 32 kHz clock review; no external signal | Low-frequency oscillator output; WCH BLE/low-power SDK configuration must confirm whether a 32 kHz crystal is needed |
 | 48 | PA10 / X32KI | Reserve for 32 kHz clock review; no external signal | Low-frequency oscillator input; WCH BLE/low-power SDK configuration must confirm whether a 32 kHz crystal is needed |
 
@@ -95,7 +95,8 @@ Note: pad numbers come from the CH585M column of datasheet Table 1-1 (printed pa
 | PC USB Device | USBHS CMSIS-DAP v2 Bulk, CDC ACM, and management channel | USBHS; PB12 QFN48-14=U2D−, PB13 QFN48-13=U2D+ | EVT has USBHS Device/IAP examples; composite descriptors, ThreadX integration, and HS board enumeration remain to be implemented/verified |
 | USBFS recovery | Production/recovery USB path | PB10 QFN48-16=UD−, PB11 QFN48-15=UD+ | Reserved; connector and complete official ISP recovery flow TBD |
 | Target SWD/JTAG | Shared GPIO engine | PB0 QFN48-24=SWCLK/TCK; PB1 QFN48-23=SWDIO/TMS; PB2 QFN48-22=TDI; PB3 QFN48-21=TDO | Mux assignments checked; waveform, speed, and DAP JTAG support require software/board testing |
-| Target reset/power | Reset and target power enable | PB5 QFN48-19=TARGET_nRESET; PB6 QFN48-18=TARGET_PWR_EN | GPIO pads verified; level shifting, default state, power protection, and control logic TBD |
+| Target reset/power | Target reset control and power enable | PB5 QFN48-19=TARGET_RESET_ASSERT; PB6 QFN48-18=TARGET_PWR_EN; PA12 QFN48-46=TARGET_PWR_FLT_N | GPIO allocation for validation input; align PB5 firmware/API semantics with active assertion and high-impedance release; load-switch fault-pin compatibility TBD |
+| Target front-end control | SWDIO direction, interface enable, protocol mode | PA5 QFN48-37=TARGET_SWDIO_DIR; PA6 QFN48-38=TARGET_IF_OE_N; PA7 QFN48-4=TARGET_MODE_SEL | PA5 allocation depends on UART3 remap; datasheet mux entries for PA6/PA7 are checked; external default pulls and active polarity are circuit-review inputs; current firmware does not implement these controls |
 | Target UART/CDC | Full-duplex UART bridge | UART0; PB4 QFN48-20=RXD0, PB7 QFN48-17=TXD0 | EVT UART0 pins and interface verified; CDC bridge, baud rate, and concurrency TBD |
 | SWO | NRZ SWO receive | PB20 QFN48-28=RXD3_; UART3 RX remapped to PB20 by EVT `RB_PIN_UART3` | Header declares remap; SWO sampling, baud rate, and CMSIS-DAP output path TBD |
 | Target VTref | Target voltage sensing | PA4 QFN48-36=ADC A0 | ADC mux name confirmed; divider, clamp, range, calibration, and thresholds TBD |
@@ -115,7 +116,7 @@ The table cross-checks the proposed V1 pin baseline against official materials. 
 | PC USB | USBHS Device | PB12=USBHS D−, PB13=USBHS D+ | Datasheet pin table and EVT `USBHS_IAP`/USBHS Device examples confirm peripheral/example presence; DAP Bulk+CDC composite descriptors, endpoint plan, ThreadX integration, and HS signal measurement remain |
 | USB recovery | Reserve USBFS Device | PB10=USBFS D−, PB11=USBFS D+; reserve production/recovery access | Datasheet pins confirmed; recovery entry and connector decision TBD |
 | Target SWD/JTAG | Shared SWD/JTAG GPIO backend | PB0=SWCLK/TCK, PB1=SWDIO/TMS, PB2=TDI, PB3=TDO | GPIO muxes valid; IO voltage, output topology, translators, and timing TBD in IF/validation board |
-| Target nRESET | GPIO | PB5=TARGET_nRESET | Separate from chip PB23/RST; driver, default state, pulse width TBD |
+| Target nRESET control | GPIO | PB5=TARGET_RESET_ASSERT; external interface output net is TARGET_nRESET | Separate from chip PB23/RST; PB5 controls the Target-domain pull-low/release stage, whose circuit/default behavior requires review |
 | Target power control | GPIO | PB6=TARGET_PWR_EN | External load switch, current limit, reverse current, fault handling, and default state require power design |
 | Target UART/CDC | UART0 + USB CDC ACM | PB4=Probe RX/Target TX; PB7=Probe TX/Target RX | EVT remap documentation and datasheet pin mapping agree; baud, CDC interfaces/endpoints, and concurrency TBD |
 | SWO | UART3 RX | PB20=RXD3_; apply EVT `RB_PIN_UART3` remap | Default PA4/PA5 UART3 route conflicts with PA4 ADC allocation; apply remap and verify actual initialization |
@@ -169,7 +170,7 @@ The project has selected ThreadX for V1 firmware. PoC-1 pins Eclipse ThreadX `v6
 | CPU | Scheduling, interrupt, and protocol processing | Verify worst-case response under concurrent USB/RF load | Datasheet maximum of 78 MHz alone does not prove performance targets |
 | Compiler/Port | ThreadX port compatible with CH585M toolchain, ABI, and startup | ThreadX `v6.5.1.202602a_rel`, commit `b91b03b9e75fa523b17127f9e0eca09dca916459`; MounRiver GCC 12.2.0; WCH EVT GCC12 configuration | Host cross-build passes; EVT compiler patch version is not specified, board port compatibility is unverified |
 
-ThreadX adds no external connector signal; current allocation is USBHS primary Device, reserved USBFS recovery, UART0, PB0–PB3 Target SWD/JTAG, PB5/PB6 Target reset/power, and integrated Radio. Preserve Probe programming/recovery access. The current resource baseline designates SysTick for the ThreadX kernel tick and reserves TMR0 through TMR3; if port integration fails, document and review a resource change.
+ThreadX adds no external connector signal; current allocation is USBHS primary Device, USBFS recovery reserve, UART0, PB0–PB3 Target SWD/JTAG, PB5/PB6 Target reset/power, PA5/PA6/PA7 front-end controls, PA12 fault input, and integrated Radio. PA5 depends on successful UART3 remapping to PB20/PB21. Preserve Probe programming/recovery access. The current resource baseline designates SysTick for the ThreadX kernel tick and reserves TMR0 through TMR3; if port integration fails, document and review a resource change.
 
 ### ThreadX Upstream Dependency Source
 
@@ -185,4 +186,4 @@ Obtain the matching WCH SDK/example version, official package drawing, silicon r
 
 ## 8. Validation-Board Hardware Boundary
 
-MCU-001 defines the draft MCU-side resource allocation only. Actual peripheral circuits, supplies, level adaptation, protection, recovery paths, test points, and PCB constraints are controlled by [HW-001](DBG-C-HW-001.en-US.md). V1 requires externally powered nominal 1.8 V and 3.3 V Target domains, VTref-following level adaptation and powered-off isolation on every Target digital signal, and hardware output inhibit for invalid VTref. SWDIO direction control and Target-domain nRESET pull-low/release are required. HW-001 V0.4 permits modular validation-board schematic work; translator parts/numeric limits, active Target power-output scope, custom Type-C mapping, BOOT/recovery timing, PB16–PB21 RF mux, RF matching, and final power/clock values remain evidence-dependent. This does not mean MCU pins have been electrically verified or product hardware is frozen.
+MCU-001 defines the draft MCU-side allocation only; [HW-001](DBG-C-HW-001.en-US.md) controls peripheral circuits, power, level adaptation, protection, recovery paths, test points, and PCB constraints. V1 requires externally powered nominal 1.8 V and 3.3 V Target domains, VTref-following adaptation and powered-off isolation on every Target digital signal, and hardware output inhibit for invalid VTref. SWDIO direction control and Target-domain nRESET pull-low/release are required. HW-001 V0.5 permits continued modular validation-board design; VTref fault isolation, active 3.3 V power circuit, custom Type-C mapping, BOOT/recovery timing, PB16–PB21 RF mux, RF matching, and final power/clock values remain evidence-dependent. The new PA5 control allocation depends on UART3 remapping to PB20/PB21. This does not mean MCU pins have been electrically verified or product hardware is frozen.
