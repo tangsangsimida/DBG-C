@@ -1,6 +1,6 @@
 # DBG-C Verification Specification
 
-**文档编号：** DBG-C-TEST-001　**版本：** V0.68　**状态：** 测试计划草案；PB8/PB9 UI GPIO 适配器 56 项主机模拟寄存器检查通过；SPI1 配置 BSP 19 项及 PA0–PA3 GPIO 模式及 PA3 原始片选电平 BSP 104 项主机模拟寄存器检查通过，SPI 传输未实现；SWD 引擎线模型已接入 CH585 GPIO BSP 模拟寄存器路径，3321 项断言通过；通用 Target Reset 序列服务 24 项主机回调检查及 PB5 复位序列适配器 37 项主机模拟寄存器检查及 PB5 GPIO BSP 69 项主机模拟寄存器检查通过；CH585 JTAG GPIO BSP 四信号映射 116 项及上游 CMSIS-DAP JTAG Sequence、IDCODE 与 DP Transfer 写入/posted-read 经 GPIO BSP 累计 1610 项模拟寄存器主机检查通过；定长包队列（54 项主机检查）、更新事务管理器（57 项主机检查）、FIFO、单向/双向字节流桥接、CMSIS-DAP 命令层、有界 dispatch、SWD 引擎主机模型、边界预检器、CMSIS 编译器映射及 CH585 SWD GPIO、Target Reset/PB6 Target Power GPIO 与 UART0、UID 读取适配器主机/目标静态链接检查已执行；PoC ThreadX 创建状态/tick 观测代码已加入并随目标交叉构建；CH585 BSP/适配器静态库纳入 PoC 交叉构建；产品 UART/命令边界、硅片 UID 与 ThreadX 实板测试未执行
+**文档编号：** DBG-C-TEST-001　**版本：** V0.71　**状态：** 测试计划草案；PB8/PB9 UI GPIO 适配器 56 项主机模拟寄存器检查通过；SPI1 配置 BSP 19 项及 PA0–PA3 GPIO 模式及 PA3 原始片选电平 BSP 104 项主机模拟寄存器检查通过，SPI 传输未实现；SWD 引擎线模型已接入 CH585 GPIO BSP 模拟寄存器路径，3321 项断言通过；通用 Target Reset 序列服务 24 项主机回调检查及 PB5 复位序列适配器 37 项主机模拟寄存器检查及 PB5 GPIO BSP 69 项主机模拟寄存器检查通过；CH585 JTAG GPIO BSP 四信号映射 116 项及上游 CMSIS-DAP JTAG Sequence、IDCODE 与 DP Transfer 写入/posted-read 经 GPIO BSP 累计 1610 项模拟寄存器主机检查通过；定长包队列（54 项主机检查）、更新事务管理器（57 项主机检查）、FIFO、单向/双向字节流桥接、CMSIS-DAP 命令层、有界 dispatch、SWD 引擎主机模型、边界预检器、CMSIS 编译器映射及 CH585 SWD GPIO、Target Reset/PB6 Target Power GPIO 与 UART0、UID 读取适配器主机/目标静态链接检查已执行；PoC ThreadX 创建状态/tick 观测代码已加入并随目标交叉构建；CH585 BSP/适配器静态库纳入 PoC 交叉构建；产品 UART/命令边界、硅片 UID 与 ThreadX 实板测试未执行
 
 ## 1. 通过规则
 
@@ -23,7 +23,7 @@ MCU-001 V0.11 将 Target SWD/JTAG 分配为 PB0–PB3、Target_nRESET 分配为 
 ### 3.2 SWO、VTref 与 Target 电源
 
 - SWO：使用可编程 SWO 源覆盖冻结的编码/速率范围；验证采集、主机数据流、溢出指示及 DAP/UART 并发。波特率范围和丢失门限尚未冻结。
-- VTref：使用校准电源覆盖 IF-001 电压范围、门限边界、掉电和异常电压。记录 ADC 读数、误差、保护节点测量值及判定；量程/精度冻结前不作通过判定。
+- VTref/电平适配：使用校准电源分别提供 1.8 V 与 3.3 V Target 域，覆盖有效门限、异常电压及 Probe/Target 四种供电组合。逐条检查所有 Target 数字线的电平、方向、隔离、反灌电流和最高 SWD/JTAG/UART/SWO 速率；记录 ADC 读数、误差、保护节点及波形。器件级有效门限/精度待冻结，实板未执行。
 - Target 电源控制：验证上电默认态、开关、空载/额定负载/短路、反向供电、热插拔和故障恢复。门限和电路冻结前保持待执行。
 
 ### 3.3 USB 自升级与外部 SPI NOR
@@ -124,7 +124,7 @@ Discovery、设备信息、Pair/Unpair、配置、状态、OTA、中断恢复、
 
 ## 9. CMSIS-DAP 命令核心主机检查
 
-测试对象为固定上游提交的 `Firmware/Source/DAP.c`，通过 `DAP_ExecuteCommand()` 调用。配置位于 `software/common/cmsis_dap_host_test/`，不是 DBG-C 产品配置；SWD 命令处理开启，JTAG 关闭。SWD pin 操作是空操作，底层 `SWD_Transfer()` 由测试桩模拟。测试构建只在 `software/poc1-ch585-threadx/build/host-tests/` 复制并修改 `DAP.h` 延时分支选择条件，没有定义 `__CC_ARM`，也不改动第三方子模块。
+测试对象为固定上游提交的 `Firmware/Source/DAP.c`，通过 `DAP_ExecuteCommand()` 调用。配置位于 `software/common/cmsis_dap_host_test/`，不是 DBG-C 产品配置；SWD 命令处理开启，JTAG 关闭。SWD pin 操作是空操作，底层 `SWD_Transfer()` 由测试桩模拟。测试构建只在 `software/build/archive/poc1-ch585-threadx/host-tests/` 复制并修改 `DAP.h` 延时分支选择条件，没有定义 `__CC_ARM`，也不改动第三方子模块。
 
 | 用例 | 请求/检查 | 通过条件 | 状态 |
 |---|---|---|---|
@@ -320,3 +320,23 @@ SWD GPIO 与 Target Reset GPIO 主机检查分别以普通变量模拟 GPIOB 寄
 | UI-GPIO-HOST-01 | PB8/PB9 映射、五种模式下寄存器位隔离、原始高低电平读写、无效信号/模式和空输出指针 | 56 项检查通过 |
 
 本检查不定义按键有效电平、去抖/唤醒策略、LED 极性/默认态，也不验证外部电路或 CH585M 实板行为。PB18/PB19 因 EVT RF 天线开关复用待确认，未纳入本 BSP。复现命令：`python3 software/tools/python/build_poc1.py --toolchain-root /path/to/riscv-wch-elf/bin --build-dir build/ui-gpio`。
+
+## 11. Validation Board 硬件 Bring-up 与 Gate
+
+本节依据 HW-001 V0.3 增加实板验证计划，不代表现有板级测试已执行。当前无可用板卡，以下项目全部为“未执行”。
+
+| 阶段/用例 | 观测或验证内容 | 通过证据 | 当前状态 |
+|---|---|---|---|
+| 上电前检查 | 电源网、短路、极性、DNI/0R状态、恢复跳线、Target隔离 | 检查表、原理图/BOM版本、测量记录 | 未执行 |
+| 电源/时钟 | VBUS及各MCU电源轨；32 MHz振荡；选装32 kHz；复位启动 | 示波器/电源测量，芯片启动日志，所用晶体/电源料号 | 未执行 |
+| 芯片恢复 | PB22/BOOT与PB23/RST序列；USBFS与官方UART恢复入口 | WCH说明对应的实测波形、下载日志、冷启动恢复记录 | 未执行；入口时序待官方资料确认 |
+| USBHS/USBFS | 独立枚举、热插拔、恢复入口、双控制器冲突检查 | 主机日志、描述符/接口记录、断电/应用损坏恢复日志 | 未执行；并发能力未确认 |
+| Target接口 | PB0–PB5、PB20、PA4直接测试入口及隔离前端 | 引脚/网表连续性、上下电状态波形、保护与误插记录 | 未执行；不得接入不兼容电压 |
+| Target电压/VTref/电源 | 覆盖1.8 V与3.3 V，Probe/Target四种供电组合，逐条测量Target数字线适配和掉电隔离；测VTref误差、反灌、限流、短路、热插拔 | 校准电源读数、示波器波形、掉电注入电流、故障恢复和器件温升记录 | 未执行；转换器、门限和数值判据待冻结 |
+| RF复用/射频 | PB16–PB21复用状态；天线网络；BLE/RF模式分别运行 | 配置/寄存器证据、RF收发日志、射频测量 | 未执行；预编译库占脚待查 |
+| SPI NOR | SPI波形、器件识别、边界读写、掉电恢复 | 器件料号、逻辑分析记录、镜像完整性日志 | 未执行；器件/传输实现未定 |
+| 产品验收门 | ThreadX tick/中断/调度、DAP、SWD/JTAG/UART、OTA等系统项 | 按本规范相应章节和 HW-001 Gate 留存全套版本化证据 | 未执行；不能由验证板原理图完成替代 |
+
+### 原理图 Gate 状态
+
+**可以开始/继续 Validation Board 原理图设计**：MCU-001 引脚基线和当前软件放行门已建立；可以绘制 MCU 核心、USBHS PHY、独立恢复接口、直接 Target 测试点及可隔离模块。Target 电压前端、供电、BOOT/恢复时序、PB16–PB21 RF复用、RF匹配和 Type-C 自定义接口在证据不足时必须保持隔离/待定。PCB Layout 前 Gate 和投板前 Gate 均未通过。该判定不是 Product Board 冻结。

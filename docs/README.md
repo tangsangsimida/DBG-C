@@ -30,7 +30,7 @@
 
 - [项目索引](00-project/README.zh-CN.md) · [未决问题](00-project/DBG-C-OPEN-001.zh-CN.md)
 - [产品需求 PRD-001](01-requirements/DBG-C-PRD-001.zh-CN.md) · [系统架构 SYS-001](02-system/DBG-C-SYS-001.zh-CN.md)
-- [DBG-C Interface IF-001](03-interfaces/DBG-C-IF-001.zh-CN.md) · [MCU 选型与资源评估 MCU-001](04-hardware/DBG-C-MCU-001.zh-CN.md)
+- [DBG-C Interface IF-001](03-interfaces/DBG-C-IF-001.zh-CN.md) · [MCU 选型与资源评估 MCU-001](04-hardware/DBG-C-MCU-001.zh-CN.md) · [硬件设计规范 HW-001](04-hardware/DBG-C-HW-001.zh-CN.md)
 - [代码规范 CODE-001](05-firmware/DBG-C-CODE-001.zh-CN.md) · [固件架构与 PoC-1 FW-001](05-firmware/DBG-C-FW-001.zh-CN.md)
 - [USB Device 规范 USB-001](06-protocols/DBG-C-USB-001.zh-CN.md) · [RF 协议 RF-001](06-protocols/DBG-C-RF-001.zh-CN.md)
 - [验证规范 TEST-001](07-verification/DBG-C-TEST-001.zh-CN.md) · [风险登记册 RISK-001](08-risk/DBG-C-RISK-001.zh-CN.md)

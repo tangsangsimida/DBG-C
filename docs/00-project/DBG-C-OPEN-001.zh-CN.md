@@ -1,31 +1,33 @@
 # DBG-C 未决问题与验证清单
 
-**文档编号：** DBG-C-OPEN-001　**版本：** V0.46　**状态：** 开放项
+**文档编号：** DBG-C-OPEN-001　**版本：** V0.48　**状态：** 开放项；HW-001 V0.3 仅允许验证板模块化原理图继续，不代表产品硬件冻结
 
 | ID | 问题 | 需要的证据/决策 | 影响文档 | 状态 |
 |---|---|---|---|---|
 | O01 | CH585M 可用私有 RF PHY/API、BLE 与私有 RF 并发限制是什么？ | WCH 官方参考手册、SDK/例程版本及实测 | MCU, RF, FW, TEST | 待获取 |
 | O02 | WCH USBHS Device 栈能否承载 CMSIS-DAP v2 Bulk 与 CDC ACM 复合设备？USBFS 恢复通道是否能与 USBHS 同时使用？ | EVT USBHS Device/CDC/IAP 源码、USBHS API/端点资源、ThreadX 集成、主机枚举实测及双控制器资源证据 | MCU, USB, SYS, TEST | 待验证；EVT `SimulateCDC` 头文件声明 `USBHS_IRQHandler()`，但源文件实际定义 `USB2_DEVICE_IRQHandler()`，且 EVT 向量表绑定后者；CDC 示例启用 EP2 RX/TX、EP3 TX，main 为轮询且无 ThreadX。产品 DAP+CDC 描述符、DMA 缓冲所有权、ISR/ThreadX 同步和 USBFS 并发仍无证据 |
 | O03 | RF DAP 往返延迟和重试边界如何满足常见调试器？ | CMSIS-DAP Host 实测及 RF 原型 | RF, TEST, PRD | 待验证 |
-| O04 | DBG-C Basic/Full 在 Type-C 上的合法/可靠引脚及线缆方案？ | USB-IF 最新 Type-C 规范、线缆结构证据、电气评审 | IF, HW, TEST | 待研究 |
+| O04 | DBG-C Basic/Full 在 Type-C 上的合法/可靠引脚及线缆方案？ | USB-IF Release 2.5 适用条款、具体线缆结构/导体映射、双方向测试、电气评审 | IF, HW, TEST | IF-001/HW-001 已记录规范边界；无已批准自定义 Contact→Conductor→Target 映射，保持开放；Target信号需独立测试接口 |
 | O05 | USB 插入、用户选择、无线连接如何决定 Standalone/Host/Target？ | 产品状态机评审，含冲突/切换规则 | PRD, SYS, RF, BLE | 待决策 |
 | O06 | Pairing 是否持久化、是否自动配对、解绑后行为？ | 安全/使用流程评审与持久化测试 | PRD, RF, BLE | 待决策 |
 | O07 | Device ID 的实际来源、长度、读取 API 和认证绑定？ | CH585M SDK/官方接口及安全评审 | MCU, RF, BLE | 部分确认：EVT ROM 命令参数、状态语义及 WCH 8 字节 UID 构造源码已确认；Device ID 产品编码、唯一性/稳定性承诺、认证绑定未决；硅片读取待实板验证 |
 | O08 | USB VID/PID、接口/端点布局、字符串、Serial 策略？ | 正式实现及组织 VID 决策 | USB, TEST | 待决策 |
 | O09 | CDC UART 波特率、流控、目标电平和性能门限？ | 用户需求、电气设计及测量 | PRD, IF, TEST | 待决策；PB4/PB7 UART0 初始化已有 EVT 依据，轮询 BSP 主机模型/目标对象编译通过；产品参数、CDC、实际电气/收发和并发仍待定义验证 |
 | O10 | OTA 是否支持签名、双镜像、回滚及断电恢复？ | WCH Boot/SDK 文档、示例和断电测试 | MCU, FW, BLE, RF, RISK | 待验证；已增加不含 Flash/Boot 后端的通用更新事务管理器及主机模型，签名、存储布局、提交原子性、回滚与断电恢复均未实现或验证 |
-| O11 | 目标 UART/RESET/SWD 最大允许电压、保护和 SWD GPIO 工作模式是什么？ | 冻结 Target 兼容范围、电气规范、SWDIO 上下拉/输出驱动/空闲态/方向切换要求与实测方案 | IF, HW, FW, TEST | 待决策；固定 CMSIS-DAP 的 `DAP_config.h` 将 nRESET 定义为带上拉的开漏输出；数据手册表 7-4 的自动开漏描述限定于 I2C 场景，PB5 在表 1-1 中未列出 I2C 复用；WCH EVT 通用 GPIO 模式没有通用开漏选项。PB5 BSP 已增加按 CMSIS-DAP nRESET 位语义进行方向切换的软件模拟，断言低电平时以调用方选定的推挽模式驱动，释放时切为浮空或上拉输入，69 项模拟寄存器主机检查通过。仍需评审外部上拉/电平转换、电压兼容和安全默认态，并在验证板测量复位有效电平、释放态、电压与脉宽；PB1/PB0 SWDIO 模式、上下拉、驱动及方向切换亦待电气规范确认。
+| O11 | Target数字信号的电平适配、保护和掉电隔离如何实现，SWD GPIO模式与速度边界是什么？ | 按冻结的1.8 V/3.3 V域选定VTref关联适配方案；定义SWDIO上下拉/方向、所有方向信号输出/输入阈值、掉电隔离/注入电流、传播延迟及实测条件 | PRD, IF, HW, FW, TEST | V1电压域已决策为1.8 V与3.3 V，所有Target数字信号必须经VTref关联电平适配且任一侧掉电隔离；禁止CH585M 3.3 V GPIO直连Target。器件型号/拓扑、工作门限、时序、故障范围及实板验证仍开放。PB5方向切换主机检查不证明硬件开漏 |
 | O12 | 性能目标：DAP 延迟、吞吐、射程、稳定运行时长？ | 原型数据与产品评审 | PRD, RF, TEST | 待决策 |
 | O13 | V1 BLE OTA 仅升级 Probe 自身；是否需要 RF OTA？ | 需求确认及资源/安全评审 | PRD, BLE, RF | 待决策 |
 | O14 | PC OS、IDE/OpenOCD/pyOCD 支持矩阵？ | 产品支持策略与逐项互操作测试 | PRD, USB, TEST | 待决策 |
 | O15 | 当前数据手册适用修订、勘误与参考手册版本？ | WCH 官方发布页和芯片版本核对 | MCU, HW, FW | 待获取 |
 | O16 | BLE 无线下载的应用协议、镜像格式、Target 范围和断点续传规则？ | 定义 DBG-C Tool ↔ Probe 协议并选定 Target 验收板 | PRD, BLE, TEST | 待决策 |
-| O17 | USBHS 作为 V1 主接口、USBFS 保留恢复时，两者能否在同一固件中并行启用？若不能，恢复模式如何进入与切换？ | EVT 初始化与控制器资源源码、时钟/DMA/中断审查、验证板双接口测试 | MCU, USB, SYS | USBHS 已选作主接口；USBFS 并行能力与恢复流程待验证 |
+| O17 | USBHS 作为 V1 主接口、USBFS 保留恢复时，两者能否在同一固件中并行启用？若不能，恢复模式如何进入与切换？ | EVT 初始化与控制器资源源码、时钟/DMA/中断审查、验证板双接口测试及 WCH Recovery 入口说明 | MCU, USB, SYS, HW, TEST | USBHS主接口资源可绘制；USBFS与USBHS并发、BOOT入口/时序和恢复介质未证实。验证板需独立可访问并隔离USBFS/官方UART恢复路径；保持开放 |
 | O18 | Eclipse ThreadX RISC-V32/GNU 线程上下文例程及本地 CH585M 低层适配能否正确运行于 QingKe V3C？ | 在 CH585M 板上验证 HPE、PFIC/VTF、启动入口、异常栈帧、SysTick、睡眠唤醒、调度和持续运行 | MCU, FW, TEST | 待实板验证；软件门已放行验证板设计，但当前无可用板卡，芯片运行未执行 |
 | O19 | 进入硬件设计前，PoC-1 的“软件验证通过”门槛是什么？ | 采用 O19 放行标准：两次可复现构建、ELF/链接资源检查、startup/ThreadX 上下文与中断路径静态审查；仅放行验证硬件设计，产品冻结须实板验证 | MCU, FW, SYS, TEST | 1000 tick/s 配置两次干净构建及 ELF/map 复核通过，验证板设计软件门通过；ThreadX 实板运行与产品硬件冻结未通过 |
 | O20 | Arm CMSIS-DAP 固件核心能否由 CH585M 的 WCH RISC-V GCC 编译，需做哪些有依据的编译器/指令集适配？ | 对固定上游提交审查编译器头、内联汇编及端口依赖；完成有依据的适配后验证目标编译和主机命令层，禁止引入 Arm ISA 汇编 | FW, MCU, TEST | 本地 CMSIS 编译器宏适配及编译检查通过；8 项命令层主机检查、9 项 SWD 线模型用例通过；WCH GCC 将测试配置的 `DAP.c`、`SW_DP.c` 编译为 ELF32 RISC-V 对象。产品 HAL、时序校准、USB 接入和固件链接未完成，O20 仍开放 |
 | O21 | 如何在调用 CMSIS-DAP 上游命令处理前，验证实际输入长度及响应容量？ | 明确产品启用命令/功能、厂商命令覆盖策略、字符串回调最大写入量、USB 实际收包长度及请求/响应缓冲容量；把有界 dispatch 接入真实产品 USB 收包路径并覆盖产品命令配置 | USB, FW, TEST | 通用预检与有界 dispatch 已实现：102 项预检检查、5 个上游 dispatch 主机用例及 WCH GCC ELF32 RISC-V 对象编译通过；截断输入和容量不足会在上游调用前被拒绝，vendor/SWO/CMSIS-DAP UART 失败关闭。产品命令与 feature profile、Info 最大写入、USB 收包长度/响应容量及 USB 调用接入尚未实现，O21 保持开放；测试夹具不是产品配置 |
-| O22 | CH585 RF 初始化/预编译库是否启用 `RB_RF_ANT_SW_EN` 并占用 PB16–PB21？ | 审查实际链接库接口/配置；取得可追溯库源码或配置；验证板测引脚复用状态与 RF 收发 | MCU, FW, HW, RF, TEST | 待验证；EVT `CH58x_gpio.h` 定义该功能覆盖 PB16–PB21；当前公开示例源码扫描未找到显式 `GPIOPinRemap(..., RB_RF_ANT_SW_EN)` 调用，但不能据此判断预编译 RF 库不会启用 |
+| O22 | CH585 RF 初始化/预编译库是否启用 `RB_RF_ANT_SW_EN` 并占用 PB16–PB21？ | 审查实际链接库接口/配置；取得可追溯库源码或配置；验证板测引脚复用状态与 RF 收发 | MCU, FW, HW, RF, TEST | EVT `CH58x_gpio.h` 明确该映射覆盖 PB16–PB21；公开 RF 示例未找到显式调用，不能据此排除库内配置。HW-001要求相关板网可隔离；真实库行为及实板 RF 测试仍待验证 |
+| O23 | CH585M 电源/32 MHz与32 kHz时钟、去耦、RF匹配的验证板电路值和装配选项是什么？ | 对照数据手册具体章节、WCH参考原理图、所选器件数据手册与SDK时钟要求，形成逐网/逐器件审查记录 | MCU, HW, FW, TEST | HW-001 V0.3 已列出设计输入和门槛；EVT示例数值不直接作为DBG-C定值。32 kHz是否装配、供电/去耦最终值及RF匹配/布局需来源核对，投板前关闭 |
+| O24 | Validation Board 的 Target 接口安全默认态、掉电矩阵及误插/ESD/热插拔验收门限是什么？ | HW-001/IF-001 每信号电气表；Probe/Target四种供电组合、故障电压/时长、批准IEC 61000-4-2等级和系统判据；实板测试记录 | PRD, IF, HW, TEST, RISK | 安全要求已纳入 IF-001；具体器件、电气数值、ESD等级和故障门限仍需产品/EMC评审及验证板数据，未执行 |
 
 ## O07 UID 接口证据更新
 

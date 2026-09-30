@@ -1,6 +1,6 @@
 # DBG-C MCU 选型与资源评估
 
-**文档编号：** DBG-C-MCU-001　**版本：** V0.15　**状态：** CH585M V1 原理图资源分配草案；PoC tick 目标 1000 tick/s；1000 tick/s 配置已完成两次固定路径干净构建复核；实板验证未执行
+**文档编号：** DBG-C-MCU-001　**版本：** V0.17　**状态：** CH585M V1 MCU 资源分配草案；Target 1.8 V/3.3 V域要求由 IF-001/PRD-001规定；验证板硬件输入见 HW-001 V0.3；实板验证未执行
 
 ## 1. 证据来源
 
@@ -99,7 +99,7 @@ SPI 能力核对还使用 `EVT/EXAM/SRC/StdPeriphDriver/CH58x_spi1.c`（SHA-256 
 | Target UART/CDC | 全双工 UART 桥 | UART0；PB4 QFN48-20=RXD0，PB7 QFN48-17=TXD0 | EVT UART0 引脚和接口已核；CDC 桥接、速率和并发待实现/验证 |
 | SWO | NRZ SWO 接收 | PB20 QFN48-28=RXD3_；UART3 RX 由 EVT `RB_PIN_UART3` 重映射至 PB20 | 头文件声明映射；SWO 采样、波特率和 CMSIS-DAP SWO 输出路径待实现/验证 |
 | Target VTref | 目标电压检测 | PA4 QFN48-36=ADC A0 | 仅确认 ADC 复用名；分压、钳位、量程、校准和判定阈值待电气设计/测量 |
-| 外部 SPI NOR | 升级缓存、回滚、日志及离线镜像候选存储 | SPI1：PA0= SCK1、PA1=MOSI1、PA2=MISO1；PA3=GPIO CS | 引脚复用已核；Flash 型号/容量、协议、时钟与分区待选型/实现；不能据此冻结 Flash 布局 |
+| 外部 SPI NOR | 升级缓存、回滚、日志及离线镜像暂存资源 | SPI1：PA0= SCK1、PA1=MOSI1、PA2=MISO1；PA3=GPIO CS | 引脚复用已核；Flash 型号/容量、协议、时钟与分区待选型/实现；不能据此冻结 Flash 布局 |
 | 私有 RF/BLE | 私有 2.4 GHz 与 BLE 管理 | 芯片集成 Radio；ANT QFN48-34 | EVT 有 RF 示例；协议、DMA、RF 与 BLE 同时运行能力待源码/库接口分析及板测 |
 | Probe 自身调试/复位 | 生产调试和恢复 | PB15 QFN48-11=TCK；PB14 QFN48-12=TIO；PB23 QFN48-25=RST | 依数据手册保留；是否持续开放由生产策略确定 |
 | BOOT 控制 | 官方下载/恢复入口 | PB22 QFN48-26 接板级 BOOT 控制网络 | EVT 参考原理图确认网络；芯片复用表没有专用 BOOT 功能，启动条件待官方文档确认 |
@@ -182,3 +182,7 @@ ThreadX 上游该版本包含 `ports/risc-v32/gnu`，PoC 使用通用上下文�
 ## 7. 必须补齐的资料
 
 匹配的 WCH SDK/例程版本、官方封装图、芯片修订/勘误、USBHS Device 与 USBFS recovery 示例和恢复说明、CH585M 射频天线参考设计、RF/BLE 共存说明、OTA/ISP/IAP 入口与接口、Target 信号电气规格及系统时钟要求。取得后更新此文并记录文件版本/哈希与审阅日期。
+
+## 8. 验证板硬件接口边界
+
+MCU-001 只定义 MCU 侧资源分配草案；实际外围电路、供电、电平转换、保护、恢复路径、测试点和 PCB 约束由 [HW-001](DBG-C-HW-001.zh-CN.md) 管理。V1 Target I/O域为1.8 V与3.3 V，所有Target数字信号必须使用VTref关联电平适配和掉电隔离。HW-001 V0.3允许验证板模块化原理图继续，但转换器件、Target Power、Type-C自定义映射、BOOT/恢复时序、PB16–PB21 RF复用、RF匹配及供电/时钟具体值仍需证据。此结论不等于MCU引脚已电气验证或产品硬件冻结。

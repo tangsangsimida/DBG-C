@@ -14,6 +14,7 @@ from pathlib import Path
 
 
 SOFTWARE_ROOT = Path(__file__).resolve().parents[2]
+SOFTWARE_BUILD_ROOT = SOFTWARE_ROOT / "build"
 PROJECT_DIR = SOFTWARE_ROOT / "poc1-ch585-threadx"
 REPO_DIR = SOFTWARE_ROOT.parent
 HOST_FLAGS = ["-std=c99", "-Wall", "-Wextra", "-Werror", "-pedantic"]
@@ -34,22 +35,30 @@ class BuildFailure(Exception):
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--build-dir", type=Path, help="构建目录，必须位于当前 PoC 目录内")
+    parser.add_argument(
+        "--build-dir",
+        type=Path,
+        help="构建目录，必须位于 software/build/ 内；默认 software/build/poc1-ch585-threadx/",
+    )
     parser.add_argument("--toolchain-root", type=Path, help="WCH 工具链目录；也可设置 DBGC_WCH_TOOLCHAIN_ROOT 或将工具加入 PATH")
     parser.add_argument("--host-cc", help="主机 C 编译器；也可设置 CC")
     parser.add_argument("--generator", help="可选的 CMake generator 名称")
     return parser.parse_args()
 
 
-def resolve_inside_project(path: Path, label: str) -> Path:
-    """Resolve a path and require it to be a child of the PoC directory."""
+def resolve_build_directory(path: Path) -> Path:
+    """Resolve build paths under software/build, accepting the former build/ prefix."""
+    if not path.is_absolute():
+        if path.parts and path.parts[0] == "build":
+            path = Path(*path.parts[1:])
+        path = SOFTWARE_BUILD_ROOT / path
     resolved = path.resolve()
     try:
-        relative = resolved.relative_to(PROJECT_DIR)
+        relative = resolved.relative_to(SOFTWARE_BUILD_ROOT.resolve())
     except ValueError as exc:
-        raise BuildFailure(f"{label} 必须位于 {PROJECT_DIR} 下：{resolved}") from exc
+        raise BuildFailure(f"构建目录必须位于 {SOFTWARE_BUILD_ROOT} 下：{resolved}") from exc
     if not relative.parts:
-        raise BuildFailure(f"{label} 不能是 PoC 根目录：{resolved}")
+        raise BuildFailure(f"构建目录不能是 software/build 根目录：{resolved}")
     return resolved
 
 
@@ -285,12 +294,12 @@ def run_target_checks(log, toolchain_root: Path, upstream_dir: Path) -> None:
 
 def run_build(args: argparse.Namespace) -> None:
     global BUILD_DIR
-    requested_build_dir = args.build_dir or Path(os.environ.get("DBGC_BUILD_DIR", "build"))
-    if not requested_build_dir.is_absolute():
-        requested_build_dir = PROJECT_DIR / requested_build_dir
-    BUILD_DIR = resolve_inside_project(requested_build_dir, "Build directory")
+    requested_build_dir = args.build_dir or Path(
+        os.environ.get("DBGC_BUILD_DIR", "poc1-ch585-threadx")
+    )
+    BUILD_DIR = resolve_build_directory(requested_build_dir)
     BUILD_DIR.mkdir(parents=True, exist_ok=True)
-    evidence_log = resolve_inside_project(BUILD_DIR / "build-evidence.log", "Evidence log")
+    evidence_log = BUILD_DIR / "build-evidence.log"
 
     requested_toolchain = args.toolchain_root or os.environ.get("DBGC_WCH_TOOLCHAIN_ROOT")
     if requested_toolchain:
@@ -351,7 +360,7 @@ def main() -> int:
     return 0
 
 
-BUILD_DIR = PROJECT_DIR / "build"
+BUILD_DIR = SOFTWARE_BUILD_ROOT / "poc1-ch585-threadx"
 
 
 if __name__ == "__main__":

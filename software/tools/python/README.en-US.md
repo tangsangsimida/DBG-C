@@ -42,10 +42,10 @@ After confirming the preview, add `--write` to modify the file. The converter ne
 python3 software/tools/python/build_poc1.py
 ```
 
-The build tool resolves `python3`, `git`, `cmake`, the selected CMake generator (such as GNU Make or Ninja), the host C compiler, and `riscv-wch-elf-*` tools through `PATH`. In fish, use `fish_add_path /path/to/tool-directory` to add executable directories to `PATH`, or `set -gx DBGC_WCH_TOOLCHAIN_ROOT /path/to/toolchain/bin` to select the toolchain directory. Set `CC` to select the host compiler, `CMAKE` to select the CMake command, or `DBGC_WCH_TOOLCHAIN_ROOT` to identify the WCH toolchain `bin` directory. Select a build directory with `--build-dir`; it must remain under the PoC directory. For example:
+The build tool resolves `python3`, `git`, `cmake`, the selected CMake generator (such as GNU Make or Ninja), the host C compiler, and `riscv-wch-elf-*` tools through `PATH`. In fish, use `fish_add_path /path/to/tool-directory` to add executable directories to `PATH`, or `set -gx DBGC_WCH_TOOLCHAIN_ROOT /path/to/toolchain/bin` to select the toolchain directory. Set `CC` to select the host compiler, `CMAKE` to select the CMake command, or `DBGC_WCH_TOOLCHAIN_ROOT` to identify the WCH toolchain `bin` directory. The default output is `software/build/poc1-ch585-threadx/`; `--build-dir NAME` writes to `software/build/NAME/`. Build products and evidence logs stay under `software/build/`. For compatibility with existing reproduction commands, `--build-dir build/NAME` also maps to `software/build/NAME/`. For example:
 
 ```fish
-python3 software/tools/python/build_poc1.py --build-dir build/host-review --host-cc cc
+python3 software/tools/python/build_poc1.py --build-dir host-review --host-cc cc
 ```
 
 The script runs the existing host checks and target-object checks, then records build evidence. Their test declarations are still explicit in the build script, so a new case must be registered once; each run executes the registered checks automatically. The script does not verify CH585M board runtime. Build outputs and local environment configuration remain developer-managed; the scripts do not set machine-specific installation paths.

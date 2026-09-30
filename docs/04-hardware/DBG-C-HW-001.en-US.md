@@ -1,0 +1,250 @@
+# DBG-C Hardware Design Specification
+
+**Document ID:** DBG-C-HW-001　**Version:** V0.3　**Status:** Validation-board design-input draft; V1 requires 1.8 V/3.3 V Targets and VTref-associated level adaptation; not a product-board freeze basis
+
+## 1. Scope and Design Gate
+
+This document defines electrical design inputs for the CH585M validation board and future product hardware. MCU package pins and peripheral allocation are controlled by [MCU-001](DBG-C-MCU-001.en-US.md); the connector contacts between DBG-C and a Target remain controlled by [IF-001](../03-interfaces/DBG-C-IF-001.en-US.md). The current software gate permits validation-board design only. A validation board is for measurement and does not mean the V1 product circuit or PCB is frozen.
+
+Disposition: **Validation-board schematic work may continue only for the core, USB PHY, isolated test access, and peripheral modules whose signal names/directions/MCU resources/power domains/safe defaults are defined. Circuits with unresolved translator selection, Target power, connector contacts, or component-level fault parameters must remain modular and must not be treated as finalized circuits.** PCB layout and product-hardware gates have not passed.
+
+## 2. Evidence and Limits
+
+The repository [CH585/CH584 Datasheet V1.6](../09-references/CH585-CH584_Datasheet_V1.6.pdf) is the project baseline; its SHA-256 is `68270bbf3424956f36183bb6f0fef5b8892b540026f56fab3a7c0a1976d596f3f`. The official EVT archive index is dated 2026.08. Reviewed archive files include `EVT/PUB/CH585SCH.pdf`, USBHS IAP, GPIO/UART/SPI/ADC drivers, and RF examples. The EVT schematic is reference evidence, not an approved DBG-C circuit. Prebuilt RF-library behavior, silicon electrical behavior, and board results cannot be inferred from an example. The archive hash and handling rules are in the [EVT reference note](../09-references/CH585EVT/README.md).
+
+| Evidence class | Meaning |
+|---|---|
+| Manual/source confirmed | Confirms only functions, package pins, or software interfaces explicitly stated in the source |
+| Validation-board input | A connection, jumper, or test point retained to obtain measurements; not a product commitment |
+| Pending verification | Official evidence, selection data, or board results are insufficient; do not insert experience-based values |
+
+## 3. Schematic Module Hierarchy
+
+No EDA project or hardware naming convention is currently committed. The following is a suggested validation-board sheet hierarchy; final names shall follow the selected EDA project rules.
+
+| Sheet | Suggested module | Design boundary |
+|---:|---|---|
+| 01 | CH585M core | QFN48, all supply pins, decoupling, reference clocks, reset |
+| 02 | Power entry and tree | PC VBUS, system supply, probe supply, Target power isolation |
+| 03 | Programming, debug, and recovery | TIO/TCK, RST, BOOT, recoverable USBFS/UART access |
+| 04 | USBHS PC interface | USB-C receptacle, CC, VBUS detection, D+/D−, ESD |
+| 05 | USBFS recovery interface | Independently accessible recovery connection; no USBHS wiring tie |
+| 06 | Target debug and UART | VTref-associated level-adaptation front ends for SWD/JTAG/UART/Reset; isolatable test points on both sides of the adaptation path, with no Target operating path that bypasses adaptation |
+| 07 | VTref and Target power | ADC front end, level compatibility, current/back-feed protection |
+| 08 | External SPI NOR | PA0–PA3, device footprint and bus test points; part TBD |
+| 09 | BLE/private RF | RF supply, official reference network, antenna and test boundary |
+| 10 | Key, LEDs, and test points | GPIO loads, observable signals, configurable jumpers |
+
+## 4. MCU Pin and Net Baseline
+
+The MCU-side nets below follow the current MCU-001 allocation. They do not define Type-C connector contacts and do not prove simultaneous operation.
+
+| Pin | MCU-side net/use | Schematic constraint |
+|---|---|---|
+| PB0 / PB1 | TARGET_SWCLK_TCK / TARGET_SWDIO_TMS | Shared SWD/JTAG signals; retain separate test points and an isolatable path |
+| PB2 / PB3 | TARGET_TDI / TARGET_TDO | JTAG signals; unused state requires firmware/electrical definition |
+| PB4 / PB7 | TARGET_UART_RX / TARGET_UART_TX | MCU perspective; connect to Target TX / RX through an electrical front end |
+| PB5 | TARGET_nRESET | Separate from MCU PB23/RST; driver topology TBD |
+| PB6 | TARGET_PWR_EN | GPIO control resource only; do not drive a load directly |
+| PA4 | TARGET_VTREF_ADC | ADC A0; voltage/current limiting required; no assumed arbitrary VTref compatibility |
+| PB20 | TARGET_SWO | UART3 RX remap resource; resolve RF antenna-switch mux conflict |
+| PB10 / PB11 | USBFS D− / D+ | Recovery channel; do not connect to USBHS |
+| PB12 / PB13 | USBHS D− / D+ | Primary PC USB Device interface |
+| PB14 / PB15 | CH585 TIO / TCK | Probe self-debug; keep separate from Target debug nets |
+| PB22 / PB23 | BOOT board net / CH585 RST | BOOT entry conditions TBD; PB23 is MCU reset |
+| PA0–PA2 / PA3 | SPI1 SCK/MOSI/MISO / GPIO CS | SPI1 transfer/recovery not implemented; PA3 CS is project allocation |
+| PB8 / PB9 / PB18 / PB19 | KEY_MODE / LED_TARGET / LED_USB / LED_RF | PB18–PB19 conflict with RF antenna-switch mux remains unresolved |
+| PB16 / PB17 / PB21 | EXT_IRQ / EXT_RESET_N / reserve | Potential RF antenna-switch conflict; use isolatable pads |
+
+## 5. CH585M Core, Power, and Clocks
+
+### 5.1 Supply Nets
+
+The CH585M supply-pin evidence is in datasheet §1.2 Table 1-1, §5.1 Figure 5-1, §22.2 Table 22-2, and EVT `EVT/PUB/CH585SCH.pdf`. The current evidence gives these connection/value inputs; the DC-DC mode, VDD33/VIO33 supply relationship, and board-level component values require a power-design decision. Do not mix values for different modes.
+
+| Net/pin | Official function/recommendation | Schematic decision status |
+|---|---|---|
+| VDD33 | System supply input. Table 22-2: 3.15–3.45 V when USB is used; 1.85–3.6 V otherwise | USBHS V1 design uses USB condition for review; system regulator/source budget remains open |
+| VIO33 | GPIO and Flash I/O supply. Table 22-2 gives 3.15–3.45 V with USB and 1.85–3.6 V without USB | Do not merge with Target VTref; review relationship to VDD33 against WCH reference circuit |
+| VDCID | Internal digital LDO supply input; with DC-DC, recommended 4.7 µF (supports 1–10 µF); without DC-DC, at least 1 µF recommended | Select by final DC-DC mode; part/layout review pending |
+| VSW | DC-DC switch output; when enabled, place an inductor close to the pin in series to VDCID, recommended 10 µH (supports 4.7–22 µH); when disabled, it may connect directly to VDCID | DC-DC mode and inductor require power/startup review; do not mix mode-specific wiring |
+| VDD33 decoupling | Datasheet pin table: with DC-DC, 2.2 µF or 1 µF recommended; without DC-DC, at least 1 µF recommended | Review with source impedance, USB load, and layout |
+| VINTA | Internal analog supply node; 0.47 µF recommended without DC-DC; with DC-DC at least 0.47 µF, supports 0.47–2.2 µF | Implement for selected mode and WCH layout requirements |
+| VDCIA | Internal analog LDO supply input; 0.1 µF recommended and connect directly to VDCID | Cross-check each net against reference circuit |
+| GND/exposed pad | Common ground and device substrate | Review pad connection against package data and WCH land pattern |
+
+Datasheet §5.1 states that system supply enters through VDD33 and GPIO/Flash I/O supply through VIO33. Direct feed is the power-up default; DC-DC is an optional efficiency mode. The validation board shall select one mode and keep supply wiring, decoupling/inductor, and firmware configuration consistent. WCH EVT topology is a reference, not a substitute for DBG-C power budgeting and PCB review.
+
+### 5.2 Decoupling and Bulk Storage
+
+Place decoupling near each supply pin per WCH recommendations. RF/USB load transients and supply integrity require review against the official reference design. Values, count, packages, and placement must be recorded in schematic/BOM review; this document does not guess them. Provide measurement access to MCU rails, VBUS, and Target supply.
+
+### 5.3 Clocks
+
+Connect the 32 MHz crystal to X32MI/X32MO and check load capacitance, ESR, drive, and layout against the datasheet and EVT reference. The EVT schematic annotates a 32 MHz ±10 ppm, 12 pF, 30 Ω crystal example. That annotation describes the example part only and is not automatically a DBG-C purchasing specification. Obtain the selected crystal's full data and calculate the load.
+
+PA10/PA11 provide 32 kHz crystal functions. Assembly depends on the CH585 BLE/RF SDK requirements for low-speed clock source, accuracy, power, and RF behavior. The current review has not produced a traceable decision; reserve optional pads on the validation board, with values and population TBD.
+
+### 5.4 MCU Reset, TIO/TCK, BOOT, and Recovery
+
+PB23/RST is CH585 reset; PB14/TIO and PB15/TCK are the chip's own debug interface. Keep accessible debug/reset points on the validation board. PB22 connects to a board-level BOOT download switch in the WCH reference schematic, but the reviewed manual/examples do not establish entry level, reset-sampling order, or the corresponding ISP medium. Do not freeze a button or pull value from this alone.
+
+Recovery must not depend on application firmware running. The exact combination and entry sequence for USBFS PB10/PB11 and official UART ISP-related PA8/PA9/PA14/PA15 require WCH's official download instructions. Until obtained, retain accessible recovery pads/test points. Application-level USB update must not be the only recovery path.
+
+## 6. USB Hardware Interfaces
+
+### 6.1 USBHS PC Interface
+
+PB12=USBHS D− and PB13=USBHS D+ are supported by the datasheet and EVT examples, so schematic work on the USBHS PHY module may continue. Type-C receptacle CC1/CC2, VBUS, GND, Shield, Device pull-down/power role, VBUS detection, ESD, series components, and differential routing must each be checked against USB-IF Type-C/USB specifications and WCH's official reference design. Component values, differential impedance, and protection part are not frozen.
+
+CMSIS-DAP v2 Bulk, CDC ACM descriptors/endpoints, and VID/PID belong to firmware/USB specifications. Their lack of freeze does not block drawing the physical PHY, but enumeration compatibility must not be claimed. Ordinary USB-C PC cables are for the PC USB function; Target custom signals must not use those cable contacts.
+
+### 6.2 USBFS Recovery
+
+PB10/PB11 are USBFS D−/D+. Concurrent USBFS and USBHS operation in one firmware remains unverified. Provide an independently accessible recovery connector/pads and use a jumper or explicit isolation so the two PHYs are not electrically tied together. Connector choice, recovery firmware entry, and simultaneous power relationship require design verification.
+
+## 7. DBG-C Target Interface and Cables
+
+IF-001 Basic/Full remain conceptual and define no connector contacts. The USB-IF USB Type-C Cable and Connector Specification Release 2.5 (2026-04-08) is the formal revision found in this review; its scope explicitly limits third-party functionality of Type-C connectors/cables to functionality described by the specification. Therefore, Type-C receptacle contacts cannot be treated as arbitrary DBG-C signal conductors, and an ordinary passive USB 2.0 cable cannot be described as carrying SWD/UART/Reset.
+
+| Contact/conductor class | USB specification use | DBG-C validation-board conclusion |
+|---|---|---|
+| D+/D− | USB 2.0 data | Use for PC USBHS/USBFS; do not repurpose as Target signals |
+| CC1/CC2 | Type-C attach/orientation/power-role related | Do not use as Target GPIO; implement per USB Type-C specification |
+| VBUS/GND | Bus power/return | Do not connect to Target power without analyzed isolation |
+| SBU1/SBU2 | Defined sideband use | Conductor continuity in an ordinary USB 2.0 cable cannot be assumed; do not freeze custom mapping |
+| SuperSpeed TX/RX pairs | USB 3.x high-speed differential links | Not guaranteed in passive USB 2.0 cables; active cables may retime/convert and cannot be assumed transparent for custom low-speed signals |
+| Shield | Shield/chassis related | Bonding strategy requires EMC/ESD and power review |
+
+There are currently **no approved rows** for Connector Contact→Cable Conductor→Target Signal mapping. Select a specific connector/cable assembly and prove it with formal construction data, orientation matrix, and continuity measurements before populating that mapping. Receptacle orientation, CC orientation detection, and any MUX are also unfrozen. Bring all Target SWD/JTAG/UART/nRESET/SWO/VTref/Target Power/GND signals to separate test points or isolatable headers so Type-C experiments cannot block other tests.
+
+## 8. Target Electrical Front Ends
+
+### 8.1 Voltage Compatibility, SWD/JTAG, and UART
+
+The DBG-C V1 Target I/O domains are frozen by requirement as **1.8 V and 3.3 V**. Every Target-facing digital signal shall use level adaptation associated with Target VTref measured by `TARGET_VTREF_ADC` and shall be isolated when either Probe or Target is unpowered. Do not directly connect CH585M 3.3 V GPIO to the Target. Review WCH GPIO/ADC limits and specifications for not-yet-selected parts before selecting the specific part/topology.
+
+SWDIO/TMS is bidirectional and requires verification of direction changes, output-enable timing, pulls, and bus contention. SWCLK/TCK, TDI, and Probe UART TX are outputs; TDO, Target UART TX, and SWO are inputs; nRESET is in the Target voltage domain. Every digital path requires VTref-associated level adaptation and review of power-off isolation/high impedance, safe startup default, overvoltage, back-feed, propagation delay, speed/edge, and ESD. Whether multiple translator devices are needed must follow device data and SWD bidirectional timing; no part is assumed here. Keep replaceable footprints and test points on the validation board; do not provide a 3.3 V direct-to-Target operating path that violates this requirement.
+
+### 8.2 Target nRESET
+
+Firmware direction-switch emulation does not prove a hardware open-drain output. nRESET is in the Target voltage domain and must default to released; Probe power-off/reset, Bootloader, or firmware failure shall not assert it. Evaluate a safe open-drain/equivalent output with released level sourced from Target-side VTref and powered-off isolation. Part, pull value, polarity, pulse width, and fault behavior require component review and board verification.
+
+### 8.3 VTref Detection
+
+The DBG-C V1 Target domains are 1.8 V and 3.3 V; PA4/A0 detection must cover both and distinguish a valid Target supply from power-off/abnormal states. PA4/A0 currently has a raw ADC BSP and modeled-register host checks only; silicon sampling, divider, range, error, and protection are unverified. Calculate divider resistance, input impedance, RC, clamp, and error budget from CH585 ADC input/reference, injection-current, and accuracy specifications. Thresholds and calibration values require calculation and verification.
+
+VTref sensing and the translator reference supply are separate electrical nodes/functions. Target VTref shall be associated with digital level adaptation, but do not use the PA4 divider node directly as translator supply. Measure sensing and reference-supply paths separately and implement power-off isolation. Absent, out-of-range, and abnormal voltage shall fail safely by preventing Target operations.
+
+### 8.4 Target Power
+
+PB6 is only a control GPIO. Whether USB VBUS may power a Target, output voltage/current, regulator or load switch, current limit, short-circuit protection, reverse current, inrush, externally powered Target behavior, and Fault/PG sensing are unfrozen. A disconnected power block and measurement points may be reserved on the validation board, but do not populate and drive a Target until the power budget, Target voltage range, and component data are reviewed. Current measurement is not a mandatory V1 feature.
+
+## 9. SPI NOR, RF, and UI
+
+### 9.1 SPI NOR
+
+PA0–PA2 are allocated to SPI1 and PA3 to GPIO CS. The transfer driver, timeout recovery, and storage model are unfinished; Flash capacity must not be inferred from PoC image size. Before selection, budget APP, update staging, rollback, recovery, configuration, metadata, integrity data, and future offline Target images. Define concurrent-copy and failure-recovery semantics, then select a commonly available 3.3 V SPI NOR. Part, capacity, and package are TBD.
+
+| Data class | Planned use | Freeze boundary |
+|---|---|---|
+| Running Probe APP | Runs from CH585M internal CodeFlash | Budget against final link map and Boot layout; do not assume external NOR replaces the internal boot image |
+| USB/RF/future BLE update image | Received by the unified Update Manager; external NOR stages the complete image before verification and Boot/install processing | Image format, integrity/authentication algorithm, atomic commit, and Boot interface are unfrozen; do not erase the only running image directly |
+| Rollback/Recovery | Keeping a recovery image or previous version depends on Boot update mechanism and Flash capacity | External staging does not itself provide rollback; internal A/B, BackupUpgrade, and external boot are not selected |
+| Configuration/pairing metadata | Select DataFlash or external NOR after persistence requirements are reviewed | Atomic writes, endurance, layout, and identity binding are not frozen |
+| Update metadata | Records receive state, length, version, verification result, and recovery phase | Field/format follow the formal update protocol and Boot design; this document assumes no storage structure |
+| Offline Target images | Capacity-budget input for later offline programming | Not a frozen mandatory V1 feature; select Flash only after capacity is budgeted |
+
+USB, 2.4 GHz, and future BLE are image-transport entry points only; Flash writes, integrity checks, commit state, and recovery belong to the unified update logic. SPI1 transfer and the NOR backend are not implemented. This is a capacity/reliability design boundary, not an executable partition layout.
+
+### 9.2 BLE and 2.4 GHz RF
+
+BLE and private RF use the same RF subsystem; full simultaneous operation is not assumed. EVT `CH58x_gpio.h` declares `RB_RF_ANT_SW_EN` as using PB16–PB21 for antenna-switch outputs. Thus PB16/PB17 expansion, PB18/PB19 LEDs, PB20 SWO, and PB21 reserve may conflict. Failure to find an explicit remap call in public examples does not prove a prebuilt RF library will not enable it. Isolate these nets on the validation board using 0R links/solder bridges/disconnect options; do not permanently connect conflicting loads before resolution.
+
+RF antenna, matching, clearance, ground plane, and routing must come from traceable WCH RF references and the selected antenna vendor. The reviewed EVT schematic text is insufficient to establish the complete matching/layout requirements for a DBG-C PCB. Matching-network footprints may be reserved, but do not enter unsupported values. Before PCB release, review the RF schematic/layout and establish a VNA or board-tuning plan.
+
+### 9.3 Key and LEDs
+
+PB8/PB9/PB18/PB19 GPIO host-model checks do not establish LED current, polarity, mux conflicts, or key default state. Make validation-board loads current-limited and disconnectable; isolate PB18/PB19 while RF conflict remains open. Values, polarity, and key timing are TBD by part selection and firmware specification.
+
+## 10. Protection, Test Points, and Configuration Options
+
+Analyze ESD/EOS, misconnection, short circuit, reverse polarity, hot plug, and reverse current separately for USB, Target signals, external connectors, and power rails. Protection level/part are unfrozen. No unreviewed back-feed path may connect PC VBUS, Target Power, Target VTref, or MCU supplies.
+
+Validation-board test points shall cover at least: VBUS, system/MCU rails, GND, a measurement method for X32MI/X32MO, optional 32 kHz, RST, BOOT, TIO, TCK, USBHS/USBFS D+/D−, SWCLK, SWDIO, TDI, TDO, Target nRESET, UART TX/RX, SWO, VTref front-end input and PA4 node, TARGET_PWR_EN, Target Power output, SPI1 SCK/MOSI/MISO/CS, RF measurement nodes, and ThreadX tick/runtime observation GPIO if required by the test plan. RF probing must not compromise impedance or antenna behavior and must follow an official method.
+
+Use series 0R links, solder bridges, headers, or DNI parts for unfrozen electrical options so SWDIO direction, Target levels, reset output, Target power, PB16–PB21 mux, and Type-C experiments can change. Values/packages require design-for-test and safety review. Cross-check the test-point list with TEST-001 board cases.
+
+## 11. PCB Layout Constraints
+
+Before PCB layout, obtain and follow WCH CH585M package, power, and RF references. Review USBHS/USBFS differential paths and return, crystal layout, DC-DC current loops, RF antenna clearance and ground, Target interface protection/return, power-domain isolation, and coupling among USB, RF, clocks, and switching supplies. Do not invent impedance, spacing, clearance, stack-up, or antenna dimensions when evidence is missing. The validation board shall retain measurement and rework capability.
+
+## 12. Validation Board and Product Board Gates
+
+### Per-signal default-state baseline
+
+Before drawing individual electrical circuits, use these reviewable safe defaults: Target Power off; every Target digital level adapter output disabled by default, isolating/high-impedance on both Probe and Target sides; enable Target outputs only after VTref is within a frozen valid range and direction is configured; `TARGET_nRESET` released by default. Protect the VTref ADC input according to its limits; it is not the digital translator supply. Verify resistor values, logic polarity, and enable devices against the selected parts' data sheets before schematic freeze.
+
+| Signal group | Logical direction | Safe state at power-up/reset/pre-init | Enable condition |
+|---|---|---|---|
+| TARGET_SWCLK_TCK / TARGET_TDI | Probe to Target | Probe output disabled; adapter does not drive Target side | Valid VTref and Target operation started |
+| TARGET_SWDIO_TMS | Bidirectional | Bidirectional outputs disabled/high impedance; no current injected into Target | Direction configured and VTref valid |
+| TARGET_TDO / TARGET_UART_RX / TARGET_SWO | Target to Probe | Probe input isolated and does not load Target signal | VTref valid and receive path configured |
+| TARGET_UART_TX | Probe to Target | Adapter disabled/high impedance | VTref valid and CDC/UART started |
+| TARGET_nRESET | Probe-controlled, Target domain | Released; do not assert | Brief assertion only on valid reset request |
+| TARGET_VTREF_ADC | Analog Sense | Current-limited/clamped within ADC-safe range | ADC initialized before sampling |
+| TARGET_PWR_EN | Internal control | Off by default | Explicit power request and protection valid |
+
+### Before schematic entry
+
+- Freeze signal names/directions/MCU resources/power domains and safe defaults; import MCU-001 pin/net baseline; keep PB23/RST separate from PB22/BOOT.
+- Define validation-board scope, power sources, and connection prohibitions; mark unresolved electrical values/parts TBD/DNI.
+- Establish CH585M core, USBHS, USBFS recovery, direct Target access, and test-point sheets.
+
+### Evidence that may be completed during schematic work
+
+- USB descriptors/endpoints; USBHS/USBFS concurrency; custom Type-C Target mapping; VTref accuracy; translator selection; Target power; RF mux/clocks; SPI NOR part/capacity.
+- Draw these as modular, isolatable, replaceable blocks; do not report them frozen.
+
+### Required before PCB layout
+
+- Cross-check each WCH power, decoupling, crystal, USB, and RF reference and cite its source.
+- Review Target voltage front end and powered-off/back-feed cases; Target power tree; recovery accessibility.
+- Decide PB16–PB21 RF mux strategy; source antenna/matching network; set USB/crystal/DC-DC/RF layout constraints.
+- If Type-C carries custom Target signals, first establish specification permission, cable-conductor evidence, orientation handling, and tests. Otherwise, do not route the custom interface.
+
+### Required before fabrication
+
+- Schematic ERC/review, footprint check, power/protection calculations, test-point list, DNI/0R states, recovery-entry exercise plan, and open-risk review.
+- Document safe experimental connection boundaries for every unverified block; never connect an unknown voltage directly to the chip or Target.
+
+### Required before V1 product hardware freeze
+
+- Pass and record TEST-001 board cases for ThreadX startup/tick/interrupt/context/sleep-wake; USB, Target interface, SWD/JTAG/UART, VTref/power, RF, and recovery acceptance.
+- Review electrical specifications, cable/connector compatibility, BOM, PCB, EMC/ESD, and fault recovery for all required product interfaces.
+- Close product-freeze blockers in OPEN-001 or disposition them through a formal change decision; document evidence and treatment for high RISK-001 items.
+
+## 13. Items Requiring Board Tests or Additional Official Evidence
+
+| Item | Required evidence |
+|---|---|
+| Final CH585M supply/crystal/decoupling wiring | Datasheet page citation, WCH circuit review, selected part parameters, rail measurements |
+| BOOT/ISP/USBFS/UART recovery | WCH formal entry instructions, validation-board timing and recovery exercise |
+| USBHS/USBFS combination and USB-C Device circuit | Controller/resource and official-circuit review, enumeration/recovery tests |
+| Type-C custom Target contacts and cable | USB-IF applicable-clause review, specific cable BOM/construction, both-orientation continuity matrix, signal tests |
+| 1.8 V/3.3 V/unpowered Target compatibility | CH585 electrical limits, data for not-yet-selected level translators, power-sequence/back-feed/waveform measurements |
+| VTref range and accuracy | ADC/front-end error budget, calibration method, calibrated-source measurements |
+| Target Power path | Power budget, current-limit/short/reverse isolation review and load-fault tests |
+| RF mux, antenna, and clocks | Actual SDK/library configuration, official matching/layout references, RF measurements |
+| External SPI NOR | Final image budget, recovery/rollback semantics, part procurement and driver validation |
+| ESD/EMC/hot plug | Frozen test levels, sample results, and fault analysis |
+
+## 14. References
+
+| Source | Revision/date | Use and conclusion |
+|---|---|---|
+| WCH, CH585/CH584 Datasheet | V1.6, repository copy | Chip pin, electrical, power/clock, and peripheral basis; check errata before use |
+| WCH CH585EVT archive | Index 2026.08; `EVT/PUB/CH585SCH.pdf` | Official example circuit/software reference, not a frozen DBG-C circuit |
+| USB-IF, USB Type-C Cable and Connector Specification | Release 2.5, 2026-04-08 | Type-C cable/connector specification; applicability clauses must be reviewed before interface freeze |
+
+External source: [USB-IF Type-C Specification Release 2.5](https://www.usb.org/document-library/usb-type-cr-cable-and-connector-specification-release-25), checked 2026-09-30. This document does not reproduce specification tables; conductor details remain subject to verification against a specific assembly.

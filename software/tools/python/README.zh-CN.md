@@ -42,10 +42,10 @@ python3 software/tools/python/convert_to_utf8.py path/to/source.c --from-encodin
 python3 software/tools/python/build_poc1.py
 ```
 
-构建工具通过 `PATH` 查找 `python3`、`git`、`cmake`、所选 CMake 构建器（如 GNU Make 或 Ninja）、主机 C 编译器及 `riscv-wch-elf-*` 工具。fish 用户可用 `fish_add_path /实际工具目录` 将程序目录加入 `PATH`；也可用 `set -gx DBGC_WCH_TOOLCHAIN_ROOT /实际工具链bin目录` 设置工具链目录。主机编译器可通过 `CC` 指定，CMake 命令可通过 `CMAKE` 指定，WCH 工具链也可通过 `DBGC_WCH_TOOLCHAIN_ROOT` 指定其 `bin` 目录。构建目录可用 `--build-dir` 选择，仍须位于 PoC 目录内。示例：
+构建工具通过 `PATH` 查找 `python3`、`git`、`cmake`、所选 CMake 构建器（如 GNU Make 或 Ninja）、主机 C 编译器及 `riscv-wch-elf-*` 工具。fish 用户可用 `fish_add_path /实际工具目录` 将程序目录加入 `PATH`；也可用 `set -gx DBGC_WCH_TOOLCHAIN_ROOT /实际工具链bin目录` 设置工具链目录。主机编译器可通过 `CC` 指定，CMake 命令可通过 `CMAKE` 指定，WCH 工具链也可通过 `DBGC_WCH_TOOLCHAIN_ROOT` 指定其 `bin` 目录。默认输出目录为 `software/build/poc1-ch585-threadx/`；`--build-dir NAME` 将输出放到 `software/build/NAME/`，构建产物和证据日志集中保存在 `software/build/`。为兼容既有复现命令，`--build-dir build/NAME` 也映射到 `software/build/NAME/`。示例：
 
 ```fish
-python3 software/tools/python/build_poc1.py --build-dir build/host-review --host-cc cc
+python3 software/tools/python/build_poc1.py --build-dir host-review --host-cc cc
 ```
 
 该脚本运行已有主机检查、交叉编译检查并记录构建证据；目前主机检查及目标对象检查的测试声明仍在构建脚本中显式维护，新增用例时需登记一次，但每次运行会自动执行。它不验证 CH585M 实板运行。构建目录、生成文件和环境配置均由开发者本地管理，不在脚本中设置机器专属安装路径。

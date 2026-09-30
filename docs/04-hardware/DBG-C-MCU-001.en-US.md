@@ -1,6 +1,6 @@
 # DBG-C MCU Selection and Resource Assessment
 
-**Document ID:** DBG-C-MCU-001　**Version:** V0.15　**Status:** CH585M V1 schematic resource allocation draft; PoC tick target 1000 ticks/s; two fixed-path clean-build reviews for 1000 ticks/s complete; board verification not run
+**Document ID:** DBG-C-MCU-001　**Version:** V0.17　**Status:** CH585M V1 MCU resource allocation draft; Target 1.8 V/3.3 V domains defined by IF-001/PRD-001; validation-board hardware input in HW-001 V0.3; board verification not run
 
 ## 1. Evidence Source
 
@@ -99,7 +99,7 @@ Note: pad numbers come from the CH585M column of datasheet Table 1-1 (printed pa
 | Target UART/CDC | Full-duplex UART bridge | UART0; PB4 QFN48-20=RXD0, PB7 QFN48-17=TXD0 | EVT UART0 pins and interface verified; CDC bridge, baud rate, and concurrency TBD |
 | SWO | NRZ SWO receive | PB20 QFN48-28=RXD3_; UART3 RX remapped to PB20 by EVT `RB_PIN_UART3` | Header declares remap; SWO sampling, baud rate, and CMSIS-DAP output path TBD |
 | Target VTref | Target voltage sensing | PA4 QFN48-36=ADC A0 | ADC mux name confirmed; divider, clamp, range, calibration, and thresholds TBD |
-| External SPI NOR | Update cache, rollback, logs, and offline image candidate storage | SPI1: PA0=SCK1, PA1=MOSI1, PA2=MISO1; PA3=GPIO CS | Pin muxes checked; part/capacity/protocol/clock/partition TBD; this does not freeze Flash layout |
+| External SPI NOR | Update cache, rollback, logs, and offline image staging resources | SPI1: PA0=SCK1, PA1=MOSI1, PA2=MISO1; PA3=GPIO CS | Pin muxes checked; part/capacity/protocol/clock/partition TBD; this does not freeze Flash layout |
 | Private RF/BLE | Private 2.4 GHz and BLE management | Integrated Radio; ANT QFN48-34 | EVT RF examples exist; protocol, DMA, concurrency, and performance require source/library review and board testing |
 | Probe debug/reset | Production debug and recovery | PB15 QFN48-11=TCK; PB14 QFN48-12=TIO; PB23 QFN48-25=RST | Preserve per datasheet; production access policy TBD |
 | BOOT control | Official download/recovery entry | PB22 QFN48-26 board-level BOOT net | Reference schematic confirms net; chip mux table has no dedicated BOOT function; entry conditions require official documentation |
@@ -182,3 +182,7 @@ The pinned upstream version's root `LICENSE.txt` identifies the MIT License. Ret
 ## 7. Required Materials
 
 Obtain the matching WCH SDK/example version, official package drawing, silicon revision/errata, USBHS Device and USBFS recovery examples/entry instructions, CH585M RF antenna reference design, RF/BLE coexistence guidance, OTA/ISP/IAP entry/interfaces, Target signal electrical requirements, and clock requirements. Record file version/hash and review date when updating this document.
+
+## 8. Validation-Board Hardware Boundary
+
+MCU-001 defines the draft MCU-side resource allocation only. Actual peripheral circuits, supplies, level translation, protection, recovery paths, test points, and PCB constraints are controlled by [HW-001](DBG-C-HW-001.en-US.md). V1 Target I/O domains are 1.8 V and 3.3 V; every Target digital signal requires VTref-associated level adaptation and powered-off isolation. HW-001 V0.3 permits modular validation-board schematic work, while translator parts, Target power, custom Type-C mapping, BOOT/recovery timing, PB16–PB21 RF mux, RF matching, and final power/clock values remain evidence-dependent. This does not mean MCU pins have been electrically verified or product hardware is frozen.

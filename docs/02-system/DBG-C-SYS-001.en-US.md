@@ -1,6 +1,6 @@
 # DBG-C System Architecture
 
-**Document ID:** DBG-C-SYS-001　**Version:** V0.3　**Status:** For review
+**Document ID:** DBG-C-SYS-001　**Version:** V0.4　**Status:** Architecture draft; V1 1.8 V/3.3 V Target domains and VTref-associated level adaptation recorded; product integration and board verification not run
 
 ## 1. System Boundary
 
@@ -46,7 +46,7 @@ Draft state set: `Standalone`; pairing-management; `Host`/`Target` role establis
 
 ## 5. Hardware Layers
 
-CH585M Probe controller, USBHS Device connected to the PC Host, USBFS recovery resources, 2.4 GHz antenna/RF, power and clocks, buttons/status indicators, DBG-C Interface, Target SWD/JTAG/SWO/UART, VTref ADC, target power control, and external SPI NOR. Pin baseline is in MCU-001; this is not an electrical schematic. Target voltage translation, VBUS/target-power isolation, Type-C CC/VBUS, protection, BOOT conditions, RF antenna-switch muxing, external Flash selection, and power path remain unfrozen; do not freeze product hardware from this draft.
+CH585M Probe controller, USBHS Device connected to the PC Host, USBFS recovery resources, 2.4 GHz antenna/RF, power and clocks, buttons/status indicators, DBG-C Interface, Target SWD/JTAG/SWO/UART, VTref ADC, target power control, and external SPI NOR. V1 shall support 1.8 V/3.3 V Target I/O; all Target digital signals use VTref-associated level adaptation with isolation when either side is unpowered. Pin baseline is in MCU-001; electrical implementation is in HW-001. This is not an electrical schematic. Translator parts, VBUS/Target-power isolation, Type-C CC/VBUS, protection, BOOT conditions, RF antenna-switch muxing, external Flash selection, and power path remain unfrozen; do not freeze product hardware from this draft.
 
 ## 6. Resource-Conflict Topics
 

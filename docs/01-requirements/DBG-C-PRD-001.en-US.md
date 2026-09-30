@@ -1,6 +1,6 @@
 # DBG-C Product Requirements Specification
 
-**Document ID:** DBG-C-PRD-001　**Version:** V0.2 (Draft baseline)　**Status:** For review
+**Document ID:** DBG-C-PRD-001　**Version:** V0.3 (Draft baseline)　**Status:** Target voltage-domain requirement added; remaining requirements for review
 
 ## 1. Product Positioning
 
@@ -58,6 +58,7 @@ The system includes PC/DBG-C Tool, DBG-C Probe, USB, BLE, private 2.4 GHz, DBG-C
 | PRD-014 | USB self-update | Update Probe firmware from the PC over USBHS; pass complete-image validation, commit, reboot, corrupt-image recovery, and power-loss recovery |
 | PRD-015 | Private 2.4 GHz self-update | Paired devices transfer Probe images reliably under the frozen RF update protocol; verify loss/retry, link recovery, integrity, commit, and recovery |
 | PRD-016 | External SPI NOR | After part selection, verify image staging reads/writes, erase boundaries, integrity checks, and power-loss retention; rollback/offline-image use requires a separate decision |
+| PRD-017 | Target I/O voltage domains and level adaptation | V1 supports 1.8 V and 3.3 V Target I/O. All Target digital signals use level adaptation associated with Target VTref and isolate when either Probe or Target is unpowered. Do not rely on direct compatibility with CH585M 3.3 V GPIO. Verify parts, timing, protection, and error through HW review and validation-board tests |
 
 
 ## 8. Performance Metrics
@@ -66,7 +67,7 @@ No latency, throughput, startup time, power, range, or packet-loss thresholds ha
 
 ## 9. Open Requirements
 
-Whether USB connection affects role, role-switch rules, pairing persistence, automatic/manual pairing, multi-device USB behavior, PC OS/IDE matrix, CDC parameters, target voltage range, wireless recovery deadline, OTA rollback/authorization, BLE target-download protocol/scope, and cable capabilities remain for product review. See `../00-project/DBG-C-OPEN-001.en-US.md`.
+Whether USB connection affects role, role-switch rules, pairing persistence, automatic/manual pairing, multi-device USB behavior, PC OS/IDE matrix, CDC parameters, valid Target voltage thresholds/fault range, wireless recovery deadline, OTA rollback/authorization, BLE target-download protocol/scope, and cable capabilities remain for product review. The 1.8 V and 3.3 V Target I/O domains are frozen; see `../00-project/DBG-C-OPEN-001.en-US.md`.
 
 ## 10. Product Statement (Input, Not Verification Evidence)
 

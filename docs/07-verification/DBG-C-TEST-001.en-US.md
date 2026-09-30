@@ -1,6 +1,6 @@
 # DBG-C Verification Specification
 
-**Document ID:** DBG-C-TEST-001　**Version:** V0.68　**Status:** Test-plan draft; PB8/PB9 UI GPIO adapter passes 56 modeled-register host checks; SPI1 configuration BSP passes 19 modeled-register checks and PA0–PA3 GPIO modes and raw PA3 chip-select BSP pass 104 modeled-register checks; SPI transfer is not implemented; SWD-engine host line model now runs through the CH585 GPIO BSP modeled-register path with 3321 assertions; the generic Target Reset sequence service passes 24 callback host checks and the PB5 reset-sequence adapter passes 37 modeled-register host checks; the PB5 GPIO BSP passes 69 modeled-register host checks; the CH585 JTAG GPIO BSP passes 116 modeled-register checks, and upstream CMSIS-DAP JTAG Sequence, IDCODE, and DP Transfer write/posted-read paths through the BSP pass 1610 cumulative modeled-register host checks; fixed-slot packet queue (54 host checks), update transaction manager (57 host checks), FIFO, single/duplex byte-stream bridges, CMSIS-DAP command-core, upstream SWD-engine host model, bounded dispatch, bounds preflight, CMSIS compiler mapping, and CH585 SWD GPIO, Target Reset/PB6 Target Power GPIO, UART0 and UID-read adapter host and target relocatable-link checks executed; PoC ThreadX creation-status/tick-observation code is included in the target cross-build; the CH585 BSP/adapter static library is included in the PoC cross-build; product UART/command bounds, silicon UID, and ThreadX board tests have not run
+**Document ID:** DBG-C-TEST-001　**Version:** V0.71　**Status:** Test-plan draft; PB8/PB9 UI GPIO adapter passes 56 modeled-register host checks; SPI1 configuration BSP passes 19 modeled-register checks and PA0–PA3 GPIO modes and raw PA3 chip-select BSP pass 104 modeled-register checks; SPI transfer is not implemented; SWD-engine host line model now runs through the CH585 GPIO BSP modeled-register path with 3321 assertions; the generic Target Reset sequence service passes 24 callback host checks and the PB5 reset-sequence adapter passes 37 modeled-register host checks; the PB5 GPIO BSP passes 69 modeled-register host checks; the CH585 JTAG GPIO BSP passes 116 modeled-register checks, and upstream CMSIS-DAP JTAG Sequence, IDCODE, and DP Transfer write/posted-read paths through the BSP pass 1610 cumulative modeled-register host checks; fixed-slot packet queue (54 host checks), update transaction manager (57 host checks), FIFO, single/duplex byte-stream bridges, CMSIS-DAP command-core, upstream SWD-engine host model, bounded dispatch, bounds preflight, CMSIS compiler mapping, and CH585 SWD GPIO, Target Reset/PB6 Target Power GPIO, UART0 and UID-read adapter host and target relocatable-link checks executed; PoC ThreadX creation-status/tick-observation code is included in the target cross-build; the CH585 BSP/adapter static library is included in the PoC cross-build; product UART/command bounds, silicon UID, and ThreadX board tests have not run
 
 ## 1. Pass Criteria
 
@@ -23,7 +23,7 @@ Using the final CMSIS-DAP configuration and MCU-001 PB0–PB3 nets, verify JTAG 
 ### 3.2 SWO, VTref, and Target Power
 
 - SWO: Use a programmable SWO source over the frozen encoding/rate range; verify capture, host stream output, overflow indication, and concurrent DAP/UART traffic. Baud range and loss thresholds are not frozen.
-- VTref: Use a calibrated supply across the IF-001 voltage range, threshold boundaries, power-off, and abnormal voltage. Record ADC readings, error, protection-node measurements, and decisions. Do not judge until range/accuracy are frozen.
+- VTref/level adaptation: Apply calibrated 1.8 V and 3.3 V Target domains, covering valid thresholds, abnormal voltage, and all four Probe/Target power combinations. Check voltage, direction, isolation, back-feed current, and maximum SWD/JTAG/UART/SWO rate on every Target digital line. Record ADC readings, error, protection nodes, and waveforms. Component-level thresholds/accuracy remain TBD; board tests have not run.
 - Target power control: Verify startup default, switching, no-load/rated-load/short-circuit conditions, reverse power, hotplug, and fault recovery. Keep pending until thresholds and circuit are frozen.
 
 ### 3.3 USB Self-Update and External SPI NOR
@@ -124,7 +124,7 @@ The queue is not thread-safe; callers must serialize all access. Reproduction co
 
 ## 9. CMSIS-DAP Command-Core Host Checks
 
-The test target is `Firmware/Source/DAP.c` from the pinned upstream commit, called through `DAP_ExecuteCommand()`. The configuration under `software/common/cmsis_dap_host_test/` is test-only and is not the DBG-C product configuration; SWD command processing is enabled and JTAG is disabled. SWD pin operations are no-ops, and `SWD_Transfer()` is mocked. The build copies `DAP.h` into `software/poc1-ch585-threadx/build/host-tests/` and changes only its delay-branch selection condition. It does not define `__CC_ARM` or modify the third-party submodule.
+The test target is `Firmware/Source/DAP.c` from the pinned upstream commit, called through `DAP_ExecuteCommand()`. The configuration under `software/common/cmsis_dap_host_test/` is test-only and is not the DBG-C product configuration; SWD command processing is enabled and JTAG is disabled. SWD pin operations are no-ops, and `SWD_Transfer()` is mocked. The build copies `DAP.h` into `software/build/archive/poc1-ch585-threadx/host-tests/` and changes only its delay-branch selection condition. It does not define `__CC_ARM` or modify the third-party submodule.
 
 | Case | Request/check | Pass condition | Status |
 |---|---|---|---|
@@ -320,3 +320,23 @@ The test target is `software/poc1-ch585-threadx/platform/ch585/dbgc_ch585_ui_gpi
 | UI-GPIO-HOST-01 | PB8/PB9 mapping, register-bit isolation across five modes, raw high/low reads and writes, invalid signal/mode, and null output pointer | 56 checks pass |
 
 This check does not define button polarity, debounce/wakeup policy, LED polarity/default state, or verify external circuitry or CH585M board runtime. PB18/PB19 are excluded because the EVT RF antenna-switch mux remains unresolved. Reproduce with `python3 software/tools/python/build_poc1.py --toolchain-root /path/to/riscv-wch-elf/bin --build-dir build/ui-gpio`.
+
+## 11. Validation Board Hardware Bring-up and Gates
+
+This section adds board-verification planning from HW-001 V0.3; it does not mean any board test has run. No board is currently available, so all items below are **Not run**.
+
+| Stage/case | Observation or verification | Passing evidence | Current status |
+|---|---|---|---|
+| Pre-power inspection | Supply nets, shorts, polarity, DNI/0R state, recovery jumpers, Target isolation | Checklist, schematic/BOM revision, measurement record | Not run |
+| Power/clocks | VBUS and MCU rails; 32 MHz oscillation; optional 32 kHz; reset startup | Scope/power readings, chip startup log, crystal/supply part numbers | Not run |
+| Chip recovery | PB22/BOOT and PB23/RST sequence; USBFS and official UART recovery | Measurements matching WCH instructions, download log, cold-start recovery record | Not run; entry timing awaits official evidence |
+| USBHS/USBFS | Independent enumeration, hot plug, recovery entry, dual-controller conflict | Host logs, descriptor/interface records, recovery with power loss/corrupt app | Not run; concurrency unconfirmed |
+| Target interface | Isolated test access on both sides of the VTref-associated level-adaptation paths for PB0–PB5, PB20, and PA4 sensing; no direct CH585M-to-Target operating path | Pin/net continuity, power-state waveforms, protection/misconnection records | Not run; do not connect incompatible voltage |
+| Target voltage/VTref/power | Cover 1.8 V/3.3 V and four Probe/Target power combinations; measure adaptation and powered-off isolation on each Target digital line plus VTref error, back-feed, current limit, short, and hot plug | Calibrated supply readings, scope traces, powered-off injection current, fault recovery, component temperature | Not run; translators, thresholds, and numerical criteria TBD |
+| RF mux/RF | PB16–PB21 mux state; antenna network; separate BLE/RF mode operation | Configuration/register evidence, RF logs, RF measurements | Not run; prebuilt-library pin use unresolved |
+| SPI NOR | SPI waveforms, device identification, boundary read/write, power-loss recovery | Part number, logic-analyzer record, image-integrity log | Not run; part/transfer implementation TBD |
+| Product acceptance gate | ThreadX tick/interrupt/scheduling, DAP, SWD/JTAG/UART, OTA, and system cases | Complete versioned evidence under applicable sections and HW-001 gates | Not run; schematic completion cannot substitute |
+
+### Schematic Gate Status
+
+**Validation Board schematic design may start/continue**: the MCU-001 pin baseline and software-design gate are established. The MCU core, USBHS PHY, independent recovery interface, direct Target test access, and isolatable modules may be drawn. Keep Target voltage front end/power, BOOT/recovery timing, PB16–PB21 RF mux, RF matching, and custom Type-C interface isolated or pending where evidence is insufficient. PCB-layout and fabrication gates have not passed. This is not a Product Board freeze.

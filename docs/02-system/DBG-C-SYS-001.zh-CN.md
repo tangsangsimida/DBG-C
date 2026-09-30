@@ -1,6 +1,6 @@
 # DBG-C 系统架构设计
 
-**文档编号：** DBG-C-SYS-001　**版本：** V0.3　**状态：** 架构草案；2026-09-29 起 USBHS 为主接口，USBFS 保留作恢复/生产评估；产品集成及实板验证未执行
+**文档编号：** DBG-C-SYS-001　**版本：** V0.4　**状态：** 架构草案；Target 1.8 V/3.3 V域及VTref关联电平适配已列为V1要求；产品集成及实板验证未执行
 
 ## 1. 系统边界
 
@@ -46,7 +46,7 @@ Application / Role & Pair Manager / OTA
 
 ## 5. 硬件分层
 
-CH585M Probe 主控、USBHS Device 接入 PC Host、USBFS 恢复资源、2.4 GHz 天线/RF、电源与时钟、按键/状态指示、DBG-C Interface、Target SWD/JTAG/SWO/UART、VTref ADC、Target 电源控制及外部 SPI NOR。引脚基线见 MCU-001；本文件不是电气原理图。Target 电压转换、VBUS/目标供电隔离、Type-C CC/VBUS、保护、BOOT 条件、RF 天线开关复用、外部 Flash 型号和电源路径仍未冻结，不得据此冻结产品硬件。
+CH585M Probe 主控、USBHS Device 接入 PC Host、USBFS 恢复资源、2.4 GHz 天线/RF、电源与时钟、按键/状态指示、DBG-C Interface、Target SWD/JTAG/SWO/UART、VTref ADC、Target 电源控制及外部 SPI NOR。V1须支持1.8 V/3.3 V Target I/O，所有Target数字信号经VTref关联电平适配并具有任一侧掉电隔离。引脚基线见 MCU-001；电气实现见 HW-001。本文件不是电气原理图。转换器器件、VBUS/目标供电隔离、Type-C CC/VBUS、保护、BOOT条件、RF天线开关复用、外部Flash型号和电源路径仍未冻结，不得据此冻结产品硬件。
 
 ## 6. 资源冲突关注
 
