@@ -60,7 +60,7 @@ git submodule update --init --recursive
 python3 software/tools/python/build_poc1.py
 ```
 
-构建入口集中在 `software/tools/python/build_poc1.py`。以上命令可直接在 fish 中执行。脚本从 `PATH` 查找 `git`、`cmake`、本机 C 编译器及 `riscv-wch-elf-*` 工具；可设置 `CC`、`CMAKE`、`DBGC_WCH_TOOLCHAIN_ROOT`，或将相应程序目录加入 `PATH`。不需要在项目文件中配置个人安装目录。构建产物、临时文件与证据日志统一存放在 `software/build/`；默认构建目录为 `software/build/poc1-ch585-threadx/`，可通过 `--build-dir NAME` 选择 `software/build/NAME/`。旧复现命令中的 `--build-dir build/NAME` 仍映射到 `software/build/NAME/`。工具链文件将 `DBGC_WCH_TOOLCHAIN_ROOT` 传播到 CMake 编译器探测子项目，因此显式 `--toolchain-root` 参数可用于完整配置和构建；该路径已由统一构建入口实测。脚本将工具版本、仓库与 ThreadX 修订、构建输出、ELF 大小和 ELF 头摘要写入 `build-evidence.log`。日志是本地构建产物，不纳入版本控制。构建和主机检查不验证 CH585M 实板运行。
+构建入口集中在 `software/tools/python/build_poc1.py`。以上命令可直接在 fish 中执行。脚本从 `PATH` 查找 `git`、`cmake`、本机 C 编译器及 `riscv-wch-elf-*` 工具；可设置 `CC`、`CMAKE`、`DBGC_WCH_TOOLCHAIN_ROOT`，或将相应程序目录加入 `PATH`。不需要在项目文件中配置个人安装目录。构建产物、临时文件与证据日志统一存放在 `software/build/`；默认构建目录为 `software/build/poc1-ch585-threadx/`，可通过 `--build-dir NAME` 选择 `software/build/NAME/`。旧复现命令中的 `--build-dir build/NAME` 仍映射到 `software/build/NAME/`。工具链文件将 `DBGC_WCH_TOOLCHAIN_ROOT` 传播到 CMake 编译器探测子项目，因此显式 `--toolchain-root` 参数可用于完整配置和构建；该路径已由统一构建入口实测。脚本将工具版本、仓库与 ThreadX 修订、构建输出、ELF 大小和 ELF 头摘要写入 `software/build/poc1-ch585-threadx/build-evidence.log`。日志是本地构建产物，不纳入版本控制。构建和主机检查不验证 CH585M 实板运行。
 
 ## 4. WCH 来源与文件清单
 
@@ -88,7 +88,7 @@ WCH 示例的 `highcode_init()` 初始化 HSI PLL 到 62.4 MHz，并配置相关
 
 ## 6. 构建结果、验收和剩余工作
 
-本轮 ThreadX 可观测性变更完成后，在固定构建路径 `software/build/archive/poc1-ch585-threadx/threadx-observability/` 执行两次 clean rebuild，产物一致：ELF SHA-256 `00f0e40b217d61df475f721607a6dd88b2e9f1450b511863b2984899e97e32f8`，map SHA-256 `823322fcfe0849eefa6b88e4df478ac28e6bdc094a11173faaba1e85697fdfa5`。不同构建路径产生不同的 ELF/map SHA-256，不作为同路径可复现性比较。ELF header、section、program header、符号地址及 map 已与 PoC 启动代码和 `ch585.ld` 静态核对；`_start` 为 ELF 入口，应用 `.highcode` 段位于链接 RAM，链接段在当前脚本声明的 Flash/RAM 范围内。当次构建记录含 ThreadX 精确修订 `b91b03b9e75fa523b17127f9e0eca09dca916459`、MounRiver GCC 12.2.0、GNU assembler/linker 2.38、ELF32 RISC-V、入口 `0x0`，text 8916、data 8、bss 5580 字节；原始日志仅作为本地构建目录产物，不提交仓库。没有执行烧录、板上中断/调度、时钟测量或长时间运行测试。
+本轮 ThreadX 可观测性变更完成后，曾在 `software/poc1-ch585-threadx/build/threadx-observability/` 执行两次 clean rebuild，产物一致；该历史构建树现归档于 `software/build/archive/poc1-ch585-threadx/`。新构建统一写入 `software/build/`。产物为：ELF SHA-256 `00f0e40b217d61df475f721607a6dd88b2e9f1450b511863b2984899e97e32f8`，map SHA-256 `823322fcfe0849eefa6b88e4df478ac28e6bdc094a11173faaba1e85697fdfa5`。不同构建路径产生不同的 ELF/map SHA-256，不作为同路径可复现性比较。ELF header、section、program header、符号地址及 map 已与 PoC 启动代码和 `ch585.ld` 静态核对；`_start` 为 ELF 入口，应用 `.highcode` 段位于链接 RAM，链接段在当前脚本声明的 Flash/RAM 范围内。当次构建记录含 ThreadX 精确修订 `b91b03b9e75fa523b17127f9e0eca09dca916459`、MounRiver GCC 12.2.0、GNU assembler/linker 2.38、ELF32 RISC-V、入口 `0x0`，text 8916、data 8、bss 5580 字节；原始日志仅作为本地构建目录产物，不提交仓库。没有执行烧录、板上中断/调度、时钟测量或长时间运行测试。
 
 ### 6.1 软件验证与硬件设计顺序
 
