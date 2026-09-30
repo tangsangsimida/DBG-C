@@ -180,6 +180,8 @@ def run_host_checks(log, host_cc: list[str], upstream_dir: Path) -> None:
     duplex_src = common / "byte_duplex_bridge/src/dbgc_byte_duplex_bridge.c"
     reset_inc = common / "target_reset_sequence/include"
     reset_src = common / "target_reset_sequence/src/dbgc_target_reset_sequence.c"
+    update_inc = common / "update_manager/include"
+    update_src = common / "update_manager/src/dbgc_update_manager.c"
     cmsis_inc = common / "cmsis_dap_host_test"
     bounds_inc = common / "cmsis_dap_bounds/include"
     dap_src = upstream_dir / "src/DAP.c"
@@ -190,12 +192,18 @@ def run_host_checks(log, host_cc: list[str], upstream_dir: Path) -> None:
         ("test_dbgc_byte_stream_bridge", [fifo_src, byte_stream_src, common / "byte_stream_bridge/tests/test_dbgc_byte_stream_bridge.c"], [fifo_inc, byte_stream_inc], (), ()),
         ("test_dbgc_byte_duplex_bridge", [fifo_src, byte_stream_src, duplex_src, common / "byte_duplex_bridge/tests/test_dbgc_byte_duplex_bridge.c"], [fifo_inc, byte_stream_inc, duplex_inc], (), ()),
         ("test_dbgc_target_reset_sequence", [reset_src, common / "target_reset_sequence/tests/test_dbgc_target_reset_sequence.c"], [reset_inc], (), ()),
+        ("test_dbgc_update_manager", [update_src, common / "update_manager/tests/test_dbgc_update_manager.c"], [update_inc], (), ()),
         ("test_ch585_target_reset_sequence", [platform / "dbgc_ch585_target_reset_gpio.c", platform / "dbgc_ch585_target_reset_sequence.c", reset_src, common / "ch585_target_reset_gpio_host_test/test_ch585_target_reset_sequence.c"], [common / "ch585_target_reset_gpio_host_test", reset_inc, platform], ("DBGC_CH585_TARGET_RESET_GPIO_HOST_TEST",), ()),
         ("test_ch585_uart0", [platform / "dbgc_ch585_uart0.c", platform / "dbgc_ch585_uart0_bridge_adapter.c", fifo_src, byte_stream_src, duplex_src, common / "ch585_uart0_host_test/test_ch585_uart0.c"], [common / "ch585_uart0_host_test", fifo_inc, byte_stream_inc, duplex_inc, platform], ("DBGC_CH585_UART0_HOST_TEST",), ()),
         ("test_ch585_swd_gpio", [platform / "dbgc_ch585_swd_gpio.c", common / "ch585_swd_gpio_host_test/test_ch585_swd_gpio.c"], [common / "ch585_swd_gpio_host_test", platform], ("DBGC_CH585_SWD_GPIO_HOST_TEST",), ()),
         ("test_ch585_jtag_gpio", [platform / "dbgc_ch585_jtag_gpio.c", common / "ch585_jtag_gpio_host_test/test_ch585_jtag_gpio.c"], [common / "ch585_jtag_gpio_host_test", platform], ("DBGC_CH585_JTAG_GPIO_HOST_TEST",), ()),
         ("test_ch585_target_reset_gpio", [platform / "dbgc_ch585_target_reset_gpio.c", common / "ch585_target_reset_gpio_host_test/test_ch585_target_reset_gpio.c"], [common / "ch585_target_reset_gpio_host_test", platform], ("DBGC_CH585_TARGET_RESET_GPIO_HOST_TEST",), ()),
+        ("test_ch585_target_power_gpio", [platform / "dbgc_ch585_target_power_gpio.c", common / "ch585_target_power_gpio_host_test/test_ch585_target_power_gpio.c"], [common / "ch585_target_power_gpio_host_test", platform], ("DBGC_CH585_TARGET_POWER_GPIO_HOST_TEST",), ()),
+        ("test_ch585_ui_gpio", [platform / "dbgc_ch585_ui_gpio.c", common / "ch585_ui_gpio_host_test/test_ch585_ui_gpio.c"], [common / "ch585_ui_gpio_host_test", platform], ("DBGC_CH585_UI_GPIO_HOST_TEST",), ()),
         ("test_ch585_uid", [platform / "dbgc_ch585_uid.c", common / "ch585_uid_host_test/test_ch585_uid.c"], [common / "ch585_uid_host_test", platform], ("DBGC_CH585_UID_HOST_TEST",), ()),
+        ("test_ch585_vtref_adc", [platform / "dbgc_ch585_vtref_adc.c", common / "ch585_vtref_adc_host_test/test_ch585_vtref_adc.c"], [common / "ch585_vtref_adc_host_test", platform], ("DBGC_CH585_VTREF_ADC_HOST_TEST",), ()),
+        ("test_ch585_spi1_config", [platform / "dbgc_ch585_spi1_config.c", common / "ch585_spi1_config_host_test/test_ch585_spi1_config.c"], [common / "ch585_spi1_config_host_test", platform], ("DBGC_CH585_SPI1_CONFIG_HOST_TEST",), ()),
+        ("test_ch585_spi1_gpio", [platform / "dbgc_ch585_spi1_gpio.c", common / "ch585_spi1_gpio_host_test/test_ch585_spi1_gpio.c"], [common / "ch585_spi1_gpio_host_test", platform], ("DBGC_CH585_SPI1_GPIO_HOST_TEST",), ()),
         ("test_dbgc_cmsis_dap_service", [common / "packet_queue/src/dbgc_packet_queue.c", common / "cmsis_dap_bounds/src/dbgc_cmsis_dap_bounds.c", common / "cmsis_dap_service/src/dbgc_cmsis_dap_service.c", common / "cmsis_dap_service/tests/test_dbgc_cmsis_dap_service.c"], [common / "packet_queue/include", bounds_inc, common / "cmsis_dap_service/include", cmsis_inc, upstream_dir / "include"], ("DBGC_CMSIS_DAP_TEST_C_LOOP",), ()),
         ("test_cmsis_dap_bounds", [common / "cmsis_dap_bounds/src/dbgc_cmsis_dap_bounds.c", common / "cmsis_dap_bounds/tests/test_cmsis_dap_bounds.c"], [bounds_inc, cmsis_inc, upstream_dir / "include"], ("DBGC_CMSIS_DAP_TEST_C_LOOP",), ()),
         ("test_cmsis_dap_commands", [common / "cmsis_dap_bounds/src/dbgc_cmsis_dap_bounds.c", dap_src, common / "cmsis_dap_host_test/test_dap_commands.c"], [bounds_inc, cmsis_inc, upstream_dir / "include"], ("DBGC_CMSIS_DAP_TEST_C_LOOP",), ("-Wno-unused-parameter", "-Wno-unused-variable")),
@@ -222,11 +230,17 @@ def run_target_checks(log, toolchain_root: Path, upstream_dir: Path) -> None:
 
     checks = [
         ("cmsis_dap_bounds.o", common / "cmsis_dap_bounds/src/dbgc_cmsis_dap_bounds.c", [common / "cmsis_dap_bounds/include", platform, platform / "wch", common / "cmsis_dap_host_test", upstream_dir / "include"], (), ()),
+        ("dbgc_update_manager.o", common / "update_manager/src/dbgc_update_manager.c", [common / "update_manager/include"], (), ()),
         ("dbgc_cmsis_compiler_check.o", platform / "dbgc_cmsis_compiler_check.c", [platform, platform / "wch"], (), ()),
         ("dbgc_ch585_swd_gpio.o", platform / "dbgc_ch585_swd_gpio.c", [platform, platform / "wch"], (), ()),
         ("dbgc_ch585_target_reset_gpio.o", platform / "dbgc_ch585_target_reset_gpio.c", [platform, platform / "wch"], (), ()),
+        ("dbgc_ch585_target_power_gpio.o", platform / "dbgc_ch585_target_power_gpio.c", [platform, platform / "wch"], (), ()),
+        ("dbgc_ch585_ui_gpio.o", platform / "dbgc_ch585_ui_gpio.c", [platform, platform / "wch"], (), ()),
         ("dbgc_ch585_uart0_bridge_adapter.o", platform / "dbgc_ch585_uart0_bridge_adapter.c", [common / "byte_fifo/include", common / "byte_stream_bridge/include", common / "byte_duplex_bridge/include", platform, platform / "wch"], (), ()),
         ("dbgc_ch585_uid.o", platform / "dbgc_ch585_uid.c", [platform, platform / "wch", vendor], (), ()),
+        ("dbgc_ch585_vtref_adc.o", platform / "dbgc_ch585_vtref_adc.c", [platform, platform / "wch"], (), ()),
+        ("dbgc_ch585_spi1_config.o", platform / "dbgc_ch585_spi1_config.c", [platform, platform / "wch"], (), ()),
+        ("dbgc_ch585_spi1_gpio.o", platform / "dbgc_ch585_spi1_gpio.c", [platform, platform / "wch"], (), ()),
         ("dbgc_ch585_uart0.o", platform / "dbgc_ch585_uart0.c", [platform, platform / "wch"], (), ()),
         ("cmsis_dap_command_core.o", upstream_dir / "src/DAP.c", [platform, platform / "wch", common / "cmsis_dap_host_test", upstream_dir / "include"], ("DBGC_CMSIS_DAP_TEST_C_LOOP",), ("-Wno-unused-parameter", "-Wno-unused-variable")),
         ("cmsis_dap_swd_engine.o", REPO_DIR / "software/third_party/cmsis-dap/Firmware/Source/SW_DP.c", [platform, platform / "wch", common / "cmsis_dap_host_test", upstream_dir / "include"], ("DBGC_CMSIS_DAP_TEST_C_LOOP", "DBGC_CMSIS_DAP_SWD_ENGINE_TEST"), ("-Wno-unused-parameter", "-Wno-unused-variable")),
@@ -246,9 +260,14 @@ def run_target_checks(log, toolchain_root: Path, upstream_dir: Path) -> None:
     for name in (
         "cmsis_dap_bounds.o",
         "dbgc_ch585_target_reset_gpio.o",
+        "dbgc_ch585_target_power_gpio.o",
+        "dbgc_ch585_ui_gpio.o",
         "dbgc_ch585_uart0.o",
         "dbgc_ch585_uart0_bridge_adapter.o",
         "dbgc_ch585_uid.o",
+        "dbgc_ch585_vtref_adc.o",
+        "dbgc_ch585_spi1_config.o",
+        "dbgc_ch585_spi1_gpio.o",
         "dbgc_ch585_swd_gpio.o",
         "cmsis_dap_command_core.o",
         "cmsis_dap_swd_engine.o",

@@ -1,11 +1,11 @@
 # DBG-C 未决问题与验证清单
 
-**文档编号：** DBG-C-OPEN-001　**版本：** V0.40　**状态：** 开放项
+**文档编号：** DBG-C-OPEN-001　**版本：** V0.46　**状态：** 开放项
 
 | ID | 问题 | 需要的证据/决策 | 影响文档 | 状态 |
 |---|---|---|---|---|
 | O01 | CH585M 可用私有 RF PHY/API、BLE 与私有 RF 并发限制是什么？ | WCH 官方参考手册、SDK/例程版本及实测 | MCU, RF, FW, TEST | 待获取 |
-| O02 | WCH USBHS Device 栈能否承载 CMSIS-DAP v2 Bulk 与 CDC ACM 复合设备？USBFS 恢复通道是否能与 USBHS 同时使用？ | EVT USBHS Device/CDC/IAP 源码、USBHS API/端点资源、ThreadX 集成、主机枚举实测及双控制器资源证据 | MCU, USB, SYS, TEST | 待验证；EVT 有 USBHS CDC、双 HID 复合设备和 IAP 示例，但无 DAP+CDC 复合设备或双控制器并发验证 |
+| O02 | WCH USBHS Device 栈能否承载 CMSIS-DAP v2 Bulk 与 CDC ACM 复合设备？USBFS 恢复通道是否能与 USBHS 同时使用？ | EVT USBHS Device/CDC/IAP 源码、USBHS API/端点资源、ThreadX 集成、主机枚举实测及双控制器资源证据 | MCU, USB, SYS, TEST | 待验证；EVT `SimulateCDC` 头文件声明 `USBHS_IRQHandler()`，但源文件实际定义 `USB2_DEVICE_IRQHandler()`，且 EVT 向量表绑定后者；CDC 示例启用 EP2 RX/TX、EP3 TX，main 为轮询且无 ThreadX。产品 DAP+CDC 描述符、DMA 缓冲所有权、ISR/ThreadX 同步和 USBFS 并发仍无证据 |
 | O03 | RF DAP 往返延迟和重试边界如何满足常见调试器？ | CMSIS-DAP Host 实测及 RF 原型 | RF, TEST, PRD | 待验证 |
 | O04 | DBG-C Basic/Full 在 Type-C 上的合法/可靠引脚及线缆方案？ | USB-IF 最新 Type-C 规范、线缆结构证据、电气评审 | IF, HW, TEST | 待研究 |
 | O05 | USB 插入、用户选择、无线连接如何决定 Standalone/Host/Target？ | 产品状态机评审，含冲突/切换规则 | PRD, SYS, RF, BLE | 待决策 |
@@ -13,8 +13,8 @@
 | O07 | Device ID 的实际来源、长度、读取 API 和认证绑定？ | CH585M SDK/官方接口及安全评审 | MCU, RF, BLE | 部分确认：EVT ROM 命令参数、状态语义及 WCH 8 字节 UID 构造源码已确认；Device ID 产品编码、唯一性/稳定性承诺、认证绑定未决；硅片读取待实板验证 |
 | O08 | USB VID/PID、接口/端点布局、字符串、Serial 策略？ | 正式实现及组织 VID 决策 | USB, TEST | 待决策 |
 | O09 | CDC UART 波特率、流控、目标电平和性能门限？ | 用户需求、电气设计及测量 | PRD, IF, TEST | 待决策；PB4/PB7 UART0 初始化已有 EVT 依据，轮询 BSP 主机模型/目标对象编译通过；产品参数、CDC、实际电气/收发和并发仍待定义验证 |
-| O10 | OTA 是否支持签名、双镜像、回滚及断电恢复？ | WCH Boot/SDK 文档、示例和断电测试 | MCU, FW, BLE, RF, RISK | 待验证 |
-| O11 | 目标 UART/RESET/SWD 最大允许电压、保护和 SWD GPIO 工作模式是什么？ | 冻结 Target 兼容范围、电气规范、SWDIO 上下拉/输出驱动/空闲态/方向切换要求与实测方案 | IF, HW, FW, TEST | 待决策；PB1/PB0 模式选择、PB5 原始电平 GPIO BSP 与复位序列适配器已完成主机模拟寄存器和目标构建检查；产品电气模式、复位有效电平映射、默认态、保护和脉宽仍未定义，须由电气规范评审并在验证板测量 |
+| O10 | OTA 是否支持签名、双镜像、回滚及断电恢复？ | WCH Boot/SDK 文档、示例和断电测试 | MCU, FW, BLE, RF, RISK | 待验证；已增加不含 Flash/Boot 后端的通用更新事务管理器及主机模型，签名、存储布局、提交原子性、回滚与断电恢复均未实现或验证 |
+| O11 | 目标 UART/RESET/SWD 最大允许电压、保护和 SWD GPIO 工作模式是什么？ | 冻结 Target 兼容范围、电气规范、SWDIO 上下拉/输出驱动/空闲态/方向切换要求与实测方案 | IF, HW, FW, TEST | 待决策；固定 CMSIS-DAP 的 `DAP_config.h` 将 nRESET 定义为带上拉的开漏输出；数据手册表 7-4 的自动开漏描述限定于 I2C 场景，PB5 在表 1-1 中未列出 I2C 复用；WCH EVT 通用 GPIO 模式没有通用开漏选项。PB5 BSP 已增加按 CMSIS-DAP nRESET 位语义进行方向切换的软件模拟，断言低电平时以调用方选定的推挽模式驱动，释放时切为浮空或上拉输入，69 项模拟寄存器主机检查通过。仍需评审外部上拉/电平转换、电压兼容和安全默认态，并在验证板测量复位有效电平、释放态、电压与脉宽；PB1/PB0 SWDIO 模式、上下拉、驱动及方向切换亦待电气规范确认。
 | O12 | 性能目标：DAP 延迟、吞吐、射程、稳定运行时长？ | 原型数据与产品评审 | PRD, RF, TEST | 待决策 |
 | O13 | V1 BLE OTA 仅升级 Probe 自身；是否需要 RF OTA？ | 需求确认及资源/安全评审 | PRD, BLE, RF | 待决策 |
 | O14 | PC OS、IDE/OpenOCD/pyOCD 支持矩阵？ | 产品支持策略与逐项互操作测试 | PRD, USB, TEST | 待决策 |

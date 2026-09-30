@@ -1,12 +1,14 @@
 # DBG-C MCU Selection and Resource Assessment
 
-**Document ID:** DBG-C-MCU-001　**Version:** V0.11　**Status:** CH585M V1 schematic resource allocation draft; PoC tick target 1000 ticks/s; two fixed-path clean-build reviews for 1000 ticks/s complete; board verification not run
+**Document ID:** DBG-C-MCU-001　**Version:** V0.15　**Status:** CH585M V1 schematic resource allocation draft; PoC tick target 1000 ticks/s; two fixed-path clean-build reviews for 1000 ticks/s complete; board verification not run
 
 ## 1. Evidence Source
 
 `docs/09-references/CH585-CH584_Datasheet_V1.6.pdf` is the project-designated CH585M IC manual. Its internal title is *CH585/CH584 Datasheet*, V1.6, 160 pages. Use it as the primary project source for chip parameters, pin multiplexing, and documented peripheral capabilities. SDK APIs, concrete project configuration, RF concurrency performance, and board behavior still require SDK review/measurement. Do not infer CH585M behavior from CH584 or other CH series.
 
 The repository retains the official EVT archive `docs/09-references/CH585EVT/CH585EVT.ZIP` without extracting it wholesale. Files checked for this allocation include `EVT/EXAM/SRC/StdPeriphDriver/inc/CH58x_gpio.h` (SHA-256 `c7f450ceaa501e4c5a912bc0429bca1540fa3c3f26e3fd55dfd908fad9b06183`), `EVT/EXAM/IAP/USBHS_IAP/src/Main.c` (SHA-256 `5f6edcee35151480161a032c2995b495e70b9ecd352c57c4a99ee351cb40476f`), and `EVT/PUB/CH585SCH.pdf` (SHA-256 `70391feaa719a7c5ffc1b738b927ba166bf2402692ec42f7042366839c1fb7bb`). The EVT GPIO header declares UART3 `RB_PIN_UART3` routing from PA4/PA5 to PB20/PB21; the USBHS IAP Main initializes the USBHS Device controller; the official reference schematic shows PB22 connected to a BOOT download switch. The archive index `EVT/CH585_List_EN.txt` is dated 2026.08 and declares no separate SDK semantic version. These examples do not prove DBG-C implementation or board validation.
+
+The SPI review additionally checks `EVT/EXAM/SRC/StdPeriphDriver/CH58x_spi1.c` (SHA-256 `bf8c13f5e7ead9983cb3a25d9d0c59ceadb494ca14f9883495ae5b83fdf57a9f`) and `EVT/EXAM/SPI/src/Main.c` (SHA-256 `68e4b60472fce13db8d873a792f5e6d6dbda4d0b2a9356c197d52662b9c79831`), from the same 2026.08 EVT archive.
 
 ## 2. Resource Table
 
@@ -18,7 +20,7 @@ The repository retains the official EVT archive `docs/09-references/CH585EVT/CH5
 | USBFS | One FS USB 2.0 controller/PHY; 15 endpoints; 64-byte packets; DMA; Host/Device | Reserve PB10/PB11 for recovery, production, and debug access; USBHS is the V1 primary USB. USBFS Device stack and recovery flow remain to be implemented and verified |
 | USBHS | One 480 Mbps USB 2.0 HS controller/PHY; 1024-byte packets; DMA; HS/FS Host/Device | V1 primary USB Device target; PB12=U2D− and PB13=U2D+. EVT includes USBHS Device and USBHS IAP examples; composite-device and ThreadX integration plus board-level HS signal behavior remain to be implemented/verified |
 | UART | Four instances; 8-level FIFO; datasheet states up to 9 Mbps | Pins, clock accuracy, and target levels TBD |
-| SPI | Two instances, Master/Slave, DMA | No evidence yet whether RF needs an external transceiver; internal RF path TBD from SDK |
+| SPI | SPI0 supports Master/Slave and DMA; SPI1 is Master-only. Both support SPI modes 0/3 and an 8-byte FIFO, with a maximum frequency of Fsys/2; the master divider range is 2–254 (datasheet §§10.1.1, 10.2) | Datasheet assigns SCK1/MOSI1/MISO1 to PA0/PA1/PA2; the project allocates PA3 as a GPIO chip select. The SPI1 branch in EVT `EVT/EXAM/SPI/src/Main.c`, currently excluded by `#if 1`, uses PA12 as GPIO chip select and configures PA0, PA1, and PA12 as outputs; that example does not establish PA3 electrical configuration. SPI1 register configuration, explicit PA0–PA3 GPIO modes, and raw PA3 chip-select level BSP are included in the PoC; transfer, timeout recovery, Flash part, and capacity remain pending; do not infer SPI0 DMA support for SPI1 |
 | ADC | 12-bit; 14 external + 3 internal channels (overview) | Not mandatory in V1; package/mux channel check required |
 | GPIO | The overview states 40 GPIOs, two with 5 V input tolerance and 32 with interrupt/wake capability | Table 1-1 CH585M column lists PA0–PA15 and PB0–PB23, 40 GPIO identifiers with package pad numbers, matching the overview count. This does not mean all 40 are freely allocatable or interrupt/wake capable. 5VT does not imply 5 V output |
 | BLE/RF | BLE 5.4; integrated 2.4 GHz RF; 1/2 Mbps; mentions 2.4G mode up to 8 kHz report rate | Meaning of 2.4G mode, private PHY/API, RF DMA capability/API, BLE coexistence, and performance require SDK/reference-manual confirmation. Local datasheet extract does not confirm RF DMA |
@@ -76,7 +78,7 @@ Package pin numbers below are read from the **CH585M column** of datasheet Table
 | 39 | PA0 / SCK1 | EXT_FLASH_SCK | SPI1 SCK1 mux; bus mode/clock TBD in driver design |
 | 40 | PA1 / MOSI1 | EXT_FLASH_MOSI | SPI1 MOSI1 mux |
 | 41 | PA2 / MISO1 | EXT_FLASH_MISO | SPI1 MISO1 mux |
-| 42 | PA3 | EXT_FLASH_CS | GPIO chip select; datasheet does not list a dedicated SPI1 CS mux |
+| 42 | PA3 | EXT_FLASH_CS | GPIO chip select; datasheet does not list a dedicated SPI1 CS mux. The SPI1 branch in EVT `EVT/EXAM/SPI/src/Main.c`, currently excluded by `#if 1`, uses PA12, distinct from the project PA3 allocation |
 | 43 | PA15 | Reserve for official ISP UART resources | Datasheet lists UART0 RXD0_ remap; confirm whether this is an ISP channel from official download documentation |
 | 44 | PA14 | Reserve for official ISP UART resources | Datasheet lists UART0 TXD0_ remap; confirm whether this is an ISP channel from official download documentation |
 | 45 | PA13 | Unallocated reserve | Do not enable SPI0 SCK or PWM5 |

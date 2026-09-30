@@ -1,6 +1,6 @@
 # DBG-C Verification Specification
 
-**文档编号：** DBG-C-TEST-001　**版本：** V0.56　**状态：** 测试计划草案；SWD 引擎线模型已接入 CH585 GPIO BSP 模拟寄存器路径，3321 项断言通过；通用 Target Reset 序列服务 24 项主机回调检查及 PB5 BSP 集成 37 项主机模拟寄存器检查通过；CH585 JTAG GPIO BSP 四信号映射 116 项及上游 CMSIS-DAP JTAG Sequence、IDCODE 与 DP Transfer 写入/posted-read 经 GPIO BSP 累计 1610 项模拟寄存器主机检查通过；定长包队列（54 项主机检查）、FIFO、单向/双向字节流桥接、CMSIS-DAP 命令层、有界 dispatch、SWD 引擎主机模型、边界预检器、CMSIS 编译器映射及 CH585 SWD GPIO、Target Reset GPIO 与 UART0、UID 读取适配器主机/目标静态链接检查已执行；PoC ThreadX 创建状态/tick 观测代码已加入并随目标交叉构建；CH585 BSP/适配器静态库纳入 PoC 交叉构建；产品 UART/命令边界、硅片 UID 与 ThreadX 实板测试未执行
+**文档编号：** DBG-C-TEST-001　**版本：** V0.68　**状态：** 测试计划草案；PB8/PB9 UI GPIO 适配器 56 项主机模拟寄存器检查通过；SPI1 配置 BSP 19 项及 PA0–PA3 GPIO 模式及 PA3 原始片选电平 BSP 104 项主机模拟寄存器检查通过，SPI 传输未实现；SWD 引擎线模型已接入 CH585 GPIO BSP 模拟寄存器路径，3321 项断言通过；通用 Target Reset 序列服务 24 项主机回调检查及 PB5 复位序列适配器 37 项主机模拟寄存器检查及 PB5 GPIO BSP 69 项主机模拟寄存器检查通过；CH585 JTAG GPIO BSP 四信号映射 116 项及上游 CMSIS-DAP JTAG Sequence、IDCODE 与 DP Transfer 写入/posted-read 经 GPIO BSP 累计 1610 项模拟寄存器主机检查通过；定长包队列（54 项主机检查）、更新事务管理器（57 项主机检查）、FIFO、单向/双向字节流桥接、CMSIS-DAP 命令层、有界 dispatch、SWD 引擎主机模型、边界预检器、CMSIS 编译器映射及 CH585 SWD GPIO、Target Reset/PB6 Target Power GPIO 与 UART0、UID 读取适配器主机/目标静态链接检查已执行；PoC ThreadX 创建状态/tick 观测代码已加入并随目标交叉构建；CH585 BSP/适配器静态库纳入 PoC 交叉构建；产品 UART/命令边界、硅片 UID 与 ThreadX 实板测试未执行
 
 ## 1. 通过规则
 
@@ -15,6 +15,33 @@
 MCU-001 V0.11 将 Target SWD/JTAG 分配为 PB0–PB3、Target_nRESET 分配为 PB5。PoC BSP 和模拟寄存器检查现将 SWDIO/SWCLK 映射至 PB1/PB0，并将 Target_nRESET 映射至 PB5。这些检查不验证物理焊盘、波形、电平或复位效果；目前无板卡，板测未执行。
 
 覆盖 Connect、ID 读取、内存读写、擦除、Program/Verify、Reset、断点、单步、寄存器和内存访问。至少 STM32、GD32 各选定具体型号和板卡；型号待测试夹具冻结。检查 SWD 频率范围、信号质量、目标掉电/插拔与错误返回。
+
+### 3.1 JTAG
+
+使用最终 CMSIS-DAP 配置和 MCU-001 PB0–PB3 网络，验证 JTAG 连接、TAP 复位/序列、DP/AP 读写、下载/校验、Target Reset、断点、单步和错误恢复。使用冻结的 STM32、GD32 目标型号。目前无目标板卡，这些用例未执行。
+
+### 3.2 SWO、VTref 与 Target 电源
+
+- SWO：使用可编程 SWO 源覆盖冻结的编码/速率范围；验证采集、主机数据流、溢出指示及 DAP/UART 并发。波特率范围和丢失门限尚未冻结。
+- VTref：使用校准电源覆盖 IF-001 电压范围、门限边界、掉电和异常电压。记录 ADC 读数、误差、保护节点测量值及判定；量程/精度冻结前不作通过判定。
+- Target 电源控制：验证上电默认态、开关、空载/额定负载/短路、反向供电、热插拔和故障恢复。门限和电路冻结前保持待执行。
+
+### 3.3 USB 自升级与外部 SPI NOR
+
+USBHS 自升级覆盖有效镜像、版本拒绝、损坏、中断传输、提交前后掉电、Boot 恢复和旧镜像启动。外部 NOR 覆盖识别、擦写边界、镜像完整性、掉电状态和介质故障。分区、器件和镜像格式测试须依据实际链接 map、器件选型和 Update Manager 规范确定。
+
+### 3.4 通用更新事务管理器主机检查
+
+测试对象为 `software/common/update_manager/`。后端使用主机模拟回调，不访问 CH585M Flash、外部 SPI NOR、USB、RF、BLE、ThreadX 或中断。当前 57 项断言属于同一主机测试套件；下表用例是覆盖范围分类，不表示每行分别对应一次独立测试进程。
+
+| 用例 | 检查内容 | 通过条件 | 状态 |
+|---|---|---|---|
+| UPDATE-HOST-01 | 按连续偏移写入完整镜像并执行 verify/commit | 状态依次进入 RECEIVING、VERIFIED、COMMITTED；后端收到的偏移、长度和字节顺序正确 | 通过（57 项主机断言套件中的覆盖项） |
+| UPDATE-HOST-02 | 空镜像、零长度片段、空数据、偏移跳跃和超过声明镜像长度的片段 | 返回对应参数/范围错误；非法片段不调用后端 write 且已接收长度不变 | 通过（57 项主机断言套件中的覆盖项） |
+| UPDATE-HOST-03 | 未开始、未接收完整、已校验、已提交、已取消和失败状态下调用不允许的操作 | 拒绝非法状态转换，不重复调用后端阶段回调 | 通过（57 项主机断言套件中的覆盖项） |
+| UPDATE-HOST-04 | prepare、write、verify、commit 和 abort 后端分别失败 | 状态和错误码符合接口契约；失败片段不自动重放；commit 失败进入 COMMIT_UNCERTAIN，拒绝 abort 和新事务 | 通过（57 项主机断言套件中的覆盖项） |
+
+这些检查只验证事务编排和回调契约，不验证镜像算法、Flash 擦写、提交原子性、掉电恢复、回滚、OTA 传输或实板行为。硬件及产品验收仍须按上文 USB 自升级与外部 SPI NOR 用例另行执行。
 
 ## 4. UART
 
@@ -145,7 +172,7 @@ WCH RISC-V GCC 另将启用 JTAG 测试配置的上游 `DAP.c` 与 `JTAG_DP.c` �
 
 ## 10. 当前执行状态
 
-当前仓库包含 CH585M 数据手册、CH585EVT 压缩包及 ThreadX PoC-1。PoC 主机交叉构建与工具链摘要记录在 FW-001；构建原始日志仅保存在本地构建目录，不进入版本控制；用户确认目前没有可用硬件，故无 CH585M 下载/调试及运行证据。DBG-C 产品固件、线缆样品或抓包也未提供。本文列出的产品级验证用例均未执行；定长包队列 54 项主机检查通过；FIFO 七组主机用例、八项 CMSIS-DAP 命令核心检查、五项 CMSIS-DAP 边界预检/dispatch 主机用例、十项 CMSIS-DAP 命令到 SWD 引擎主机线模型检查（含 DP 写入，接入 CH585 GPIO BSP 模拟寄存器）、两项 CMSIS 编译器宏目标对象检查、SWD GPIO BSP 模拟寄存器 57 项、Target Reset GPIO BSP 模拟寄存器 33 项、UART0 BSP/双向桥接适配器模拟寄存器与回调 94 项、UID 读取适配器 mock 31 项、单向/双向字节流桥接各 15 项主机检查、通用 Target Reset 序列 24 项回调检查及 UID ROM 底层库可重定位链接、其余 BSP/适配器目标对象编译及 `dbgc_ch585_platform` 静态库构建检查已通过，但均不计为板级或产品功能测试，PoC 交叉构建也不计为实板运行证据。此前 100 tick/s 基线的构建、ELF/链接检查和源码静态审查已完成；1000 tick/s 配置及 PB5 复位序列适配器已完成固定构建路径下的两次干净构建，ELF/map 散列一致；验证板设计软件门复核通过。该门要求可复现的干净构建、ELF/链接/资源检查，以及对启动、上下文和中断路径的静态审查；仅允许设计验证板，不放行产品原理图或 PCB 冻结。实板运行仍未执行，产品硬件冻结未放行。ThreadX 启动、中断进入/退出、SysTick 频率与 tick 投递、线程切换/睡眠/唤醒、栈完整性、复位恢复和持续运行项目均保持未执行，须在具体测试方案中预先定义时长、重复次数、负载和通过门限。软件放行与实板门见 OPEN-001 O18/O19。本文件定义覆盖面，不构成实板验证报告。
+当前仓库包含 CH585M 数据手册、CH585EVT 压缩包及 ThreadX PoC-1。PoC 主机交叉构建与工具链摘要记录在 FW-001；构建原始日志仅保存在本地构建目录，不进入版本控制；用户确认目前没有可用硬件，故无 CH585M 下载/调试及运行证据。DBG-C 产品固件、线缆样品或抓包也未提供。本文列出的产品级验证用例均未执行；定长包队列 54 项主机检查通过；FIFO 七组主机用例、八项 CMSIS-DAP 命令核心检查、五项 CMSIS-DAP 边界预检/dispatch 主机用例、十项 CMSIS-DAP 命令到 SWD 引擎主机线模型检查（含 DP 写入，接入 CH585 GPIO BSP 模拟寄存器）、两项 CMSIS 编译器宏目标对象检查、SWD GPIO BSP 模拟寄存器 57 项、Target Reset GPIO BSP 模拟寄存器 69 项、UART0 BSP/双向桥接适配器模拟寄存器与回调 94 项、UID 读取适配器 mock 31 项、单向/双向字节流桥接各 15 项主机检查、通用 Target Reset 序列 24 项回调检查及 UID ROM 底层库可重定位链接、其余 BSP/适配器目标对象编译及 `dbgc_ch585_platform` 静态库构建检查已通过，但均不计为板级或产品功能测试，PoC 交叉构建也不计为实板运行证据。此前 100 tick/s 基线的构建、ELF/链接检查和源码静态审查已完成；1000 tick/s 配置及 PB5 复位序列适配器已完成固定构建路径下的两次干净构建，ELF/map 散列一致；验证板设计软件门复核通过。该门要求可复现的干净构建、ELF/链接/资源检查，以及对启动、上下文和中断路径的静态审查；仅允许设计验证板，不放行产品原理图或 PCB 冻结。实板运行仍未执行，产品硬件冻结未放行。ThreadX 启动、中断进入/退出、SysTick 频率与 tick 投递、线程切换/睡眠/唤醒、栈完整性、复位恢复和持续运行项目均保持未执行，须在具体测试方案中预先定义时长、重复次数、负载和通过门限。软件放行与实板门见 OPEN-001 O18/O19。本文件定义覆盖面，不构成实板验证报告。
 
 ### 10.1 CMSIS 与 CH585 GPIO 主机/目标检查
 
@@ -155,10 +182,10 @@ WCH RISC-V GCC 另将启用 JTAG 测试配置的上游 `DAP.c` 与 `JTAG_DP.c` �
 | CMSIS-COMP-02 | 用 WCH RISC-V GCC 和该编译器头编译测试配置下的固定上游 `DAP.c`、`SW_DP.c` | 两个独立对象均成功生成为 ELF32 RISC-V；无 Arm ISA 汇编进入对象编译路径 | 通过 |
 | CH585-GPIO-HOST-01 | 以模拟寄存器编译并运行 `dbgc_ch585_swd_gpio.c`，检查 SWDIO/SWCLK 的所有模式、读写和错误参数 | 模拟寄存器位变化符合 WCH EVT GPIOB 模式实现；57 项检查通过 | 通过（仅主机寄存器模型） |
 | CH585-GPIO-OBJ-01 | 用 WCH RISC-V GCC 编译 `platform/ch585/dbgc_ch585_swd_gpio.c` 并检查对象 ELF 头 | `-Werror` 编译成功，目标对象为 ELF32 RISC-V | 通过（仅目标对象编译） |
-| CH585-RESET-HOST-01 | 以模拟寄存器编译并运行 Target Reset GPIO BSP，检查五种模式、原始电平读写及错误参数 | PB5 模拟寄存器位变化符合 WCH EVT GPIOB 实现；33 项检查通过 | 通过（仅主机寄存器模型） |
+| CH585-RESET-HOST-01 | 以模拟寄存器编译并运行 Target Reset GPIO BSP，检查五种模式、原始电平读写及错误参数 | 原始模式/读写，以及 CMSIS-DAP nRESET 位映射、先写低锁存值再启用输出、调用方选择释放输入模式和无效参数拒绝符合 WCH EVT GPIOB 模拟操作；69 项检查通过 | 通过（仅主机寄存器模型） |
 | CH585-RESET-OBJ-01 | 用 WCH RISC-V GCC 编译 `platform/ch585/dbgc_ch585_target_reset_gpio.c` 并检查对象 ELF 头 | `-Werror` 编译成功，目标对象为 ELF32 RISC-V | 通过（仅目标对象编译） |
 
-SWD GPIO 与 Target Reset GPIO 主机检查分别以普通变量模拟 GPIOB 寄存器，验证 BSP 源码的位操作；不能证明 CH585M 实际寄存器、引脚、电气、目标复位效果或时序。Target Reset GPIO API 传递原始高/低电平，不实现复位极性映射或脉冲策略。目标对象检查不运行对象；CMSIS-DAP 与 GPIO/UART BSP 对象均未链接到 PoC，也不证明产品 DAP 配置、USB、ThreadX 或 CH585M 实板行为。为编译 CMSIS-DAP，构建脚本只在构建目录的 `DAP.h` 副本中选择上游 C 循环延时分支；该 C 循环的 SWD 时序尚未在实板校准。
+SWD GPIO 与 Target Reset GPIO 主机检查分别以普通变量模拟 GPIOB 寄存器，验证 BSP 源码的位操作；不能证明 CH585M 实际寄存器、引脚、电气、目标复位效果或时序。Target Reset GPIO 原始接口传递高/低电平。另有 PB5 方向切换原语将 CMSIS-DAP nRESET 位 0 映射为低电平断言，将位 1 映射为输入模式释放；推挽输出档和浮空/上拉输入模式由调用方选择。这只是软件方向切换模拟，不证明外部上拉、电平转换、电气行为、复位脉冲或板级时序。目标对象检查不运行对象；CMSIS-DAP 与 GPIO/UART BSP 对象均未链接到 PoC，也不证明产品 DAP 配置、USB、ThreadX 或 CH585M 实板行为。为编译 CMSIS-DAP，构建脚本只在构建目录的 `DAP.h` 副本中选择上游 C 循环延时分支；该 C 循环的 SWD 时序尚未在实板校准。
 
 复现命令（仓库根目录执行）：`python3 software/tools/python/build_poc1.py --build-dir build/uart0-duplex-adapter`。该现有构建入口运行 SWD GPIO、Target Reset GPIO 和 UART0 主机寄存器模型，并将三个 BSP 与 UART0 桥接适配器编译为 RISC-V 目标对象；这些对象均未链接到 PoC。
 
@@ -242,3 +269,54 @@ SWD GPIO 与 Target Reset GPIO 主机检查分别以普通变量模拟 GPIOB 寄
 | JTAG-GPIO-HOST-01 | 四个信号各自的五种输入/输出模式、PB 位掩码读写和无效信号/模式/空输出指针 | 116 项主机寄存器模型检查通过 |
 
 该测试不选择产品电气模式，不验证实际引脚、目标电平、电气保护、JTAG 波形/时序或 CH585M 实板行为；BSP 尚未接入 CMSIS-DAP JTAG 命令引擎。复现命令：`python3 software/tools/python/build_poc1.py --build-dir build/goal-jtag-gpio`。
+
+
+### 10.7 CH585 PA4/A0 VTref ADC 原始采样主机检查
+
+测试对象为 `software/poc1-ch585-threadx/platform/ch585/dbgc_ch585_vtref_adc.c`，以 WCH EVT ADC/GPIO 寄存器定义为依据，用普通变量模拟 PA4、ADC 配置、转换状态和数据寄存器。采样时钟与 PGA 增益由测试调用方显式传入；轮询上限表示每阶段读取状态寄存器的次数，不表示时间。测试覆盖 `R16_CLK_SYS_CFG[9]` 为 1 时拒绝采样时钟选项 0。
+
+| 检查 | 覆盖内容 | 状态 |
+|---|---|---|
+| VTREF-ADC-HOST-01 | 未初始化/无效参数、PA4 浮空模拟输入配置、ADC A0 配置、采样时钟约束、初始化后丢弃首转换、分阶段轮询超限后续等、原始数据掩码 | 44 项主机模拟寄存器检查通过；当前主机模型不代表芯片 ADC 转换 |
+
+该检查不验证 ADC 精度、采样时钟实际频率、输入范围、分压/保护电路、毫伏换算、校准、VTref 门限或实板行为。以上产品参数未冻结；无板卡，硅片采样未执行。复现命令：`python3 software/tools/python/build_poc1.py --build-dir build/vtref-adc`。
+
+### 10.8 CH585 SPI1 配置 BSP 主机检查
+
+测试对象为 `software/poc1-ch585-threadx/platform/ch585/dbgc_ch585_spi1_config.c`，寄存器和配置语义来自 CH585/CH584 数据手册 §10.1.1/§10.2 与 2026.08 EVT `CH58x_spi1.c`。主机检查用普通变量模拟 SPI1 控制、配置、时钟分频和状态寄存器。
+
+| 检查 | 覆盖内容 | 状态 |
+|---|---|---|
+| SPI1-CONFIG-HOST-01 | Mode 0/3、MSB/LSB 位序、分频边界 2/254、输入延时位、无效参数和非空闲拒绝 | 19 项主机模拟寄存器检查通过 |
+
+本节配置 BSP 仅配置控制器寄存器；PA0–PA3 GPIO 模式与 PA3 原始电平由第 10.9 节的独立 BSP 覆盖。两者均不传输数据或实现 Flash 命令。该检查不证明分频对应的实际波形、SPI 信号电气行为或 CH585M 实板表现。EVT 传输例程存在无界轮询；表 10-2 的 `RB_SPI_FIFO_READY` 和 `RB_SPI_FREE` 仅提供 FIFO 就绪与 SPI 空闲状态；手册未定义中止移位数据或复位事务的操作。`RB_SPI_ALL_CLEAR` 仅说明清 FIFO、计数器和中断标志，不能证明超时恢复，相关证据取得前不实现传输层。复现命令：`python3 software/tools/python/build_poc1.py --build-dir build/spi1-config`。
+
+### 10.9 CH585 SPI1 GPIO 与片选原始电平 BSP 主机检查
+
+测试对象为 `software/poc1-ch585-threadx/platform/ch585/dbgc_ch585_spi1_gpio.c`。PA0/SCK1、PA1/MOSI1、PA2/MISO1 来自数据手册表 1-1；PA3 为 MCU-001 分配的 GPIO CS；模式位写入依据 WCH EVT `CH58x_gpio.c` 的 `GPIOA_ModeCfg()`。EVT `EVT/EXAM/SPI/src/Main.c` 中当前由 `#if 1` 屏蔽的 SPI1 分支使用 PA12 作 CS，不能证明项目 PA3 片选配置或传输行为。
+
+| 检查 | 覆盖内容 | 状态 |
+|---|---|---|
+| SPI1-GPIO-HOST-01 | 四个 GPIO 逐一映射；每个引脚五种 GPIO 模式；PA3 原始高低电平写入；无效引脚和模式拒绝 | 104 项主机模拟寄存器检查通过 |
+
+检查覆盖 PA3 原始输出锁存器高低写入，但不定义片选有效极性、默认态或时序；也不证明实板引脚行为、电气兼容或 SPI 信号时序。复现命令：`python3 software/tools/python/build_poc1.py --build-dir build/spi1-gpio-cs`。
+
+### 10.10 CH585 PB6 TARGET_PWR_EN 原始 GPIO 主机检查
+
+测试对象为 `software/poc1-ch585-threadx/platform/ch585/dbgc_ch585_target_power_gpio.c`。PB6/QFN48 脚 18 分配来自 MCU-001；GPIOB 模式位、`R32_PB_SET`、`R32_PB_CLR` 和 `R32_PB_PIN` 用法依据 WCH EVT `CH58x_gpio.c` 与本地 `CH585SFR.h`。主机检查以普通变量模拟寄存器。
+
+| 检查 | 覆盖内容 | 状态 |
+|---|---|---|
+| TARGET-POWER-GPIO-HOST-01 | 五种调用方指定模式、保持其他 GPIO 位、PB6 原始高低写入与读回、无效模式和空输出指针 | 36 项检查通过 |
+
+本检查不定义供电有效极性、默认态、负载开关电路或保护策略，也不验证真实 PB6、电源开关、目标供电效果或 CH585M 实板行为。复现命令：`python3 software/tools/python/build_poc1.py --toolchain-root /path/to/riscv-wch-elf/bin --build-dir build/target-power-gpio`；如已将工具链加入 PATH，可省略 `--toolchain-root`。
+
+### 10.11 CH585 PB8/PB9 用户交互 GPIO 主机检查
+
+测试对象为 `software/poc1-ch585-threadx/platform/ch585/dbgc_ch585_ui_gpio.c`。PB8=KEY_MODE、PB9=LED_TARGET 来自 MCU-001 和数据手册表 1-1；GPIOB 位掩码及模式寄存器操作依据 WCH EVT `CH58x_gpio.h`、`CH58x_gpio.c`。
+
+| 检查 | 覆盖内容 | 状态 |
+|---|---|---|
+| UI-GPIO-HOST-01 | PB8/PB9 映射、五种模式下寄存器位隔离、原始高低电平读写、无效信号/模式和空输出指针 | 56 项检查通过 |
+
+本检查不定义按键有效电平、去抖/唤醒策略、LED 极性/默认态，也不验证外部电路或 CH585M 实板行为。PB18/PB19 因 EVT RF 天线开关复用待确认，未纳入本 BSP。复现命令：`python3 software/tools/python/build_poc1.py --toolchain-root /path/to/riscv-wch-elf/bin --build-dir build/ui-gpio`。

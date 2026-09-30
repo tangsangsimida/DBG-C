@@ -1,6 +1,6 @@
 # DBG-C Verification Specification
 
-**Document ID:** DBG-C-TEST-001　**Version:** V0.56　**Status:** Test-plan draft; SWD-engine host line model now runs through the CH585 GPIO BSP modeled-register path with 3321 assertions; the generic Target Reset sequence service passes 24 callback host checks and the PB5 BSP integration passes 37 modeled-register host checks; the CH585 JTAG GPIO BSP passes 116 modeled-register checks, and upstream CMSIS-DAP JTAG Sequence, IDCODE, and DP Transfer write/posted-read paths through the BSP pass 1610 cumulative modeled-register host checks; fixed-slot packet queue (54 host checks), FIFO, single/duplex byte-stream bridges, CMSIS-DAP command-core, upstream SWD-engine host model, bounded dispatch, bounds preflight, CMSIS compiler mapping, and CH585 SWD GPIO, Target Reset GPIO, UART0 and UID-read adapter host and target relocatable-link checks executed; PoC ThreadX creation-status/tick-observation code is included in the target cross-build; the CH585 BSP/adapter static library is included in the PoC cross-build; product UART/command bounds, silicon UID, and ThreadX board tests have not run
+**Document ID:** DBG-C-TEST-001　**Version:** V0.68　**Status:** Test-plan draft; PB8/PB9 UI GPIO adapter passes 56 modeled-register host checks; SPI1 configuration BSP passes 19 modeled-register checks and PA0–PA3 GPIO modes and raw PA3 chip-select BSP pass 104 modeled-register checks; SPI transfer is not implemented; SWD-engine host line model now runs through the CH585 GPIO BSP modeled-register path with 3321 assertions; the generic Target Reset sequence service passes 24 callback host checks and the PB5 reset-sequence adapter passes 37 modeled-register host checks; the PB5 GPIO BSP passes 69 modeled-register host checks; the CH585 JTAG GPIO BSP passes 116 modeled-register checks, and upstream CMSIS-DAP JTAG Sequence, IDCODE, and DP Transfer write/posted-read paths through the BSP pass 1610 cumulative modeled-register host checks; fixed-slot packet queue (54 host checks), update transaction manager (57 host checks), FIFO, single/duplex byte-stream bridges, CMSIS-DAP command-core, upstream SWD-engine host model, bounded dispatch, bounds preflight, CMSIS compiler mapping, and CH585 SWD GPIO, Target Reset/PB6 Target Power GPIO, UART0 and UID-read adapter host and target relocatable-link checks executed; PoC ThreadX creation-status/tick-observation code is included in the target cross-build; the CH585 BSP/adapter static library is included in the PoC cross-build; product UART/command bounds, silicon UID, and ThreadX board tests have not run
 
 ## 1. Pass Criteria
 
@@ -29,6 +29,19 @@ Using the final CMSIS-DAP configuration and MCU-001 PB0–PB3 nets, verify JTAG 
 ### 3.3 USB Self-Update and External SPI NOR
 
 USBHS self-update covers valid images, version rejection, corruption, interrupted transfer, power loss before/after commit, Boot recovery, and old-image startup. External NOR tests cover identification, erase/write boundaries, image integrity, power-loss state, and media faults. Partition, part, and image format tests follow actual link maps, part selection, and Update Manager specification.
+
+### 3.4 Generic Update Transaction Manager Host Checks
+
+The test target is `software/common/update_manager/`. Its backend uses host-model callbacks and does not access CH585M Flash, external SPI NOR, USB, RF, BLE, ThreadX, or interrupts. The 57 assertions belong to one host-test suite; the rows below classify coverage and do not represent separate test processes.
+
+| Case | Check | Pass condition | Status |
+|---|---|---|---|
+| UPDATE-HOST-01 | Write a complete image at contiguous offsets, then verify and commit | State transitions through RECEIVING, VERIFIED, and COMMITTED; backend receives correct offsets, lengths, and byte order | Pass (covered by the 57-assertion host suite) |
+| UPDATE-HOST-02 | Empty image, zero-length chunk, null data, skipped offset, and chunk beyond declared image length | Matching argument/range error is returned; invalid chunk does not call backend write and received length is unchanged | Pass (covered by the 57-assertion host suite) |
+| UPDATE-HOST-03 | Invoke disallowed operations before begin, before complete reception, and after verified/committed/aborted/failed states | Invalid transitions are rejected without repeating backend phase callbacks | Pass (covered by the 57-assertion host suite) |
+| UPDATE-HOST-04 | Fail each backend prepare, write, verify, commit, and abort operation | State and status match the API contract; failed chunk is not replayed; failed commit enters COMMIT_UNCERTAIN and rejects abort/new transactions | Pass (covered by the 57-assertion host suite) |
+
+These checks verify transaction orchestration and callback contracts only. They do not verify image algorithms, Flash erase/program behavior, commit atomicity, power-loss recovery, rollback, OTA transport, or board behavior. Hardware and product acceptance must still run the USB self-update and external SPI NOR cases above.
 
 ## 4. UART
 
@@ -159,7 +172,7 @@ WCH RISC-V GCC also compiles the JTAG-enabled test configurations of upstream `D
 
 ## 10. Current Execution Status
 
-The repository contains the CH585M datasheet, CH585EVT archive, and ThreadX PoC-1. The PoC host cross-build and toolchain summary is recorded in FW-001; raw build logs stay in local build directories and are not version-controlled; the user confirms no hardware is currently available, so no CH585M programming/debug or runtime evidence exists. DBG-C product firmware, cable samples, and captures are also unavailable. All product-level verification cases remain **Not run**. The fixed-slot packet queue passes 54 host checks. The seven FIFO host case groups, eight CMSIS-DAP command-core host checks, five bounded-dispatch host cases, ten CMSIS-DAP command-to-SWD-engine host line-model cases (including DP write, connected to the CH585 GPIO BSP modeled-register path), two CMSIS compiler-mapping target-object checks, 57 SWD GPIO BSP modeled-register host checks, 33 Target Reset GPIO BSP modeled-register host checks, 94 UART0 BSP/duplex-adapter modeled-register and callback checks, 31 UID-read adapter mock checks, 15 single-channel and 15 duplex byte-stream-bridge host checks, 24 generic Target Reset sequence callback checks, and the UID ROM-library relocatable-link, BSP/adapter target-object compile checks, and `dbgc_ch585_platform` static-library build passed, but none count as board or product-function tests; neither does the PoC cross-build count as board runtime evidence. Two clean builds at a fixed path for the 1000 ticks/s configuration produced matching ELF/map hashes; ELF/link resource review and source static review are complete, so the verification-board software gate is re-reviewed and passed. This gate requires reproducible clean builds, ELF/link/resource checks, and static review of startup, context, and interrupt paths; after that review, it only permits a verification board and does not release product schematic or PCB freeze. Board runtime remains Not run, and product-hardware freeze is not released. ThreadX startup, interrupt entry/exit, SysTick frequency and tick delivery, thread switch/sleep/wakeup, stack integrity, reset recovery, and sustained-runtime cases remain Not run. Define duration, repetitions, load, and pass thresholds in the specific test plan before execution. See OPEN-001 O18/O19 for the release gates. This document defines coverage and is not a board verification report.
+The repository contains the CH585M datasheet, CH585EVT archive, and ThreadX PoC-1. The PoC host cross-build and toolchain summary is recorded in FW-001; raw build logs stay in local build directories and are not version-controlled; the user confirms no hardware is currently available, so no CH585M programming/debug or runtime evidence exists. DBG-C product firmware, cable samples, and captures are also unavailable. All product-level verification cases remain **Not run**. The fixed-slot packet queue passes 54 host checks. The seven FIFO host case groups, eight CMSIS-DAP command-core host checks, five bounded-dispatch host cases, ten CMSIS-DAP command-to-SWD-engine host line-model cases (including DP write, connected to the CH585 GPIO BSP modeled-register path), two CMSIS compiler-mapping target-object checks, 57 SWD GPIO BSP modeled-register host checks, 69 Target Reset GPIO BSP modeled-register host checks, 94 UART0 BSP/duplex-adapter modeled-register and callback checks, 31 UID-read adapter mock checks, 15 single-channel and 15 duplex byte-stream-bridge host checks, 24 generic Target Reset sequence callback checks, and the UID ROM-library relocatable-link, BSP/adapter target-object compile checks, and `dbgc_ch585_platform` static-library build passed, but none count as board or product-function tests; neither does the PoC cross-build count as board runtime evidence. Two clean builds at a fixed path for the 1000 ticks/s configuration produced matching ELF/map hashes; ELF/link resource review and source static review are complete, so the verification-board software gate is re-reviewed and passed. This gate requires reproducible clean builds, ELF/link/resource checks, and static review of startup, context, and interrupt paths; after that review, it only permits a verification board and does not release product schematic or PCB freeze. Board runtime remains Not run, and product-hardware freeze is not released. ThreadX startup, interrupt entry/exit, SysTick frequency and tick delivery, thread switch/sleep/wakeup, stack integrity, reset recovery, and sustained-runtime cases remain Not run. Define duration, repetitions, load, and pass thresholds in the specific test plan before execution. See OPEN-001 O18/O19 for the release gates. This document defines coverage and is not a board verification report.
 
 ### 10.1 CMSIS and CH585 GPIO Host/Target Checks
 
@@ -169,10 +182,10 @@ The repository contains the CH585M datasheet, CH585EVT archive, and ThreadX PoC-
 | CMSIS-COMP-02 | Compile test-configured pinned upstream `DAP.c` and `SW_DP.c` with WCH RISC-V GCC and this compiler header | Both separate objects are ELF32 RISC-V, with no Arm ISA assembly in the object-compilation path | Pass |
 | CH585-GPIO-HOST-01 | Compile and run `dbgc_ch585_swd_gpio.c` against modeled registers; check all SWDIO/SWCLK modes, reads/writes, and invalid arguments | Modeled register bits match the WCH EVT GPIOB mode implementation; 57 checks pass | Pass (host register model only) |
 | CH585-GPIO-OBJ-01 | Compile `platform/ch585/dbgc_ch585_swd_gpio.c` with WCH RISC-V GCC and inspect the object ELF header | `-Werror` compile succeeds and the target object is ELF32 RISC-V | Pass (target-object compile only) |
-| CH585-RESET-HOST-01 | Compile and run the Target Reset GPIO BSP against modeled registers; check five modes, raw-level reads/writes, and invalid arguments | PB5 modeled-register changes match the WCH EVT GPIOB implementation; 33 checks pass | Pass (host register model only) |
+| CH585-RESET-HOST-01 | Compile and run the Target Reset GPIO BSP against modeled registers; check five modes, raw-level reads/writes, and invalid arguments | Raw modes and reads/writes plus CMSIS-DAP nRESET bit mapping, low-latch-before-output ordering, caller-selected release mode, and invalid-argument rejection match the modeled WCH EVT GPIOB operations; 69 checks pass | Pass (host register model only) |
 | CH585-RESET-OBJ-01 | Compile `platform/ch585/dbgc_ch585_target_reset_gpio.c` with WCH RISC-V GCC and inspect its ELF header | `-Werror` compile succeeds and the target object is ELF32 RISC-V | Pass (target-object compile only) |
 
-The SWD and Target Reset GPIO host checks use ordinary variables to model GPIOB registers and verify the BSP source bit operations; they do not verify CH585M register/pin behavior, electrical output, target reset effect, or timing. The Target Reset API passes through raw high/low levels and implements no active-level mapping or pulse policy. Target-object checks do not execute the objects. The CMSIS-DAP and GPIO objects are not linked into PoC, and these cases do not prove product DAP configuration, USB, ThreadX, or CH585M board behavior. To compile CMSIS-DAP, the build script selects the upstream C-loop delay branch in a build-directory copy of `DAP.h`; the SWD timing of that C loop has not been calibrated on hardware.
+The SWD and Target Reset GPIO host checks use ordinary variables to model GPIOB registers and verify the BSP source bit operations; they do not verify CH585M register/pin behavior, electrical output, target reset effect, or timing. The raw Target Reset GPIO API passes through high/low levels. A separate PB5 primitive maps CMSIS-DAP nRESET bit 0 to low assertion and bit 1 to input-mode release, with caller-selected push-pull and floating/pull-up input modes. This is software direction-switching emulation only; it does not prove external pull-up, level translation, electrical behavior, reset pulse, or board timing. Target-object checks do not execute the objects. The CMSIS-DAP and GPIO objects are not linked into PoC, and these cases do not prove product DAP configuration, USB, ThreadX, or CH585M board behavior. To compile CMSIS-DAP, the build script selects the upstream C-loop delay branch in a build-directory copy of `DAP.h`; the SWD timing of that C loop has not been calibrated on hardware.
 
 Reproduction command from the repository root: `python3 software/tools/python/build_poc1.py --build-dir build/uart0-duplex-adapter`. This existing build entry runs the SWD GPIO, Target Reset GPIO, and UART0 host register models and compiles all three BSPs and the UART0 bridge adapter to RISC-V target objects; none of those objects is linked into PoC.
 
@@ -256,3 +269,54 @@ The test covers `software/poc1-ch585-threadx/platform/ch585/dbgc_ch585_jtag_gpio
 | JTAG-GPIO-HOST-01 | Five input/output modes per signal, PB bit-mask reads/writes, and invalid signal/mode/null-output arguments | 116 modeled-register host checks pass |
 
 This test does not select product electrical modes or verify physical pins, target voltage, electrical protection, JTAG waveform/timing, or CH585M board runtime. The BSP is not connected to the CMSIS-DAP JTAG command engine. Reproduce with `python3 software/tools/python/build_poc1.py --build-dir build/goal-jtag-gpio`.
+
+
+### 10.7 CH585 PA4/A0 VTref ADC Raw-Sampling Host Checks
+
+The test target is `software/poc1-ch585-threadx/platform/ch585/dbgc_ch585_vtref_adc.c`. Ordinary variables model PA4, ADC configuration, conversion status, and data registers using WCH EVT ADC/GPIO register definitions. The caller explicitly supplies sample clock and PGA gain; the poll limit counts status-register reads per stage and is not a time value. The test covers rejection of sample-clock option 0 when `R16_CLK_SYS_CFG[9]` is 1.
+
+| Check | Coverage | Status |
+|---|---|---|
+| VTREF-ADC-HOST-01 | Uninitialized/invalid arguments, PA4 floating analog-input setup, ADC A0 setup, sample-clock constraint, first-conversion discard after initialization, continuation after bounded polling, and raw-data masking | 44 modeled-register host checks pass; the host model does not represent silicon ADC conversion |
+
+This check does not verify ADC accuracy, actual sample-clock frequency, input range, divider/protection circuit, millivolt conversion, calibration, VTref thresholds, or board behavior. Product parameters remain unfrozen; no board is available and silicon sampling has not run. Reproduce with: `python3 software/tools/python/build_poc1.py --build-dir build/vtref-adc`.
+
+### 10.8 CH585 SPI1 Configuration BSP Host Checks
+
+The test target is `software/poc1-ch585-threadx/platform/ch585/dbgc_ch585_spi1_config.c`. Register and configuration semantics come from CH585/CH584 datasheet §§10.1.1/10.2 and the 2026.08 EVT `CH58x_spi1.c`. Ordinary variables model SPI1 control, configuration, clock-divider, and status registers.
+
+| Check | Coverage | Status |
+|---|---|---|
+| SPI1-CONFIG-HOST-01 | Modes 0/3, MSB/LSB bit order, divider limits 2/254, input-delay bit, invalid arguments, and busy rejection | 19 modeled-register host checks pass |
+
+The configuration BSP in this section configures controller registers only; PA0–PA3 GPIO modes and raw PA3 levels are covered by the separate BSP in Section 10.9. Neither BSP transfers data or implements Flash commands. The host checks do not prove divider-related waveforms, SPI electrical behavior, or CH585M board behavior. EVT transfer routines contain unbounded polling; datasheet Table 10-2 defines `RB_SPI_FIFO_READY` and `RB_SPI_FREE` only as FIFO-ready and SPI-idle status; it does not define an operation to abort shifting data or reset a transaction. `RB_SPI_ALL_CLEAR` clears FIFO, counters, and interrupt flags, which does not prove timeout recovery, so transfer support remains unimplemented pending that evidence. Reproduce with: `python3 software/tools/python/build_poc1.py --build-dir build/spi1-config`.
+
+### 10.9 CH585 SPI1 GPIO and Raw Chip-Select BSP Host Checks
+
+The test target is `software/poc1-ch585-threadx/platform/ch585/dbgc_ch585_spi1_gpio.c`. PA0/SCK1, PA1/MOSI1, and PA2/MISO1 come from datasheet Table 1-1; PA3 is the GPIO CS allocated by MCU-001. Mode-register writes follow WCH EVT `CH58x_gpio.c` `GPIOA_ModeCfg()`. The SPI1 branch in EVT `EVT/EXAM/SPI/src/Main.c`, currently excluded by `#if 1`, uses PA12 as CS; it does not verify the project PA3 chip-select configuration or transfer behavior.
+
+| Check | Coverage | Status |
+|---|---|---|
+| SPI1-GPIO-HOST-01 | Mapping for all four GPIOs; five modes per pin; raw PA3 high/low writes; invalid pin and mode rejection | 104 modeled-register host checks pass |
+
+The check covers raw PA3 output-latch high/low writes but does not define active polarity, default state, or timing. It does not prove board pin behavior, electrical compatibility, or SPI signal timing. Reproduce with: `python3 software/tools/python/build_poc1.py --build-dir build/spi1-gpio-cs`.
+
+### 10.10 CH585 PB6 TARGET_PWR_EN Raw GPIO Host Checks
+
+The test target is `software/poc1-ch585-threadx/platform/ch585/dbgc_ch585_target_power_gpio.c`. PB6/QFN48 pin 18 comes from MCU-001; GPIOB mode bits and `R32_PB_SET`, `R32_PB_CLR`, and `R32_PB_PIN` access follow WCH EVT `CH58x_gpio.c` and local `CH585SFR.h`. Ordinary variables model the registers.
+
+| Check | Coverage | Status |
+|---|---|---|
+| TARGET-POWER-GPIO-HOST-01 | Five caller-selected modes, preservation of unrelated GPIO bits, raw PB6 high/low writes and reads, invalid mode, and null output pointer | 36 checks pass |
+
+This test does not define active power polarity, default state, load-switch circuit, or protection policy, and does not verify the physical PB6 pin, power switch, target supply behavior, or CH585M board runtime. Reproduce with `python3 software/tools/python/build_poc1.py --toolchain-root /path/to/riscv-wch-elf/bin --build-dir build/target-power-gpio`; omit `--toolchain-root` if the toolchain is already available through PATH.
+
+### 10.11 CH585 PB8/PB9 User-Interface GPIO Host Checks
+
+The test target is `software/poc1-ch585-threadx/platform/ch585/dbgc_ch585_ui_gpio.c`. PB8=KEY_MODE and PB9=LED_TARGET come from MCU-001 and datasheet Table 1-1; GPIOB masks and mode-register operations follow WCH EVT `CH58x_gpio.h` and `CH58x_gpio.c`.
+
+| Check | Coverage | Status |
+|---|---|---|
+| UI-GPIO-HOST-01 | PB8/PB9 mapping, register-bit isolation across five modes, raw high/low reads and writes, invalid signal/mode, and null output pointer | 56 checks pass |
+
+This check does not define button polarity, debounce/wakeup policy, LED polarity/default state, or verify external circuitry or CH585M board runtime. PB18/PB19 are excluded because the EVT RF antenna-switch mux remains unresolved. Reproduce with `python3 software/tools/python/build_poc1.py --toolchain-root /path/to/riscv-wch-elf/bin --build-dir build/ui-gpio`.

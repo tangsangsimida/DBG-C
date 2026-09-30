@@ -12,15 +12,21 @@ add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../common/cmsis_dap_service" cmsis
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../common/byte_stream_bridge" byte_stream_bridge)
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../common/byte_duplex_bridge" byte_duplex_bridge)
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../common/target_reset_sequence" target_reset_sequence)
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../common/update_manager" update_manager)
 
 add_library(dbgc_ch585_platform STATIC
 	platform/ch585/dbgc_ch585_jtag_gpio.c
 	platform/ch585/dbgc_ch585_swd_gpio.c
     platform/ch585/dbgc_ch585_target_reset_gpio.c
+    platform/ch585/dbgc_ch585_target_power_gpio.c
+    platform/ch585/dbgc_ch585_ui_gpio.c
     platform/ch585/dbgc_ch585_target_reset_sequence.c
     platform/ch585/dbgc_ch585_uart0.c
     platform/ch585/dbgc_ch585_uart0_bridge_adapter.c
-    platform/ch585/dbgc_ch585_uid.c
+	platform/ch585/dbgc_ch585_uid.c
+	platform/ch585/dbgc_ch585_vtref_adc.c
+	platform/ch585/dbgc_ch585_spi1_config.c
+	platform/ch585/dbgc_ch585_spi1_gpio.c
 )
 target_include_directories(dbgc_ch585_platform PUBLIC
     "${CMAKE_CURRENT_SOURCE_DIR}/platform/ch585"

@@ -84,6 +84,29 @@ static void check_mode(dbgc_ch585_gpio_mode_t mode, uint32_t expected_dir, uint3
 }
 
 /**
+ * @brief 检查 CMSIS-DAP nRESET 位值对应的释放或开漏模拟状态。
+ * @param bit CMSIS-DAP nRESET 位值。
+ * @param output_mode 断言时使用的推挽输出模式。
+ * @param released_mode 释放时使用的输入模式。
+ * @param expected_dir 期望方向寄存器值。
+ * @param expected_pu 期望上拉寄存器值。
+ * @param expected_pd 期望下拉/驱动寄存器值。
+ * @param expected_clr 期望 GPIO 清零寄存器写入值。
+ */
+static void check_nreset(uint8_t bit, dbgc_ch585_gpio_mode_t output_mode,
+			 dbgc_ch585_gpio_mode_t released_mode, uint32_t expected_dir,
+			 uint32_t expected_pu, uint32_t expected_pd, uint32_t expected_clr)
+{
+	reset_registers();
+	CHECK_RESULT(dbgc_ch585_target_reset_gpio_set_nreset(bit, output_mode, released_mode), 0);
+	CHECK_VALUE(dbgc_host_R32_PB_DIR, expected_dir);
+	CHECK_VALUE(dbgc_host_R32_PB_PU, expected_pu);
+	CHECK_VALUE(dbgc_host_R32_PB_PD_DRV, expected_pd);
+	CHECK_VALUE(dbgc_host_R32_PB_CLR, expected_clr);
+	CHECK_VALUE(dbgc_host_R32_PB_SET, 0U);
+}
+
+/**
  * @brief 验证 PB5 Target nRESET GPIO 与通用复位序列适配。
  * @return 所有检查通过时返回零，否则返回非零值。
  */
@@ -121,6 +144,37 @@ int main(void)
 	CHECK_VALUE(dbgc_host_R32_PB_DIR, saved_dir);
 	CHECK_VALUE(dbgc_host_R32_PB_PU, saved_pu);
 	CHECK_VALUE(dbgc_host_R32_PB_PD_DRV, saved_pd);
+
+	check_nreset(0U, DBGC_CH585_GPIO_OUTPUT_PP_5MA, DBGC_CH585_GPIO_INPUT_FLOATING, 0xA5A5A5A5U,
+		     0x5A5A5A5AU, 0x96969696U, 0x00000020U);
+	check_nreset(0U, DBGC_CH585_GPIO_OUTPUT_PP_20MA, DBGC_CH585_GPIO_INPUT_FLOATING,
+		     0xA5A5A5A5U, 0x5A5A5A5AU, 0x969696B6U, 0x00000020U);
+	check_nreset(1U, DBGC_CH585_GPIO_OUTPUT_PP_5MA, DBGC_CH585_GPIO_INPUT_FLOATING, 0xA5A5A585U,
+		     0x5A5A5A5AU, 0x96969696U, 0U);
+	check_nreset(1U, DBGC_CH585_GPIO_OUTPUT_PP_5MA, DBGC_CH585_GPIO_INPUT_PULL_UP, 0xA5A5A585U,
+		     0x5A5A5A7AU, 0x96969696U, 0U);
+	reset_registers();
+	saved_dir = dbgc_host_R32_PB_DIR;
+	saved_pu = dbgc_host_R32_PB_PU;
+	saved_pd = dbgc_host_R32_PB_PD_DRV;
+	CHECK_RESULT(dbgc_ch585_target_reset_gpio_set_nreset(2U, DBGC_CH585_GPIO_OUTPUT_PP_5MA,
+							     DBGC_CH585_GPIO_INPUT_FLOATING),
+		     -1);
+	CHECK_VALUE(dbgc_host_R32_PB_DIR, saved_dir);
+	CHECK_VALUE(dbgc_host_R32_PB_PU, saved_pu);
+	CHECK_VALUE(dbgc_host_R32_PB_PD_DRV, saved_pd);
+	CHECK_VALUE(dbgc_host_R32_PB_CLR, 0U);
+	CHECK_RESULT(dbgc_ch585_target_reset_gpio_set_nreset(0U, DBGC_CH585_GPIO_INPUT_FLOATING,
+							     DBGC_CH585_GPIO_INPUT_FLOATING),
+		     -1);
+	CHECK_VALUE(dbgc_host_R32_PB_DIR, saved_dir);
+	CHECK_VALUE(dbgc_host_R32_PB_CLR, 0U);
+	CHECK_RESULT(dbgc_ch585_target_reset_gpio_set_nreset(1U, DBGC_CH585_GPIO_OUTPUT_PP_5MA,
+							     DBGC_CH585_GPIO_INPUT_PULL_DOWN),
+		     -1);
+	CHECK_VALUE(dbgc_host_R32_PB_PU, saved_pu);
+	CHECK_VALUE(dbgc_host_R32_PB_PD_DRV, saved_pd);
+	CHECK_VALUE(dbgc_host_R32_PB_CLR, 0U);
 
 	printf("PASS: %u CH585 Target Reset GPIO register-model checks\n", checks);
 	return EXIT_SUCCESS;

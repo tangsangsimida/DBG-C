@@ -1,12 +1,14 @@
 # DBG-C MCU 选型与资源评估
 
-**文档编号：** DBG-C-MCU-001　**版本：** V0.11　**状态：** CH585M V1 原理图资源分配草案；PoC tick 目标 1000 tick/s；1000 tick/s 配置已完成两次固定路径干净构建复核；实板验证未执行
+**文档编号：** DBG-C-MCU-001　**版本：** V0.15　**状态：** CH585M V1 原理图资源分配草案；PoC tick 目标 1000 tick/s；1000 tick/s 配置已完成两次固定路径干净构建复核；实板验证未执行
 
 ## 1. 证据来源
 
 `docs/09-references/CH585-CH584_Datasheet_V1.6.pdf` 是项目指定的 CH585M IC 手册；PDF 内文标题为《CH585/CH584 数据手册》V1.6，共 160 页。本文件作为当前芯片参数、引脚功能复用与寄存器能力判断的首要项目依据。SDK API、具体工程配置、射频并发性能及板级行为仍须用 SDK/实测核验。不得把 CH584/其他 CH 系列资料外推到 CH585M。
 
 仓库保留 `docs/09-references/CH585EVT/CH585EVT.ZIP` 官方 EVT 压缩包，未整体解压。用于本次分配核对的归档文件包括 `EVT/EXAM/SRC/StdPeriphDriver/inc/CH58x_gpio.h`（SHA-256 `c7f450ceaa501e4c5a912bc0429bca1540fa3c3f26e3fd55dfd908fad9b06183`）、`EVT/EXAM/IAP/USBHS_IAP/src/Main.c`（SHA-256 `5f6edcee35151480161a032c2995b495e70b9ecd352c57c4a99ee351cb40476f`）和 `EVT/PUB/CH585SCH.pdf`（SHA-256 `70391feaa719a7c5ffc1b738b927ba166bf2402692ec42f7042366839c1fb7bb`）。EVT GPIO 头文件声明 UART3 `RB_PIN_UART3` 映射 PA4/PA5 至 PB20/PB21；USBHS IAP Main 初始化 USBHS Device 控制器；官方参考原理图显示 PB22 接 BOOT 下载开关。归档索引 `EVT/CH585_List_EN.txt` 标注日期 2026.08，未声明独立 SDK 语义版本。上述示例不证明 DBG-C 固件实现或板级验证。
+
+SPI 能力核对还使用 `EVT/EXAM/SRC/StdPeriphDriver/CH58x_spi1.c`（SHA-256 `bf8c13f5e7ead9983cb3a25d9d0c59ceadb494ca14f9883495ae5b83fdf57a9f`）及 `EVT/EXAM/SPI/src/Main.c`（SHA-256 `68e4b60472fce13db8d873a792f5e6d6dbda4d0b2a9356c197d52662b9c79831`）；来源为上述 2026.08 EVT 归档。
 
 ## 2. 资源表
 
@@ -18,7 +20,7 @@
 | USBFS | 1 组 FS USB2.0 控制器/PHY；15 endpoints；64 B packet；DMA；支持 Host/Device | PB10/PB11 保留作恢复、生产和调试通道；V1 主 USB 使用 USBHS。USBFS Device 栈与恢复流程待实现和验证 |
 | USBHS | 1 组 480 Mbps USB2.0 HS 控制器/PHY；1024 B packet；DMA；支持 HS/FS Host/Device | V1 主机侧 USB Device 目标；PB12=U2D−、PB13=U2D+。EVT 有 USBHS Device 与 USBHS IAP 示例；复合设备、ThreadX 集成及板级高速信号仍待实现/验证 |
 | UART | 4 组；8 级 FIFO；数据手册称通信波特率可达 9 Mbps | UART0 PB4/PB7 用于 Target UART；UART3 RX/TX 通过 EVT `RB_PIN_UART3` 从 PA4/PA5 映射到 PB20/PB21，PB20 接收 SWO。复用配置和波特率待固件验证 |
-| SPI | 2 组，Master/Slave，DMA | PA0/PA1/PA2 的 SCK1/MOSI1/MISO1 复用来自手册；PA3 作为 GPIO 片选，组成外部 SPI NOR 接口。驱动、频率、Flash 型号与容量待实现/选型 |
+| SPI | SPI0 支持主机/从机及 DMA；SPI1 仅支持主机。两组支持 SPI Mode 0/3、8 字节 FIFO，最高频率为 Fsys/2；主机分频系数范围 2–254（数据手册 §10.1.1、§10.2） | PA0/PA1/PA2 的 SCK1/MOSI1/MISO1 复用来自手册；项目将 PA3 分配为 GPIO 片选。EVT `EVT/EXAM/SPI/src/Main.c` 中当前由 `#if 1` 屏蔽的 SPI1 分支使用 PA12 作为 GPIO 片选，并将 PA0、PA1、PA12 配为输出；该示例不能作为 PA3 电气配置依据。SPI1 寄存器配置、PA0–PA3 显式 GPIO 模式及 PA3 原始片选电平 BSP 已纳入 PoC；传输、超时恢复、Flash 型号与容量待实现/选型；不得将 SPI0 DMA 能力外推至 SPI1 |
 | ADC | 12 位；14 外部+3 内部通道（概述） | PA4 的 A0 复用由手册确认，分配为 Target_VTREF_ADC；分压、输入保护、量程和阈值待电气设计与测量 |
 | GPIO | 手册概述列出 40 个 GPIO，其中 2 个支持 5V 输入、32 个支持中断/唤醒输入 | 表 1-1 的 CH585M 列列出 PA0–PA15 与 PB0–PB23，共 40 个带封装脚号的 GPIO 标识，与概述计数一致；这不代表 40 个脚均可自由分配或均具备中断/唤醒能力。5VT 不代表可输出 5V |
 | BLE/RF | BLE 5.4；集成 2.4 GHz RF；1/2 Mbps；手册描述 2.4G 模式及最高 8 kHz 上报率 | EVT 含 `RF_Basic`、`RF_PHY`、`RF_PHY_Hop` 示例；私有 RF 协议、RF DMA、BLE 与私有 RF 共存及性能仍待库接口审查和板测 |
@@ -76,7 +78,7 @@
 | 39 | PA0 / SCK1 | EXT_FLASH_SCK | SPI1 SCK1 复用；总线模式/时钟待驱动设计 |
 | 40 | PA1 / MOSI1 | EXT_FLASH_MOSI | SPI1 MOSI1 复用 |
 | 41 | PA2 / MISO1 | EXT_FLASH_MISO | SPI1 MISO1 复用 |
-| 42 | PA3 | EXT_FLASH_CS | GPIO 片选；手册不列 SPI1 专用 CS 复用 |
+| 42 | PA3 | EXT_FLASH_CS | GPIO 片选；手册不列 SPI1 专用 CS 复用。EVT `EVT/EXAM/SPI/src/Main.c` 中当前由 `#if 1` 屏蔽的 SPI1 分支使用 PA12，不等同于项目 PA3 分配 |
 | 43 | PA15 | 官方 ISP UART 资源预留 | 手册列 UART0 RXD0_ 重映射；是否为 ISP 通道待官方下载资料确认 |
 | 44 | PA14 | 官方 ISP UART 资源预留 | 手册列 UART0 TXD0_ 重映射；是否为 ISP 通道待官方下载资料确认 |
 | 45 | PA13 | 未分配，保留 | 不启用 SPI0 SCK 或 PWM5 |
