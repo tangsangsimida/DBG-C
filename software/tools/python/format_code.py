@@ -246,6 +246,13 @@ def main() -> int:
         files = find_files(args)
         if not files:
             raise ValueError("扫描范围内没有符合条件的 C/C++ 文件")
+        report_path = None
+        if args.report:
+            report_path = resolve_user_path(args.report)
+            try:
+                report_path.relative_to(SOFTWARE_ROOT / "build")
+            except ValueError as exc:
+                raise ValueError("格式化报告必须保存在 software/build/ 内") from exc
     except (OSError, ValueError, subprocess.SubprocessError) as exc:
         print(f"格式化工具错误：{exc}", file=sys.stderr)
         return 2
@@ -293,7 +300,7 @@ def main() -> int:
         CACHE_FILE.parent.mkdir(parents=True, exist_ok=True)
         CACHE_FILE.write_text(json.dumps(cache, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     if args.report:
-        report_path = resolve_user_path(args.report)
+        assert report_path is not None
         save_report(report_path, mode, version, started, elapsed, results)
         print(f"报告已保存：{report_path}")
 

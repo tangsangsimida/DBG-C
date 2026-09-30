@@ -16,7 +16,7 @@ Check without modifying files:
 python3 software/tools/python/format_code.py --check --all
 ```
 
-Use `--c`, `--cpp`, or `--all` to select file types. `--dirs` narrows scanning to directories under `software/`, `--workers` sets parallelism, `--verbose` lists unchanged files, and `--report PATH` writes a report. Explicit file paths are also supported. clang-format is resolved through `PATH` by default; set `CLANG_FORMAT` or pass `--clang-format` to select another command. Write-mode cache data is stored under `software/build/.cache/`. Third-party, generated, build, and copied WCH CH585 header paths are excluded.
+Use `--c`, `--cpp`, or `--all` to select file types. `--dirs` narrows scanning to directories under `software/`, `--workers` sets parallelism, `--verbose` lists unchanged files, and `--report PATH` writes a report under `software/build/`. Explicit file paths are also supported. clang-format is resolved through `PATH` by default; set `CLANG_FORMAT` or pass `--clang-format` to select another command. Write-mode cache data is stored under `software/build/.cache/`. Third-party, generated, build, and copied WCH CH585 header paths are excluded.
 
 ## Doxygen Comment Coverage
 

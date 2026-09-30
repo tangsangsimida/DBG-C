@@ -1,5 +1,5 @@
 AGENTS.md
 CH585EVT.ZIP
-software/poc1-ch585-threadx/build-evidence.log
-software/build/*
-software/tools/python/__pycache__/*
+
+# Software build products, caches, and evidence logs are kept here.
+/software/build/

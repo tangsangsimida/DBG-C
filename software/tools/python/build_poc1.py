@@ -49,9 +49,13 @@ def parse_args() -> argparse.Namespace:
 def resolve_build_directory(path: Path) -> Path:
     """Resolve build paths under software/build, accepting the former build/ prefix."""
     if not path.is_absolute():
-        if path.parts and path.parts[0] == "build":
+        if path.parts[:2] == ("software", "build"):
+            path = REPO_DIR / path
+        elif path.parts and path.parts[0] == "build":
             path = Path(*path.parts[1:])
-        path = SOFTWARE_BUILD_ROOT / path
+            path = SOFTWARE_BUILD_ROOT / path
+        else:
+            path = SOFTWARE_BUILD_ROOT / path
     resolved = path.resolve()
     try:
         relative = resolved.relative_to(SOFTWARE_BUILD_ROOT.resolve())

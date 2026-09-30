@@ -9,6 +9,10 @@ import subprocess
 import sys
 
 
+SOFTWARE_ROOT = pathlib.Path(__file__).resolve().parents[2]
+SOFTWARE_BUILD_ROOT = SOFTWARE_ROOT / "build"
+
+
 def copy_verified(source: pathlib.Path, destination: pathlib.Path) -> bytes:
     data = source.read_bytes()
     destination.parent.mkdir(parents=True, exist_ok=True)
@@ -22,7 +26,15 @@ def main() -> int:
         return 2
 
     source_root = pathlib.Path(sys.argv[1])
-    output_root = pathlib.Path(sys.argv[2])
+    output_root = pathlib.Path(sys.argv[2]).resolve()
+    try:
+        relative_output = output_root.relative_to(SOFTWARE_BUILD_ROOT.resolve())
+    except ValueError:
+        print("OUTPUT_DIR must be under software/build/", file=sys.stderr)
+        return 2
+    if not relative_output.parts:
+        print("OUTPUT_DIR cannot be software/build/ itself", file=sys.stderr)
+        return 2
     pinned_commit = "12636590eec66fae2d1bba4518749426ad5a4595"
     actual_commit = subprocess.check_output(
         ["git", "-C", str(source_root), "rev-parse", "HEAD"], text=True

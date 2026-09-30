@@ -16,7 +16,7 @@ python3 software/tools/python/format_code.py --all
 python3 software/tools/python/format_code.py --check --all
 ```
 
-使用 `--c`、`--cpp` 或 `--all` 选择文件类型；`--dirs` 限定 `software/` 下的目录，`--workers` 设置并行数，`--verbose` 显示未变化文件，`--report PATH` 保存报告。也可将文件路径作为参数。clang-format 默认通过 `PATH` 查找，也可设置 `CLANG_FORMAT` 或用 `--clang-format` 指定命令。写入模式缓存位于 `software/build/.cache/`。第三方、生成、构建目录以及复制的 WCH CH585 头文件会被排除。
+使用 `--c`、`--cpp` 或 `--all` 选择文件类型；`--dirs` 限定 `software/` 下的目录，`--workers` 设置并行数，`--verbose` 显示未变化文件，`--report PATH` 将报告保存到 `software/build/` 内。也可将文件路径作为参数。clang-format 默认通过 `PATH` 查找，也可设置 `CLANG_FORMAT` 或用 `--clang-format` 指定命令。写入模式缓存位于 `software/build/.cache/`。第三方、生成、构建目录以及复制的 WCH CH585 头文件会被排除。
 
 ## Doxygen 注释覆盖率
 
